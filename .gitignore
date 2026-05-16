@@ -1,0 +1,11 @@
+.DS_Store
+.env
+.env.local
+.env.*.local
+
+# Supabase
+supabase/.temp/
+supabase/functions/.env
+
+# Deno
+.deno/

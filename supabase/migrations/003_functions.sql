@@ -1,3 +1,6 @@
+-- === ROZSZERZENIA ===
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
 -- === HELPER FUNKCJE SQL ===
 
 -- 1. Sprawdza aktywną subskrypcję
@@ -291,8 +294,6 @@ FOR EACH ROW EXECUTE FUNCTION fn_add_expired_to_shopping_list();
 
 -- === CRON JOB (pg_cron) ===
 
-CREATE EXTENSION IF NOT EXISTS pg_cron;
-
 -- 11. Scheduled job — codziennie o 8:00 rano
 SELECT cron.schedule(
   'check-expired-ingredients',
@@ -322,3 +323,35 @@ SELECT cron.schedule(
     )
   $$
 );
+
+-- ============================================================
+-- manage-user-recipes: likes counter triggers
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION increment_recipe_likes()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE recipes
+  SET likes_count = likes_count + 1
+  WHERE id = NEW.recipe_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION decrement_recipe_likes()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE recipes
+  SET likes_count = GREATEST(0, likes_count - 1)
+  WHERE id = OLD.recipe_id;
+  RETURN OLD;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER trg_increment_likes
+  AFTER INSERT ON recipe_likes
+  FOR EACH ROW EXECUTE FUNCTION increment_recipe_likes();
+
+CREATE TRIGGER trg_decrement_likes
+  AFTER DELETE ON recipe_likes
+  FOR EACH ROW EXECUTE FUNCTION decrement_recipe_likes();

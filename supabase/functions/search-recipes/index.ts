@@ -3,6 +3,8 @@ import { corsHeaders } from '../_shared/corsHeaders.ts';
 import { handleError, ValidationError } from '../_shared/errorHandler.ts';
 import { getUserId } from '../_shared/supabaseClient.ts';
 import { SubscriptionGuard } from '../_shared/SubscriptionGuard.ts';
+import { HealthPromptBuilder, HealthCondition } from '../_shared/HealthPromptBuilder.ts';
+import { ProfileRepository } from '../calculate-daily-macros/ProfileRepository.ts';
 import { SpoonacularClient } from './SpoonacularClient.ts';
 import { IngredientMatcher } from './IngredientMatcher.ts';
 import { RecipeRepository } from './RecipeRepository.ts';
@@ -20,7 +22,7 @@ serve(async (req: Request) => {
         const sr = await spoon.findByIngredients(data.pantryIngredients);
         const matches = IngredientMatcher.sortByBestMatch(IngredientMatcher.filterByMinMatch(IngredientMatcher.buildMatchResults(sr))).slice(0, 10);
         const details = await spoon.getRecipesBulk(matches.map(m => m.recipeId));
-        res = await RecipeRepository.upsertMany(details.map(d => {
+        const upserted = await RecipeRepository.upsertMany(details.map(d => {
           const s = sr.find(x => x.id === d.id)!;
           const nut = (n: string) => d.nutrition?.nutrients.find(x => x.name === n)?.amount || 0;
           return {
@@ -30,7 +32,28 @@ serve(async (req: Request) => {
             cookTimeMinutes: d.readyInMinutes, servings: d.servings, imageUrl: d.image
           };
         }));
-        res = res.map(r => ({ ...r, matchPercent: matches.find(m => m.recipeId.toString() === r.sourceId)?.matchPercent }));
+        const recipes = upserted.map(r => ({ ...r, matchPercent: matches.find(m => m.recipeId.toString() === r.sourceId)?.matchPercent }));
+
+        const profile = await ProfileRepository.getById(userId);
+        const builder = new HealthPromptBuilder();
+        const conditions = (profile.healthConditions ?? []) as HealthCondition[];
+        const forbidden = builder.getForbiddenIngredients(conditions);
+        const warnings = conditions.flatMap((c) => builder.getWarningsForCondition(c));
+
+        const filtered = forbidden.length === 0
+          ? recipes
+          : recipes.filter((recipe) => {
+            const names = (recipe.ingredients as Array<{ name: string }>)
+              .map((i) => i.name.toLowerCase());
+            return !forbidden.some((f) => names.some((n) => n.includes(f.toLowerCase())));
+          });
+
+        res = {
+          recipes: filtered,
+          totalFound: recipes.length,
+          filteredOut: recipes.length - filtered.length,
+          healthWarnings: warnings,
+        };
         break;
       }
       case 'favorites': res = await RecipeRepository.getFavorites(userId); break;

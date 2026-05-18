@@ -7,8 +7,16 @@ import { StripeClient } from './StripeClient.ts';
 import { SubscriptionRepository } from './SubscriptionRepository.ts';
 import { WebhookHandler } from './WebhookHandler.ts';
 
-const P_M = Deno.env.get('STRIPE_PRICE_MONTHLY') || '', P_Y = Deno.env.get('STRIPE_PRICE_YEARLY') || '';
-const A_M = Deno.env.get('STRIPE_ADDON_PRICE_MONTHLY') || '', A_Y = Deno.env.get('STRIPE_ADDON_PRICE_YEARLY') || '';
+const PRICE_MONTHLY = Deno.env.get('STRIPE_PRICE_MONTHLY');
+const PRICE_YEARLY = Deno.env.get('STRIPE_PRICE_YEARLY');
+const ADDON_PRICE_MONTHLY = Deno.env.get('STRIPE_ADDON_PRICE_MONTHLY');
+const ADDON_PRICE_YEARLY = Deno.env.get('STRIPE_ADDON_PRICE_YEARLY');
+
+if (!PRICE_MONTHLY || !PRICE_YEARLY) throw new Error('Brak konfiguracji Stripe Price IDs');
+if (!ADDON_PRICE_MONTHLY || !ADDON_PRICE_YEARLY) throw new Error('Brak konfiguracji Stripe Addon Price IDs');
+
+const P_M = PRICE_MONTHLY, P_Y = PRICE_YEARLY;
+const A_M = ADDON_PRICE_MONTHLY, A_Y = ADDON_PRICE_YEARLY;
 
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });

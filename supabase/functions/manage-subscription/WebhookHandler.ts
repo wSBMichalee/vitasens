@@ -1,5 +1,6 @@
 import { StripeClient } from './StripeClient.ts';
 import { SubscriptionRepository } from './SubscriptionRepository.ts';
+import { ExternalAPIError } from '../_shared/errorHandler.ts';
 
 export interface StripeEvent {
   id: string;
@@ -17,10 +18,17 @@ export interface WebhookResult {
 
 export class WebhookHandler {
   private stripeClient = new StripeClient();
-  private webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
+  private webhookSecret: string;
+
+  constructor() {
+    const secret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
+    if (!secret) throw new ExternalAPIError(
+      'Brak STRIPE_WEBHOOK_SECRET — webhooki Stripe są wyłączone',
+    );
+    this.webhookSecret = secret;
+  }
 
   async handle(rawBody: string, signature: string): Promise<WebhookResult> {
-    if (!this.webhookSecret) throw new Error('Brak STRIPE_WEBHOOK_SECRET.');
     
     this.stripeClient.verifyWebhookSignature(rawBody, signature, this.webhookSecret);
     const event = JSON.parse(rawBody) as StripeEvent;

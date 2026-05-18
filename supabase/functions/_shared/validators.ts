@@ -138,3 +138,56 @@ export const WebhookSchema = z.object({
   rawBody: z.string(),
   signature: z.string()
 });
+
+// --- manage-user-recipes ---
+export const CreateRecipeSchema = z.object({
+  title: z.string().min(3).max(100),
+  description: z.string().max(500).optional(),
+  cuisineType: z.string().default('other'),
+  spiceLevel: z.number().int().min(0).max(5).default(0),
+  difficultyLevel: z.enum(['easy', 'medium', 'hard']).default('medium'),
+  prepTimeMinutes: z.number().int().min(0).max(480).default(0),
+  cookTimeMinutes: z.number().int().min(0).max(480).default(0),
+  servings: z.number().int().min(1).max(20).default(2),
+  dietTags: z.array(z.string()).default([]),
+  mealType: z.enum([
+    'breakfast', 'lunch', 'dinner', 'snack', 'dessert',
+  ]).default('dinner'),
+  ingredients: z.array(z.object({
+    name: z.string().min(1),
+    amount: z.number().positive(),
+    unit: z.string().min(1),
+  })).min(1),
+  steps: z.array(z.object({
+    number: z.number().int().positive(),
+    instruction: z.string().min(5),
+  })).min(1),
+  isPublic: z.boolean().default(false),
+  photoUrl: z.string().url().optional(),
+  estimatedMacros: z.object({
+    proteinG: z.number().min(0),
+    carbsG: z.number().min(0),
+    fatG: z.number().min(0),
+    calories: z.number().min(0),
+  }),
+});
+
+// --- browse-recipes ---
+export const RecipeFiltersSchema = z.object({
+  cuisineType: z.string().optional(),
+  spiceLevel: z.number().int().min(0).max(5).optional(),
+  difficultyLevel: z.enum(['easy', 'medium', 'hard']).optional(),
+  maxPrepTime: z.number().int().positive().optional(),
+  dietTags: z.array(z.string()).optional(),
+  mealType: z.enum([
+    'breakfast', 'lunch', 'dinner', 'snack', 'dessert',
+  ]).optional(),
+  maxCalories: z.number().positive().optional(),
+  minProtein: z.number().positive().optional(),
+  searchQuery: z.string().max(100).optional(),
+  sortBy: z.enum([
+    'newest', 'most_liked', 'quickest', 'highest_protein',
+  ]).default('newest'),
+  limit: z.number().int().min(1).max(50).default(20),
+  offset: z.number().int().min(0).default(0),
+});

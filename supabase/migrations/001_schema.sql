@@ -203,9 +203,86 @@ BEGIN
   VALUES (NEW.id);
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE TRIGGER on_profile_created
 AFTER INSERT ON public.profiles
 FOR EACH ROW
 EXECUTE FUNCTION handle_new_profile();
+
+-- ============================================================
+-- extract-recipe: recipe steps & source tracking
+-- ============================================================
+
+-- Recipe Steps Table
+CREATE TABLE IF NOT EXISTS recipe_steps (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  recipe_id UUID NOT NULL REFERENCES recipes(id)
+    ON DELETE CASCADE,
+  step_number INTEGER NOT NULL,
+  instruction TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(recipe_id, step_number)
+);
+
+CREATE INDEX IF NOT EXISTS idx_recipe_steps_recipe_id
+  ON recipe_steps(recipe_id);
+
+-- Recipe Source Tracking
+ALTER TABLE recipes
+  ADD COLUMN IF NOT EXISTS source_url TEXT,
+  ADD COLUMN IF NOT EXISTS source_platform TEXT,
+  ADD COLUMN IF NOT EXISTS steps JSONB DEFAULT '[]';
+
+-- ============================================================
+-- manage-user-recipes + browse-recipes: rozszerzenie recipes
+-- ============================================================
+
+ALTER TABLE recipes
+  ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS created_by UUID
+    REFERENCES profiles(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS cuisine_type TEXT DEFAULT 'other',
+  ADD COLUMN IF NOT EXISTS spice_level INTEGER DEFAULT 0
+    CHECK (spice_level BETWEEN 0 AND 5),
+  ADD COLUMN IF NOT EXISTS difficulty_level TEXT DEFAULT 'medium'
+    CHECK (difficulty_level IN ('easy', 'medium', 'hard')),
+  ADD COLUMN IF NOT EXISTS prep_time_minutes INTEGER DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS diet_tags TEXT[] DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS meal_type TEXT DEFAULT 'dinner'
+    CHECK (meal_type IN (
+      'breakfast', 'lunch', 'dinner', 'snack', 'dessert'
+    )),
+  ADD COLUMN IF NOT EXISTS likes_count INTEGER DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS photo_url TEXT;
+
+-- Nowa tabela: recipe_likes
+CREATE TABLE IF NOT EXISTS recipe_likes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  recipe_id UUID NOT NULL
+    REFERENCES recipes(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL
+    REFERENCES profiles(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(recipe_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_recipe_likes_recipe_id
+  ON recipe_likes(recipe_id);
+CREATE INDEX IF NOT EXISTS idx_recipe_likes_user_id
+  ON recipe_likes(user_id);
+
+-- Nowa tabela: recipe_comments
+CREATE TABLE IF NOT EXISTS recipe_comments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  recipe_id UUID NOT NULL
+    REFERENCES recipes(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL
+    REFERENCES profiles(id) ON DELETE CASCADE,
+  content TEXT NOT NULL CHECK (char_length(content) <= 500),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_recipe_comments_recipe_id
+  ON recipe_comments(recipe_id);

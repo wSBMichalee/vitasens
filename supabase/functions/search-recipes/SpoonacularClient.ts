@@ -113,7 +113,7 @@ export class SpoonacularClient {
       return await response.json();
     } catch (error) {
       if (error instanceof ExternalAPIError) throw error;
-      throw new ExternalAPIError(`Spoonacular request failed: ${error.message}`);
+      throw new ExternalAPIError(`Spoonacular request failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 }

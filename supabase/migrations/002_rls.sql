@@ -307,13 +307,82 @@ USING (
   )
 );
 
-CREATE POLICY "Users can delete accessible shopping list items" 
-ON shopping_list FOR DELETE 
+CREATE POLICY "Users can delete accessible shopping list items"
+ON shopping_list FOR DELETE
 USING (
-  user_id = auth.uid() OR 
+  user_id = auth.uid() OR
   EXISTS (
-    SELECT 1 FROM family_members 
-    WHERE family_members.family_id = shopping_list.family_id 
+    SELECT 1 FROM family_members
+    WHERE family_members.family_id = shopping_list.family_id
     AND family_members.user_id = auth.uid()
   )
 );
+
+-- ============================================================
+-- extract-recipe: Recipe Steps RLS
+-- ============================================================
+
+ALTER TABLE recipe_steps ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "recipe_steps_select_all"
+  ON recipe_steps FOR SELECT
+  USING (true);
+
+CREATE POLICY "recipe_steps_insert_service"
+  ON recipe_steps FOR INSERT
+  WITH CHECK (true);
+
+CREATE POLICY "recipe_steps_delete_service"
+  ON recipe_steps FOR DELETE
+  USING (true);
+
+-- ============================================================
+-- manage-user-recipes + browse-recipes: RLS
+-- ============================================================
+
+-- recipe_likes RLS
+ALTER TABLE recipe_likes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "recipe_likes_select_all"
+  ON recipe_likes FOR SELECT USING (true);
+
+CREATE POLICY "recipe_likes_insert_own"
+  ON recipe_likes FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "recipe_likes_delete_own"
+  ON recipe_likes FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- recipe_comments RLS
+ALTER TABLE recipe_comments ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "recipe_comments_select_all"
+  ON recipe_comments FOR SELECT USING (true);
+
+CREATE POLICY "recipe_comments_insert_own"
+  ON recipe_comments FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "recipe_comments_delete_own"
+  ON recipe_comments FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- Aktualizacja recipes RLS: user-created public recipes
+DROP POLICY IF EXISTS "recipe_select_all" ON recipes;
+
+CREATE POLICY "recipes_select_public"
+  ON recipes FOR SELECT
+  USING (is_public = true OR auth.uid() = created_by);
+
+CREATE POLICY "recipes_insert_own"
+  ON recipes FOR INSERT
+  WITH CHECK (auth.uid() = created_by);
+
+CREATE POLICY "recipes_update_own"
+  ON recipes FOR UPDATE
+  USING (auth.uid() = created_by);
+
+CREATE POLICY "recipes_delete_own"
+  ON recipes FOR DELETE
+  USING (auth.uid() = created_by);

@@ -92,7 +92,7 @@ export class VisionClient {
       return visionResult;
     } catch (error) {
       if (error instanceof ExternalAPIError) throw error;
-      throw new ExternalAPIError(`Google Vision request failed: ${error.message}`);
+      throw new ExternalAPIError(`Google Vision request failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 }

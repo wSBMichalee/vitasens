@@ -119,26 +119,6 @@ export const DetectFoodSchema = z.object({
   mealDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD")
 });
 
-// --- manage-subscription ---
-export const CreateCheckoutSchema = z.object({
-  userId: z.string().uuid(),
-  plan: z.enum(['monthly', 'yearly'])
-});
-
-export const AddFamilyAddonSchema = z.object({
-  userId: z.string().uuid(),
-  plan: z.enum(['monthly', 'yearly'])
-});
-
-export const CancelSubscriptionSchema = z.object({
-  userId: z.string().uuid()
-});
-
-export const WebhookSchema = z.object({
-  rawBody: z.string(),
-  signature: z.string()
-});
-
 // --- manage-user-recipes ---
 export const CreateRecipeSchema = z.object({
   title: z.string().min(3).max(100),

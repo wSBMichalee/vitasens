@@ -286,3 +286,21 @@ CREATE TABLE IF NOT EXISTS recipe_comments (
 
 CREATE INDEX IF NOT EXISTS idx_recipe_comments_recipe_id
   ON recipe_comments(recipe_id);
+
+-- Voice logging columns
+ALTER TABLE meals
+  ADD COLUMN IF NOT EXISTS raw_voice_text TEXT,
+  ADD COLUMN IF NOT EXISTS log_source TEXT DEFAULT 'manual'
+    CHECK (log_source IN (
+      'manual', 'ai_detection', 'voice', 'barcode'
+    ));
+
+-- Barcode columns for ingredients
+ALTER TABLE ingredients
+  ADD COLUMN IF NOT EXISTS barcode TEXT,
+  ADD COLUMN IF NOT EXISTS brand TEXT;
+
+-- Index for barcode lookup
+CREATE INDEX IF NOT EXISTS idx_ingredients_barcode
+  ON ingredients(barcode)
+  WHERE barcode IS NOT NULL;

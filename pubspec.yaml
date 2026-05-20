@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   # STATE MANAGEMENT
   flutter_bloc: ^8.1.6
@@ -71,7 +73,7 @@ dependencies:
   json_annotation: ^4.9.0
 
   # NARZĘDZIA
-  intl: ^0.19.0
+  intl: ^0.20.2
   uuid: ^4.4.0
   collection: ^1.18.0
   url_launcher: ^6.3.0
@@ -81,6 +83,7 @@ dependencies:
 
   # ASSETS I FONTY
   google_fonts: ^6.2.1
+  flutter_native_splash: ^2.4.0
   cupertino_icons: ^1.0.8
 
 dev_dependencies:
@@ -117,3 +120,10 @@ flutter:
           weight: 600
         - asset: assets/fonts/Inter-Bold.ttf
           weight: 700
+
+flutter_native_splash:
+  color: "#F5F5F5"
+  image: ~
+  color_dark: "#F5F5F5"
+  android: true
+  ios: true

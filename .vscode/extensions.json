@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "dart-code.flutter",
+    "dart-code.dart-code",
+    "felixangelov.bloc",
+    "denoland.vscode-deno",
+    "supabase.supabase",
+    "anthropic.claude-code",
+    "saoudrizwan.claude-dev",
+    "RooVeterinaryInc.roo-cline"
+  ]
+}

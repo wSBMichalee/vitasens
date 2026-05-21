@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -70,7 +71,7 @@ class _TransformationPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+      padding: EdgeInsets.symmetric(horizontal: 24.0.w, vertical: 32.0.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -78,7 +79,7 @@ class _TransformationPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('The Transformation', style: AppTextStyles.headingXL),
-              const SizedBox(height: 8),
+              SizedBox(height: 8.h),
               Text(
                 'Experience the difference in your kitchen.',
                 style: AppTextStyles.bodyMedium,
@@ -86,20 +87,20 @@ class _TransformationPage extends StatelessWidget {
             ],
           ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms),
           
-          const SizedBox(height: 32),
+          SizedBox(height: 32.h),
 
           // BEFORE Karta
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(16.0.r),
               child: Column(
                 children: [
                   Container(
-                    height: 140,
+                    height: 140.h,
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: AppColors.border,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(12.r),
                     ),
                     child: Stack(
                       children: [
@@ -107,10 +108,10 @@ class _TransformationPage extends StatelessWidget {
                           top: 12,
                           left: 12,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
                             decoration: BoxDecoration(
                               color: AppColors.error,
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(20.r),
                             ),
                             child: Text(
                               'BEFORE',
@@ -121,7 +122,7 @@ class _TransformationPage extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24.h),
                   _buildListItem(Icons.sentiment_dissatisfied, 'Staring at your fridge', AppColors.error),
                   _buildListItem(Icons.help_outline, 'Eating random meals', AppColors.error),
                   _buildListItem(Icons.battery_alert, 'Feeling tired or unsure', AppColors.error),
@@ -130,20 +131,20 @@ class _TransformationPage extends StatelessWidget {
             ),
           ).animate(delay: 100.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms),
 
-          const SizedBox(height: 24),
+          SizedBox(height: 24.h),
 
           // AFTER Karta
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(16.0.r),
               child: Column(
                 children: [
                   Container(
-                    height: 140,
+                    height: 140.h,
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: AppColors.primaryLight,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(12.r),
                     ),
                     child: Stack(
                       children: [
@@ -151,10 +152,10 @@ class _TransformationPage extends StatelessWidget {
                           top: 12,
                           left: 12,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
                             decoration: BoxDecoration(
                               color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(20.r),
                             ),
                             child: Text(
                               'AFTER',
@@ -166,18 +167,18 @@ class _TransformationPage extends StatelessWidget {
                           top: 12,
                           right: 12,
                           child: Container(
-                            padding: const EdgeInsets.all(6),
+                            padding: EdgeInsets.all(6.r),
                             decoration: const BoxDecoration(
                               color: AppColors.backgroundWhite,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.auto_awesome, color: AppColors.primary, size: 16),
+                            child: Icon(Icons.auto_awesome, color: AppColors.primary, size: 16.r),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24.h),
                   _buildListItem(Icons.calendar_today, 'Clear meal plan', AppColors.primary),
                   _buildListItem(Icons.restaurant, 'Delicious, healthy food', AppColors.primary),
                   _buildListItem(Icons.bolt, 'Full of energy all day', AppColors.primary),
@@ -186,7 +187,7 @@ class _TransformationPage extends StatelessWidget {
             ),
           ).animate(delay: 200.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms),
 
-          const SizedBox(height: 32),
+          SizedBox(height: 32.h),
 
           ElevatedButton(
             onPressed: onNext,
@@ -202,8 +203,8 @@ class _TransformationPage extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 16.0),
       child: Row(
         children: [
-          Icon(icon, color: iconColor, size: 24),
-          const SizedBox(width: 16),
+          Icon(icon, color: iconColor, size: 24.r),
+          SizedBox(width: 16.w),
           Expanded(
             child: Text(text, style: AppTextStyles.bodyLarge),
           ),
@@ -223,20 +224,20 @@ class _ValueExplanationPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
+      padding: EdgeInsets.all(24.0.r),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           GestureDetector(
             onTap: onBack,
-            child: const Icon(Icons.chevron_left, size: 28),
+            child: Icon(Icons.chevron_left, size: 28.r),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
           Container(
-            height: 200,
+            height: 200.h,
             decoration: BoxDecoration(
-              color: const Color(0xFFE5E7EB),
-              borderRadius: BorderRadius.circular(16),
+              color: AppColors.border,
+              borderRadius: BorderRadius.circular(16.r),
             ),
           ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms),
           
@@ -245,54 +246,54 @@ class _ValueExplanationPage extends StatelessWidget {
             child: Text(
               'Why VitaSense?',
               style: TextStyle(
-                fontSize: 28,
+                fontSize: 28.sp,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF111827),
+                color: AppColors.textPrimary,
                 fontFamily: AppTextStyles.headingXL.fontFamily,
               ),
             ),
           ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms),
           
-          const SizedBox(height: 24),
+          SizedBox(height: 24.h),
 
           _buildFeatureCard(
             icon: Icons.kitchen,
-            iconColor: const Color(0xFF22C55E),
-            iconBgColor: const Color(0xFFDCFCE7),
+            iconColor: AppColors.primary,
+            iconBgColor: AppColors.primaryLight,
             title: 'Use what you already have',
             desc: 'We turn your fridge into ready-to-cook meals',
           ).animate(delay: 100.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms),
           
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
 
           _buildFeatureCard(
             icon: Icons.monitor_heart,
-            iconColor: const Color(0xFF3B82F6),
-            iconBgColor: const Color(0xFFEFF6FF),
+            iconColor: AppColors.secondary,
+            iconBgColor: AppColors.secondaryLight,
             title: 'Eat for your health',
             desc: 'Meals tailored to your condition and goals',
           ).animate(delay: 200.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms),
           
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
 
           _buildFeatureCard(
             icon: Icons.check_circle_outline,
-            iconColor: const Color(0xFF6B7280),
+            iconColor: AppColors.textSecondary,
             iconBgColor: const Color(0xFFF3F4F6),
             title: 'No more guessing',
             desc: 'Know exactly what to cook every day',
           ).animate(delay: 300.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms),
           
-          const SizedBox(height: 32),
+          SizedBox(height: 32.h),
 
           SizedBox(
-            height: 56,
+            height: 56.h,
             width: double.infinity,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1F2937),
+                backgroundColor: AppColors.backgroundDark,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(16.r),
                 ),
               ),
               onPressed: onNext,
@@ -312,24 +313,24 @@ class _ValueExplanationPage extends StatelessWidget {
     required String desc,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16.0),
+      padding: EdgeInsets.all(16.0.r),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(16.r),
       ),
       child: Row(
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: 48.w,
+            height: 48.h,
             decoration: BoxDecoration(
               color: iconBgColor,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(12.r),
             ),
-            child: Icon(icon, color: iconColor, size: 24),
+            child: Icon(icon, color: iconColor, size: 24.r),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: 16.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -337,9 +338,9 @@ class _ValueExplanationPage extends StatelessWidget {
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 16.sp,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF111827),
+                    color: AppColors.textPrimary,
                     fontFamily: AppTextStyles.bodyLarge.fontFamily,
                   ),
                 ),
@@ -347,8 +348,8 @@ class _ValueExplanationPage extends StatelessWidget {
                 Text(
                   desc,
                   style: TextStyle(
-                    fontSize: 14,
-                    color: const Color(0xFF6B7280),
+                    fontSize: 14.sp,
+                    color: AppColors.textSecondary,
                     fontFamily: AppTextStyles.bodyMedium.fontFamily,
                   ),
                 ),
@@ -371,13 +372,13 @@ class _SocialProofPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: EdgeInsets.all(24.0.r),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           GestureDetector(
             onTap: onBack,
-            child: const Icon(Icons.chevron_left, size: 28),
+            child: Icon(Icons.chevron_left, size: 28.r),
           ),
           
           Expanded(
@@ -388,13 +389,13 @@ class _SocialProofPage extends StatelessWidget {
                   margin: const EdgeInsets.only(top: 24),
                   child: Center(
                     child: SizedBox(
-                      width: 40 + (3 * 28),
-                      height: 40,
+                      width: 40.w + (3 * 28),
+                      height: 40.h,
                       child: Stack(
                         children: [
-                          Positioned(left: 0, child: _buildAvatarColor(const Color(0xFF22C55E))),
-                          Positioned(left: 28, child: _buildAvatarColor(const Color(0xFF3B82F6))),
-                          Positioned(left: 56, child: _buildAvatarColor(const Color(0xFFF59E0B))),
+                          Positioned(left: 0, child: _buildAvatarColor(AppColors.primary)),
+                          Positioned(left: 28, child: _buildAvatarColor(AppColors.secondary)),
+                          Positioned(left: 56, child: _buildAvatarColor(AppColors.warning)),
                           Positioned(left: 84, child: _buildCountAvatar('+12k')),
                         ],
                       ),
@@ -407,9 +408,9 @@ class _SocialProofPage extends StatelessWidget {
                   child: Text(
                     '50,000+',
                     style: TextStyle(
-                      fontSize: 48,
+                      fontSize: 48.sp,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF3B82F6),
+                      color: AppColors.secondary,
                       fontFamily: AppTextStyles.numberXL.fontFamily,
                     ),
                     textAlign: TextAlign.center,
@@ -421,9 +422,9 @@ class _SocialProofPage extends StatelessWidget {
                   child: Text(
                     'Join thousands of people eating smarter',
                     style: TextStyle(
-                      fontSize: 24,
+                      fontSize: 24.sp,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF111827),
+                      color: AppColors.textPrimary,
                       fontFamily: AppTextStyles.headingLarge.fontFamily,
                     ),
                     textAlign: TextAlign.center,
@@ -431,12 +432,12 @@ class _SocialProofPage extends StatelessWidget {
                 ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms),
 
                 Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
                   child: Text(
                     'People are already using VitaSense to cook\nbetter meals from what they have',
                     style: TextStyle(
-                      fontSize: 14,
-                      color: const Color(0xFF6B7280),
+                      fontSize: 14.sp,
+                      color: AppColors.textSecondary,
                       fontFamily: AppTextStyles.bodyMedium.fontFamily,
                     ),
                     textAlign: TextAlign.center,
@@ -445,34 +446,34 @@ class _SocialProofPage extends StatelessWidget {
 
                 Container(
                   margin: const EdgeInsets.only(top: 24),
-                  padding: const EdgeInsets.all(20),
+                  padding: EdgeInsets.all(20.r),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    border: Border.all(color: const Color(0xFFE5E7EB)),
-                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.border),
+                    borderRadius: BorderRadius.circular(16.r),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        children: List.generate(5, (index) => const Icon(Icons.star, color: Color(0xFFF59E0B), size: 16)),
+                        children: List.generate(5, (index) => Icon(Icons.star, color: AppColors.warning, size: 16.r)),
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12.h),
                       Text(
                         '"I stopped wasting groceries and started\nfeeling so much more energetic. VitaSense\nliterally told me what to do with my\nleftover kale and salmon."',
                         style: TextStyle(
-                          fontSize: 14,
-                          color: const Color(0xFF111827),
+                          fontSize: 14.sp,
+                          color: AppColors.textPrimary,
                           fontStyle: FontStyle.italic,
                           fontFamily: AppTextStyles.bodyMedium.fontFamily,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8.h),
                       Text(
                         '— SARAH M., LONDON',
                         style: TextStyle(
-                          fontSize: 11,
-                          color: const Color(0xFF6B7280),
+                          fontSize: 11.sp,
+                          color: AppColors.textSecondary,
                           letterSpacing: 0.5,
                           fontFamily: AppTextStyles.caption.fontFamily,
                         ),
@@ -487,19 +488,19 @@ class _SocialProofPage extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        width: 8,
-                        height: 8,
+                        width: 8.w,
+                        height: 8.h,
                         decoration: const BoxDecoration(
-                          color: Color(0xFFEF4444),
+                          color: AppColors.error,
                           shape: BoxShape.circle,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8.w),
                       Text(
                         'LIMITED-TIME ACCESS TO FULL PLAN',
                         style: TextStyle(
-                          fontSize: 11,
-                          color: const Color(0xFF6B7280),
+                          fontSize: 11.sp,
+                          color: AppColors.textSecondary,
                           letterSpacing: 1.0,
                           fontFamily: AppTextStyles.caption.fontFamily,
                         ),
@@ -512,13 +513,13 @@ class _SocialProofPage extends StatelessWidget {
           ),
           
           SizedBox(
-            height: 56,
+            height: 56.h,
             width: double.infinity,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1F2937),
+                backgroundColor: AppColors.backgroundDark,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(16.r),
                 ),
               ),
               onPressed: onNext,
@@ -532,31 +533,31 @@ class _SocialProofPage extends StatelessWidget {
 
   Widget _buildAvatarColor(Color color) {
     return Container(
-      width: 40,
-      height: 40,
+      width: 40.w,
+      height: 40.h,
       decoration: BoxDecoration(
         color: color,
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
+        border: Border.all(color: Colors.white, width: 2.w),
       ),
     );
   }
 
   Widget _buildCountAvatar(String text) {
     return Container(
-      width: 40,
-      height: 40,
+      width: 40.w,
+      height: 40.h,
       decoration: BoxDecoration(
-        color: const Color(0xFF3B82F6),
+        color: AppColors.secondary,
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
+        border: Border.all(color: Colors.white, width: 2.w),
       ),
       alignment: Alignment.center,
       child: Text(
         text,
         style: TextStyle(
           color: Colors.white,
-          fontSize: 12,
+          fontSize: 12.sp,
           fontWeight: FontWeight.w600,
           fontFamily: AppTextStyles.labelSmall.fontFamily,
         ),
@@ -575,14 +576,14 @@ class _ReinforcementPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: EdgeInsets.all(24.0.r),
       child: Column(
         children: [
           Align(
             alignment: Alignment.centerLeft,
             child: GestureDetector(
               onTap: onBack,
-              child: const Icon(Icons.chevron_left, size: 28),
+              child: Icon(Icons.chevron_left, size: 28.r),
             ),
           ),
           
@@ -590,59 +591,59 @@ class _ReinforcementPage extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 48),
+                SizedBox(height: 48.h),
 
                 Container(
-                  width: 80,
-                  height: 80,
+                  width: 80.w,
+                  height: 80.h,
                   decoration: const BoxDecoration(
-                    color: Color(0xFFDCFCE7),
+                    color: AppColors.primaryLight,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.celebration, color: Color(0xFF22C55E), size: 40),
+                  child: Icon(Icons.celebration, color: AppColors.primary, size: 40.r),
                 ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms),
 
-                const SizedBox(height: 24),
+                SizedBox(height: 24.h),
 
                 Text(
                   "We've got this!",
                   style: TextStyle(
-                    fontSize: 28,
+                    fontSize: 28.sp,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF111827),
+                    color: AppColors.textPrimary,
                     fontFamily: AppTextStyles.headingXL.fontFamily,
                   ),
                   textAlign: TextAlign.center,
                 ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms),
 
-                const SizedBox(height: 16),
+                SizedBox(height: 16.h),
 
                 Text(
                   "Based on your pantry and weight goals,\nwe've unlocked 24 new meal options that\nwill keep you on track without buying\na single new item.",
                   style: TextStyle(
-                    fontSize: 16,
-                    color: const Color(0xFF6B7280),
+                    fontSize: 16.sp,
+                    color: AppColors.textSecondary,
                     height: 1.5,
                     fontFamily: AppTextStyles.bodyLarge.fontFamily,
                   ),
                   textAlign: TextAlign.center,
                 ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms),
 
-                const SizedBox(height: 32),
+                SizedBox(height: 32.h),
 
                 Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: EdgeInsets.all(20.r),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    border: Border.all(color: const Color(0xFFE5E7EB)),
-                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.border),
+                    borderRadius: BorderRadius.circular(16.r),
                   ),
                   child: Column(
                     children: [
-                      _infoRow("Goal", "Weight Management", valueColor: const Color(0xFF3B82F6)),
-                      const Divider(color: Color(0xFFE5E7EB), height: 20),
+                      _infoRow("Goal", "Weight Management", valueColor: AppColors.secondary),
+                      Divider(color: AppColors.border, height: 20.h),
                       _infoRow("Ingredients found", "12 Items"),
-                      const Divider(color: Color(0xFFE5E7EB), height: 20),
+                      Divider(color: AppColors.border, height: 20.h),
                       _infoRow("Personalized meals", "24 Options"),
                     ],
                   ),
@@ -652,14 +653,14 @@ class _ReinforcementPage extends StatelessWidget {
           ),
 
           SizedBox(
-            height: 56,
+            height: 56.h,
             width: double.infinity,
             child: FilledButton(
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF22C55E),
+                backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(16.r),
                 ),
               ),
               onPressed: () => context.go(AppRoutes.paywall),
@@ -667,7 +668,7 @@ class _ReinforcementPage extends StatelessWidget {
             ),
           ).animate(delay: 200.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms),
 
-          const SizedBox(height: 16),
+          SizedBox(height: 16.h),
         ],
       ),
     );
@@ -679,8 +680,8 @@ class _ReinforcementPage extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            fontSize: 14,
-            color: const Color(0xFF6B7280),
+            fontSize: 14.sp,
+            color: AppColors.textSecondary,
             fontFamily: AppTextStyles.bodyMedium.fontFamily,
           ),
         ),
@@ -688,9 +689,9 @@ class _ReinforcementPage extends StatelessWidget {
         Text(
           value,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: 14.sp,
             fontWeight: FontWeight.w600,
-            color: valueColor ?? const Color(0xFF111827),
+            color: valueColor ?? AppColors.textPrimary,
             fontFamily: AppTextStyles.labelMedium.fontFamily,
           ),
         ),

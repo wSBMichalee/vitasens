@@ -6,6 +6,16 @@ import 'package:vitasense/core/theme/app_text_styles.dart';
 
 import 'package:vitasense/features/auth/presentation/screens/splash_screen.dart';
 import 'package:vitasense/features/auth/presentation/screens/onboarding_screen.dart';
+import 'package:vitasense/features/subscription/presentation/screens/paywall_screen.dart';
+import 'package:vitasense/features/subscription/presentation/screens/paywall_discount_screen.dart';
+import 'package:vitasense/features/subscription/presentation/screens/success_purchase_screen.dart';
+import 'package:vitasense/features/macros/presentation/screens/home_screen.dart';
+import 'package:vitasense/features/pantry/presentation/screens/pantry_screen.dart';
+import 'package:vitasense/features/pantry/presentation/screens/add_ingredient_screen.dart';
+import 'package:vitasense/features/detect/presentation/screens/scanning_screen.dart';
+import 'package:vitasense/features/recipes/presentation/screens/ai_meals_screen.dart';
+import 'package:vitasense/features/recipes/presentation/screens/recipe_detail_screen.dart';
+import 'package:vitasense/features/macros/presentation/screens/progress_screen.dart';
 
 // ─── STAŁE NAZWY TRAS ─────────────────────────────────────────────────────────
 class AppRoutes {
@@ -116,21 +126,21 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.paywall,
       pageBuilder: (context, state) => _slideUpPage(
         state: state,
-        child: const _PlaceholderScreen(name: 'Paywall — Standard'),
+        child: const PaywallScreen(),
       ),
     ),
     GoRoute(
       path: AppRoutes.paywallDiscount,
       pageBuilder: (context, state) => _slideUpPage(
         state: state,
-        child: const _PlaceholderScreen(name: 'Paywall — 50% Discount'),
+        child: const PaywallDiscountScreen(),
       ),
     ),
     GoRoute(
       path: AppRoutes.successPurchase,
       pageBuilder: (context, state) => _slideUpPage(
         state: state,
-        child: const _PlaceholderScreen(name: 'Purchase Success 🎉'),
+        child: const SuccessPurchaseScreen(),
       ),
     ),
 
@@ -144,28 +154,35 @@ final GoRouter appRouter = GoRouter(
           path: AppRoutes.home,
           pageBuilder: (context, state) => _fadePage(
             state: state,
-            child: const _PlaceholderScreen(name: 'Home 🏠'),
+            child: const HomeScreen(),
           ),
         ),
         GoRoute(
           path: AppRoutes.pantry,
           pageBuilder: (context, state) => _fadePage(
             state: state,
-            child: const _PlaceholderScreen(name: 'Pantry 🥗'),
+            child: const PantryScreen(),
           ),
         ),
         GoRoute(
           path: AppRoutes.aiMeals,
           pageBuilder: (context, state) => _fadePage(
             state: state,
-            child: const _PlaceholderScreen(name: 'AI Meals ✨'),
+            child: AiMealsScreen(
+              ingredients: state.extra is Map<String, dynamic>
+                  ? (state.extra as Map<String, dynamic>)['ingredients']
+                      as List<String>?
+                  : state.extra is List<String>
+                      ? state.extra as List<String>
+                      : null,
+            ),
           ),
         ),
         GoRoute(
           path: AppRoutes.progress,
           pageBuilder: (context, state) => _fadePage(
             state: state,
-            child: const _PlaceholderScreen(name: 'Progress 📊'),
+            child: const ProgressScreen(),
           ),
         ),
         GoRoute(
@@ -183,24 +200,25 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.addIngredient,
       pageBuilder: (context, state) => _slideUpPage(
         state: state,
-        child: const _PlaceholderScreen(name: 'Add Ingredient'),
+        child: const AddIngredientScreen(),
       ),
     ),
     GoRoute(
       path: AppRoutes.scanning,
       pageBuilder: (context, state) => _slideUpPage(
         state: state,
-        child: const _PlaceholderScreen(name: 'Scanning 📷'),
+        child: const ScanningScreen(),
       ),
     ),
     GoRoute(
       path: AppRoutes.recipeDetails,
-      pageBuilder: (context, state) => _fadePage(
-        state: state,
-        child: _PlaceholderScreen(
-          name: 'Recipe Details — ${state.pathParameters['id']}',
-        ),
-      ),
+      pageBuilder: (context, state) {
+        final recipe = state.extra as Map<String, dynamic>? ?? {};
+        return _fadePage(
+          state: state,
+          child: RecipeDetailScreen(recipe: recipe),
+        );
+      },
     ),
     GoRoute(
       path: AppRoutes.progressHistory,
@@ -389,7 +407,6 @@ class _NavItem {
 }
 
 // ─── PLACEHOLDER SCREENS ──────────────────────────────────────────────────────
-// Zostaną zastąpione prawdziwymi ekranami w Krokach 2-5
 class _PlaceholderScreen extends StatelessWidget {
   const _PlaceholderScreen({required this.name});
 

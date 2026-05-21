@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vitasense/core/theme/app_colors.dart';
 
 class PaywallScreen extends StatefulWidget {
   const PaywallScreen({super.key});
@@ -17,7 +19,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
           // 1. Hero image (góra, fullWidth, height 280)
@@ -25,7 +27,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             top: 0,
             left: 0,
             right: 0,
-            height: 280,
+            height: 280.h,
             child: Stack(
               fit: StackFit.expand,
               children: [
@@ -37,7 +39,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
-                        Color(0xFFF5F5F5),
+                        AppColors.background,
                       ],
                     ),
                   ),
@@ -61,44 +63,44 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   Text(
                     "Unlock Your Kitchen's Full Potential",
                     style: TextStyle(
-                      fontSize: 26,
+                      fontSize: 26.sp,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF111827),
+                      color: AppColors.textPrimary,
                       fontFamily: AppTextStyles.headingXL.fontFamily,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8.h),
                   Text(
                     "Get personalized meal ideas for every\nhealth goal and every ingredient in your pantry.",
                     style: TextStyle(
-                      fontSize: 14,
-                      color: const Color(0xFF6B7280),
+                      fontSize: 14.sp,
+                      color: AppColors.textSecondary,
                       height: 1.5,
                       fontFamily: AppTextStyles.bodyMedium.fontFamily,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24.h),
                   
                   _buildFeatureRow("Unlimited Meal Matching"),
                   _buildFeatureRow("Advanced Health Goal Analytics"),
                   _buildFeatureRow("Priority Support & New Recipes Daily"),
                   
-                  const SizedBox(height: 28),
+                  SizedBox(height: 28.h),
 
                   // PLAN SELECTOR - Yearly plan
                   GestureDetector(
                     onTap: () => setState(() => _yearlySelected = true),
                     child: Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: EdgeInsets.all(16.r),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         border: Border.all(
-                          color: _yearlySelected ? const Color(0xFF22C55E) : const Color(0xFFE5E7EB),
+                          color: _yearlySelected ? AppColors.primary : AppColors.border,
                           width: _yearlySelected ? 2 : 1,
                         ),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(16.r),
                       ),
                       child: Row(
                         children: [
@@ -108,18 +110,18 @@ class _PaywallScreenState extends State<PaywallScreen> {
                               Text(
                                 "Yearly",
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 16.sp,
                                   fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF111827),
+                                  color: AppColors.textPrimary,
                                   fontFamily: AppTextStyles.labelLarge.fontFamily,
                                 ),
                               ),
                               Text(
                                 "BEST VALUE",
                                 style: TextStyle(
-                                  fontSize: 11,
+                                  fontSize: 11.sp,
                                   fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF22C55E),
+                                  color: AppColors.primary,
                                   letterSpacing: 1.0,
                                   fontFamily: AppTextStyles.captionBold.fontFamily,
                                 ),
@@ -133,17 +135,17 @@ class _PaywallScreenState extends State<PaywallScreen> {
                               Text(
                                 "\$4.99/mo",
                                 style: TextStyle(
-                                  fontSize: 20,
+                                  fontSize: 20.sp,
                                   fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF111827),
+                                  color: AppColors.textPrimary,
                                   fontFamily: AppTextStyles.numberMedium.fontFamily,
                                 ),
                               ),
                               Text(
                                 "Billed annually",
                                 style: TextStyle(
-                                  fontSize: 12,
-                                  color: const Color(0xFF6B7280),
+                                  fontSize: 12.sp,
+                                  color: AppColors.textSecondary,
                                   fontFamily: AppTextStyles.bodySmall.fontFamily,
                                 ),
                               ),
@@ -154,29 +156,29 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     ),
                   ).animate(delay: 100.ms).fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0, duration: 400.ms),
 
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12.h),
 
                   // PLAN SELECTOR - Monthly plan
                   GestureDetector(
                     onTap: () => setState(() => _yearlySelected = false),
                     child: Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: EdgeInsets.all(16.r),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         border: Border.all(
-                          color: !_yearlySelected ? const Color(0xFF22C55E) : const Color(0xFFE5E7EB),
+                          color: !_yearlySelected ? AppColors.primary : AppColors.border,
                           width: !_yearlySelected ? 2 : 1,
                         ),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(16.r),
                       ),
                       child: Row(
                         children: [
                           Text(
                             "Monthly",
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 16.sp,
                               fontWeight: FontWeight.w600,
-                              color: !_yearlySelected ? const Color(0xFF111827) : const Color(0xFF6B7280),
+                              color: !_yearlySelected ? AppColors.textPrimary : AppColors.textSecondary,
                               fontFamily: AppTextStyles.labelLarge.fontFamily,
                             ),
                           ),
@@ -184,9 +186,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
                           Text(
                             "\$9.99/mo",
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 16.sp,
                               fontWeight: FontWeight.w600,
-                              color: !_yearlySelected ? const Color(0xFF111827) : const Color(0xFF6B7280),
+                              color: !_yearlySelected ? AppColors.textPrimary : AppColors.textSecondary,
                               fontFamily: AppTextStyles.labelLarge.fontFamily,
                             ),
                           ),
@@ -195,24 +197,24 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     ),
                   ).animate(delay: 200.ms).fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0, duration: 400.ms),
 
-                  const SizedBox(height: 28),
+                  SizedBox(height: 28.h),
 
                   // CTA Button
                   SizedBox(
                     width: double.infinity,
-                    height: 56,
+                    height: 56.h,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1F2937),
+                        backgroundColor: AppColors.backgroundDark,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(16.r),
                         ),
                       ),
                       onPressed: () => context.go(AppRoutes.successPurchase),
                       child: Text(
                         "Try Free for 7 Days",
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 16.sp,
                           fontWeight: FontWeight.w600,
                           color: Colors.white,
                           fontFamily: AppTextStyles.labelLarge.fontFamily,
@@ -221,13 +223,13 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12.h),
 
                   Text(
                     "NO COMMITMENT. CANCEL ANYTIME.",
                     style: TextStyle(
-                      fontSize: 11,
-                      color: const Color(0xFF9CA3AF),
+                      fontSize: 11.sp,
+                      color: AppColors.textMuted,
                       letterSpacing: 0.5,
                       fontFamily: AppTextStyles.caption.fontFamily,
                     ),
@@ -243,7 +245,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             child: Align(
               alignment: Alignment.topRight,
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(16.0.r),
                 child: GestureDetector(
                   onTap: () {
                     if (context.canPop()) {
@@ -253,23 +255,23 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     }
                   },
                   child: Container(
-                    width: 36,
-                    height: 36,
+                    width: 36.w,
+                    height: 36.h,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
                       ],
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.close,
-                      color: Color(0xFF111827),
-                      size: 18,
+                      color: AppColors.textPrimary,
+                      size: 18.r,
                     ),
                   ),
                 ),
@@ -286,14 +288,14 @@ class _PaywallScreenState extends State<PaywallScreen> {
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Row(
         children: [
-          const Icon(Icons.check_circle_rounded, color: Color(0xFF22C55E), size: 20),
-          const SizedBox(width: 12),
+          Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 20.r),
+          SizedBox(width: 12.w),
           Expanded(
             child: Text(
               feature,
               style: TextStyle(
-                fontSize: 15,
-                color: const Color(0xFF111827),
+                fontSize: 15.sp,
+                color: AppColors.textPrimary,
                 fontFamily: AppTextStyles.bodyLarge.fontFamily,
               ),
             ),

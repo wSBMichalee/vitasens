@@ -1,1 +1,38 @@
-// detect_state.dart — DetectState sealed: DetectInitial, CameraReady, Analyzing, DetectionResult, Confirmed
+import 'package:equatable/equatable.dart';
+
+abstract class DetectState extends Equatable {
+  const DetectState();
+
+  @override
+  List<Object?> get props => [];
+}
+
+class DetectInitial extends DetectState {
+  const DetectInitial();
+}
+
+class DetectCapturing extends DetectState {
+  const DetectCapturing();
+}
+
+class DetectProcessing extends DetectState {
+  const DetectProcessing();
+}
+
+class DetectSuccess extends DetectState {
+  final Map<String, dynamic> result;
+
+  const DetectSuccess(this.result);
+
+  @override
+  List<Object?> get props => [result];
+}
+
+class DetectError extends DetectState {
+  final String message;
+
+  const DetectError(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}

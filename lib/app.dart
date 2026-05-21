@@ -4,6 +4,14 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_theme.dart';
+import 'package:vitasense/features/detect/bloc/detect_bloc.dart';
+import 'package:vitasense/features/detect/data/detect_repository.dart';
+import 'package:vitasense/features/macros/bloc/macros_bloc.dart';
+import 'package:vitasense/features/macros/data/macros_repository.dart';
+import 'package:vitasense/features/pantry/bloc/pantry_bloc.dart';
+import 'package:vitasense/features/pantry/data/pantry_repository.dart';
+import 'package:vitasense/features/recipes/bloc/recipes_bloc.dart';
+import 'package:vitasense/features/recipes/data/recipes_repository.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -17,13 +25,26 @@ class MyApp extends StatelessWidget {
       builder: (context, child) {
         return MultiBlocProvider(
           providers: [
-            // BLoC-i będą odkomentowywane w miarę implementacji kolejnych modułów
-            // BlocProvider<AuthBloc>(create: (context) => AuthBloc()),
-            // BlocProvider<PantryBloc>(create: (context) => PantryBloc()),
-            // BlocProvider<ShoppingBloc>(create: (context) => ShoppingBloc()),
-            // BlocProvider<MacrosBloc>(create: (context) => MacrosBloc()),
-            // BlocProvider<SubscriptionBloc>(create: (context) => SubscriptionBloc()),
-            BlocProvider<DummyBloc>(create: (context) => DummyBloc()),
+            BlocProvider<PantryBloc>(
+              create: (context) => PantryBloc(
+                repository: PantryRepository(),
+              ),
+            ),
+            BlocProvider<RecipesBloc>(
+              create: (context) => RecipesBloc(
+                repository: RecipesRepository(),
+              ),
+            ),
+            BlocProvider<MacrosBloc>(
+              create: (context) => MacrosBloc(
+                repository: MacrosRepository(),
+              ),
+            ),
+            BlocProvider<DetectBloc>(
+              create: (context) => DetectBloc(
+                repository: DetectRepository(),
+              ),
+            ),
           ],
           child: const _MaterialApp(),
         );
@@ -62,9 +83,4 @@ class _MaterialApp extends StatelessWidget {
       ],
     );
   }
-}
-
-// Tymczasowy DummyBloc zapewniający kompilację w fazie CORE
-class DummyBloc extends Cubit<int> {
-  DummyBloc() : super(0);
 }

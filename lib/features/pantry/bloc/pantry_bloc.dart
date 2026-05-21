@@ -1,1 +1,92 @@
-// pantry_bloc.dart — PantryBloc: ładowanie składników, dodawanie, edycja, usuwanie, alert wygasających
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:vitasense/features/pantry/bloc/pantry_event.dart';
+import 'package:vitasense/features/pantry/bloc/pantry_state.dart';
+import 'package:vitasense/features/pantry/data/pantry_repository.dart';
+
+class PantryBloc extends Bloc<PantryEvent, PantryState> {
+  final PantryRepository repository;
+
+  PantryBloc({required this.repository}) : super(const PantryInitial()) {
+    on<LoadPantry>(_onLoadPantry);
+    on<RefreshPantry>(_onRefreshPantry);
+    on<DeleteIngredient>(_onDeleteIngredient);
+    on<AddIngredient>(_onAddIngredient);
+  }
+
+  Future<void> _onLoadPantry(
+    LoadPantry event,
+    Emitter<PantryState> emit,
+  ) async {
+    emit(const PantryLoading());
+    try {
+      final ingredients = await repository.getIngredients();
+      final expiring = await repository.getExpiring(days: 3);
+      emit(PantryLoaded(
+        ingredients: ingredients,
+        expiringSoon: expiring,
+      ));
+    } catch (e) {
+      emit(PantryError(e.toString()));
+    }
+  }
+
+  Future<void> _onRefreshPantry(
+    RefreshPantry event,
+    Emitter<PantryState> emit,
+  ) async {
+    if (state is! PantryLoaded) {
+      emit(const PantryLoading());
+    }
+    try {
+      final ingredients = await repository.getIngredients();
+      final expiring = await repository.getExpiring(days: 3);
+      
+      String filter = 'all';
+      if (state is PantryLoaded) {
+        filter = (state as PantryLoaded).selectedFilter;
+      }
+      
+      emit(PantryLoaded(
+        ingredients: ingredients,
+        expiringSoon: expiring,
+        selectedFilter: filter,
+      ));
+    } catch (e) {
+      emit(PantryError(e.toString()));
+    }
+  }
+
+  Future<void> _onDeleteIngredient(
+    DeleteIngredient event,
+    Emitter<PantryState> emit,
+  ) async {
+    try {
+      await repository.deleteIngredient(event.id);
+      add(const RefreshPantry());
+    } catch (e) {
+      // In case of error we can just refresh to ensure state is synced
+      add(const RefreshPantry());
+    }
+  }
+
+  Future<void> _onAddIngredient(
+    AddIngredient event,
+    Emitter<PantryState> emit,
+  ) async {
+    emit(const PantryAddingIngredient());
+    try {
+      await repository.addIngredient(
+        pantryId: 'default', // Temporary default
+        name: event.name,
+        quantity: event.quantity,
+        unit: event.unit,
+        category: event.category,
+        expiryDate: event.expiryDate,
+      );
+      emit(const PantryIngredientAdded());
+      add(const RefreshPantry());
+    } catch (e) {
+      emit(PantryError(e.toString()));
+    }
+  }
+}

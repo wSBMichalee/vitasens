@@ -108,18 +108,7 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/animations/
-    - assets/fonts/
 
-  fonts:
-    - family: Inter
-      fonts:
-        - asset: assets/fonts/Inter-Regular.ttf
-        - asset: assets/fonts/Inter-Medium.ttf
-          weight: 500
-        - asset: assets/fonts/Inter-SemiBold.ttf
-          weight: 600
-        - asset: assets/fonts/Inter-Bold.ttf
-          weight: 700
 
 flutter_native_splash:
   color: "#F5F5F5"

@@ -107,7 +107,10 @@ class _ScanningViewState extends State<_ScanningView> {
             context.go(AppRoutes.aiMeals, extra: state.result);
           } else if (state is DetectError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: AppColors.error,
+              ),
             );
           }
         },

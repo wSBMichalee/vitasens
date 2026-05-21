@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
 import 'package:vitasense/features/macros/bloc/macros_bloc.dart';
@@ -44,16 +45,26 @@ class _ProgressView extends StatelessWidget {
               return _buildShimmer();
             }
             if (state is MacrosError) {
+              final today = DateTime.now().toIso8601String().split('T')[0];
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.error_outline,
                         color: AppColors.error, size: 48.r),
-                    SizedBox(height: 12.h),
-                    Text(state.message,
-                        style: AppTextStyles.bodyMedium,
-                        textAlign: TextAlign.center),
+                    SizedBox(height: 16.h),
+                    Text(
+                      'Błąd ładowania danych',
+                      style: AppTextStyles.bodyLarge,
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 16.h),
+                    ElevatedButton(
+                      onPressed: () => context
+                          .read<MacrosBloc>()
+                          .add(LoadDailyMacros(today)),
+                      child: const Text('Spróbuj ponownie'),
+                    ),
                   ],
                 ),
               );
@@ -191,17 +202,21 @@ class _ProgressView extends StatelessWidget {
   }
 
   Widget _buildShimmer() {
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-      child: Column(
-        children: List.generate(
-          4,
-          (i) => Container(
-            margin: EdgeInsets.only(bottom: 16.h),
-            height: i == 0 ? 60.h : 120.h,
-            decoration: BoxDecoration(
-              color: AppColors.border,
-              borderRadius: BorderRadius.circular(16.r),
+    return Shimmer.fromColors(
+      baseColor: AppColors.borderLight,
+      highlightColor: AppColors.border,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+        child: Column(
+          children: List.generate(
+            4,
+            (i) => Container(
+              margin: EdgeInsets.only(bottom: 16.h),
+              height: i == 0 ? 60.h : 120.h,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16.r),
+              ),
             ),
           ),
         ),

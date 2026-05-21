@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
+import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -227,7 +229,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             borderRadius: BorderRadius.circular(8.r),
                           ),
                         ),
-                        onPressed: () {},
+                        onPressed: () => context.go(AppRoutes.aiMeals),
                         child: Text(
                           "ADD HIGH-PROTEIN MEAL",
                           style: TextStyle(
@@ -305,16 +307,22 @@ class _HomeScreenState extends State<HomeScreen> {
               SizedBox(height: 16.h),
 
               // ─── MEAL ITEMS ───────────────────────────────────────────────
-              const _MealCard(
-                mealType: "BREAKFAST",
-                mealName: "Greek Berry Bowl",
-                color: AppColors.border,
+              GestureDetector(
+                onTap: () => context.go(AppRoutes.aiMeals),
+                child: const _MealCard(
+                  mealType: "BREAKFAST",
+                  mealName: "Greek Berry Bowl",
+                  color: AppColors.border,
+                ),
               ),
               SizedBox(height: 12.h),
-              const _MealCard(
-                mealType: "LUNCH",
-                mealName: "Quinoa & Grill Salad",
-                color: AppColors.border,
+              GestureDetector(
+                onTap: () => context.go(AppRoutes.aiMeals),
+                child: const _MealCard(
+                  mealType: "LUNCH",
+                  mealName: "Quinoa & Grill Salad",
+                  color: AppColors.border,
+                ),
               ),
               SizedBox(height: 80.h), // Przestrzeń na FAB
             ],
@@ -322,7 +330,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () => context.go(AppRoutes.scanning),
         backgroundColor: AppColors.textPrimary,
         elevation: 4,
         shape: const CircleBorder(),

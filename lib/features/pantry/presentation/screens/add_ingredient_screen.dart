@@ -124,7 +124,10 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
             context.pop();
           } else if (state is PantryError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: AppColors.error,
+              ),
             );
           }
         },

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vitasense/core/supabase/supabase_client.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
@@ -189,7 +190,22 @@ final GoRouter appRouter = GoRouter(
           path: AppRoutes.profile,
           pageBuilder: (context, state) => _fadePage(
             state: state,
-            child: const _PlaceholderScreen(name: 'Profile 👤'),
+            child: Scaffold(
+              appBar: AppBar(title: const Text('Profile')),
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Coming soon', style: AppTextStyles.headingMedium),
+                    SizedBox(height: 24.h),
+                    ElevatedButton(
+                      onPressed: () => context.go(AppRoutes.onboarding),
+                      child: const Text('Sign Out'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ],

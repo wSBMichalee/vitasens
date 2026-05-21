@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
@@ -15,17 +16,7 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
-
-  void _nextPage() {
-    if (_pageController.page != null && _pageController.page! < 3) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOutCubic,
-      );
-    } else {
-      context.go(AppRoutes.paywall);
-    }
-  }
+  int _currentPage = 0;
 
   void _previousPage() {
     if (_pageController.page != null && _pageController.page! > 0) {
@@ -47,14 +38,38 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: PageView(
-          controller: _pageController,
-          physics: const NeverScrollableScrollPhysics(),
+        child: Column(
           children: [
-            _TransformationPage(onNext: _nextPage),
-            _ValueExplanationPage(onNext: _nextPage, onBack: _previousPage),
-            _SocialProofPage(onNext: _nextPage, onBack: _previousPage),
-            _ReinforcementPage(onNext: _nextPage, onBack: _previousPage),
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                physics: const BouncingScrollPhysics(),
+                onPageChanged: (index) => setState(() => _currentPage = index),
+                children: [
+                  const _TransformationPage(),
+                  _ValueExplanationPage(onBack: _previousPage),
+                  _SocialProofPage(onBack: _previousPage),
+                  _ReinforcementPage(onBack: _previousPage),
+                ],
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 16.h, bottom: 8.h),
+              child: SmoothPageIndicator(
+                controller: _pageController,
+                count: 4,
+                effect: WormEffect(
+                  dotColor: AppColors.border,
+                  activeDotColor: AppColors.primary,
+                  dotHeight: 8.r,
+                  dotWidth: 8.r,
+                ),
+              ),
+            ),
+            _currentPage < 3
+                ? const _SwipeHint()
+                : const SizedBox.shrink(),
+            SizedBox(height: 16.h),
           ],
         ),
       ),
@@ -62,11 +77,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
+// === SWIPE HINT ===
+class _SwipeHint extends StatelessWidget {
+  const _SwipeHint();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          'Swipe to continue',
+          style: TextStyle(fontSize: 12.sp, color: AppColors.textMuted),
+        ),
+        SizedBox(width: 4.w),
+        Icon(Icons.arrow_forward_ios, color: AppColors.textMuted, size: 12.r),
+      ],
+    )
+        .animate(onPlay: (c) => c.repeat())
+        .fadeIn(duration: 600.ms)
+        .then()
+        .fadeOut(duration: 600.ms);
+  }
+}
+
 // === STRONA 1: The Transformation ===
 class _TransformationPage extends StatelessWidget {
-  final VoidCallback onNext;
-
-  const _TransformationPage({required this.onNext});
+  const _TransformationPage();
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +123,7 @@ class _TransformationPage extends StatelessWidget {
               ),
             ],
           ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms),
-          
+
           SizedBox(height: 32.h),
 
           // BEFORE Karta
@@ -186,13 +223,6 @@ class _TransformationPage extends StatelessWidget {
               ),
             ),
           ).animate(delay: 200.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms),
-
-          SizedBox(height: 32.h),
-
-          ElevatedButton(
-            onPressed: onNext,
-            child: const Text('See My Plan'),
-          ).animate(delay: 300.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms),
         ],
       ),
     );
@@ -216,10 +246,9 @@ class _TransformationPage extends StatelessWidget {
 
 // === STRONA 2: "Why VitaSense?" ===
 class _ValueExplanationPage extends StatelessWidget {
-  final VoidCallback onNext;
   final VoidCallback onBack;
 
-  const _ValueExplanationPage({required this.onNext, required this.onBack});
+  const _ValueExplanationPage({required this.onBack});
 
   @override
   Widget build(BuildContext context) {
@@ -240,7 +269,7 @@ class _ValueExplanationPage extends StatelessWidget {
               borderRadius: BorderRadius.circular(16.r),
             ),
           ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms),
-          
+
           Container(
             margin: const EdgeInsets.only(top: 24),
             child: Text(
@@ -253,7 +282,7 @@ class _ValueExplanationPage extends StatelessWidget {
               ),
             ),
           ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms),
-          
+
           SizedBox(height: 24.h),
 
           _buildFeatureCard(
@@ -263,7 +292,7 @@ class _ValueExplanationPage extends StatelessWidget {
             title: 'Use what you already have',
             desc: 'We turn your fridge into ready-to-cook meals',
           ).animate(delay: 100.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms),
-          
+
           SizedBox(height: 12.h),
 
           _buildFeatureCard(
@@ -273,7 +302,7 @@ class _ValueExplanationPage extends StatelessWidget {
             title: 'Eat for your health',
             desc: 'Meals tailored to your condition and goals',
           ).animate(delay: 200.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms),
-          
+
           SizedBox(height: 12.h),
 
           _buildFeatureCard(
@@ -283,23 +312,6 @@ class _ValueExplanationPage extends StatelessWidget {
             title: 'No more guessing',
             desc: 'Know exactly what to cook every day',
           ).animate(delay: 300.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms),
-          
-          SizedBox(height: 32.h),
-
-          SizedBox(
-            height: 56.h,
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.backgroundDark,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.r),
-                ),
-              ),
-              onPressed: onNext,
-              child: const Text('Continue'),
-            ),
-          ).animate(delay: 400.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms),
         ],
       ),
     );
@@ -364,10 +376,9 @@ class _ValueExplanationPage extends StatelessWidget {
 
 // === STRONA 3: "50,000+" ===
 class _SocialProofPage extends StatelessWidget {
-  final VoidCallback onNext;
   final VoidCallback onBack;
 
-  const _SocialProofPage({required this.onNext, required this.onBack});
+  const _SocialProofPage({required this.onBack});
 
   @override
   Widget build(BuildContext context) {
@@ -380,7 +391,7 @@ class _SocialProofPage extends StatelessWidget {
             onTap: onBack,
             child: Icon(Icons.chevron_left, size: 28.r),
           ),
-          
+
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -511,21 +522,6 @@ class _SocialProofPage extends StatelessWidget {
               ],
             ),
           ),
-          
-          SizedBox(
-            height: 56.h,
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.backgroundDark,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.r),
-                ),
-              ),
-              onPressed: onNext,
-              child: const Text('Unlock My Plan'),
-            ),
-          ).animate(delay: 300.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms),
         ],
       ),
     );
@@ -568,10 +564,9 @@ class _SocialProofPage extends StatelessWidget {
 
 // === STRONA 4: "We've got this!" ===
 class _ReinforcementPage extends StatelessWidget {
-  final VoidCallback onNext;
   final VoidCallback onBack;
 
-  const _ReinforcementPage({required this.onNext, required this.onBack});
+  const _ReinforcementPage({required this.onBack});
 
   @override
   Widget build(BuildContext context) {
@@ -586,7 +581,7 @@ class _ReinforcementPage extends StatelessWidget {
               child: Icon(Icons.chevron_left, size: 28.r),
             ),
           ),
-          
+
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

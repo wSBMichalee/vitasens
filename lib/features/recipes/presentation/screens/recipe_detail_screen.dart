@@ -68,7 +68,7 @@ class _RecipeDetailView extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Smacznego! Spiżarnia zaktualizowana.',
+                'Smacznego! 🍽️ Spiżarnia zaktualizowana.',
                 style: TextStyle(color: AppColors.textWhite, fontSize: 14.sp),
               ),
               backgroundColor: AppColors.primary,

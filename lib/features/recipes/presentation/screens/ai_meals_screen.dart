@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:vitasense/core/router/app_router.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_bloc.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_event.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_state.dart';
@@ -32,8 +32,19 @@ class _AiMealsView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
+      body: BlocListener<RecipesBloc, RecipesState>(
+        listener: (context, state) {
+          if (state is RecipesError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+        },
+        child: SafeArea(
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ─── HEADER ──────────────────────────────────────────────────
@@ -197,10 +208,24 @@ class _AiMealsView extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 
   Widget _buildShimmerCards() {
+    return Shimmer.fromColors(
+      baseColor: AppColors.borderLight,
+      highlightColor: AppColors.border,
+      child: const _ShimmerRecipeCard(),
+    );
+  }
+}
+
+class _ShimmerRecipeCard extends StatelessWidget {
+  const _ShimmerRecipeCard();
+
+  @override
+  Widget build(BuildContext context) {
     return ListView.builder(
       itemCount: 3,
       itemBuilder: (context, index) {
@@ -208,7 +233,7 @@ class _AiMealsView extends StatelessWidget {
           margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
           height: 380.h,
           decoration: BoxDecoration(
-            color: AppColors.border,
+            color: Colors.white,
             borderRadius: BorderRadius.circular(16.r),
           ),
         );
@@ -441,7 +466,7 @@ class _RecipeCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16.r),
                       ),
                     ),
-                    onPressed: () => context.go(AppRoutes.recipeDetails, extra: recipe),
+                    onPressed: () => context.go('/recipe-details/${recipe['id']}', extra: recipe),
                     child: Text(
                       "COOK THIS",
                       style: TextStyle(

@@ -212,7 +212,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       ),
                       onPressed: () => context.go(AppRoutes.successPurchase),
                       child: Text(
-                        "Try Free for 7 Days",
+                        _yearlySelected ? "Try Free for 3 Days" : "Try Free for 7 Days",
                         style: TextStyle(
                           fontSize: 16.sp,
                           fontWeight: FontWeight.w600,
@@ -226,7 +226,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   SizedBox(height: 12.h),
 
                   Text(
-                    "NO COMMITMENT. CANCEL ANYTIME.",
+                    _yearlySelected
+                        ? "3 DAYS FREE, THEN \$59/YEAR. CANCEL ANYTIME."
+                        : "7 DAYS FREE, THEN \$9.99/MONTH. CANCEL ANYTIME.",
                     style: TextStyle(
                       fontSize: 11.sp,
                       color: AppColors.textMuted,
@@ -247,13 +249,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               child: Padding(
                 padding: EdgeInsets.all(16.0.r),
                 child: GestureDetector(
-                  onTap: () {
-                    if (context.canPop()) {
-                      context.pop();
-                    } else {
-                      context.go(AppRoutes.home);
-                    }
-                  },
+                  onTap: () => context.go(AppRoutes.home),
                   child: Container(
                     width: 36.w,
                     height: 36.h,

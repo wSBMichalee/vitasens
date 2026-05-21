@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_bloc.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_event.dart';
@@ -32,7 +33,17 @@ class _PantryView extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: BlocBuilder<PantryBloc, PantryState>(
+        child: BlocConsumer<PantryBloc, PantryState>(
+          listener: (context, state) {
+            if (state is PantryError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: AppColors.error,
+                ),
+              );
+            }
+          },
           builder: (context, state) {
             if (state is PantryInitial || state is PantryLoading) {
               return _buildShimmerLoading();
@@ -408,19 +419,10 @@ class _PantryView extends StatelessWidget {
   }
 
   Widget _buildShimmerLoading() {
-    return ListView.builder(
-      padding: EdgeInsets.all(20.r),
-      itemCount: 6,
-      itemBuilder: (context, index) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          height: 80.h,
-          decoration: BoxDecoration(
-            color: AppColors.border,
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-        );
-      },
+    return Shimmer.fromColors(
+      baseColor: AppColors.borderLight,
+      highlightColor: AppColors.border,
+      child: const _ShimmerIngredientList(),
     );
   }
 
@@ -431,6 +433,28 @@ class _PantryView extends StatelessWidget {
       return state.ingredients.where((i) => i.quantity <= i.minimumQuantity).toList();
     }
     return state.ingredients;
+  }
+}
+
+class _ShimmerIngredientList extends StatelessWidget {
+  const _ShimmerIngredientList();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: EdgeInsets.all(20.r),
+      itemCount: 6,
+      itemBuilder: (context, index) {
+        return Container(
+          margin: EdgeInsets.only(bottom: 12.h),
+          height: 80.h,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+        );
+      },
+    );
   }
 }
 

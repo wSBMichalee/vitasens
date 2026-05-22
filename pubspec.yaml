@@ -20,6 +20,10 @@ dependencies:
   # SUPABASE
   supabase_flutter: ^2.5.0
 
+  # AUTH — SOCIAL LOGIN
+  google_sign_in: ^6.2.1
+  sign_in_with_apple: ^6.1.0
+
   # NAVIGATION
   go_router: ^14.2.0
 

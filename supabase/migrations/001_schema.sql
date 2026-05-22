@@ -304,3 +304,28 @@ ALTER TABLE ingredients
 CREATE INDEX IF NOT EXISTS idx_ingredients_barcode
   ON ingredients(barcode)
   WHERE barcode IS NOT NULL;
+
+-- ============================================================
+-- manage-profile: user data collection columns
+-- ============================================================
+
+ALTER TABLE profiles
+  ADD COLUMN IF NOT EXISTS gender TEXT
+    CHECK (gender IN ('male','female','other')),
+  ADD COLUMN IF NOT EXISTS age INTEGER
+    CHECK (age BETWEEN 10 AND 120),
+  ADD COLUMN IF NOT EXISTS weight_kg DECIMAL(5,2),
+  ADD COLUMN IF NOT EXISTS height_cm DECIMAL(5,2),
+  ADD COLUMN IF NOT EXISTS activity_level TEXT DEFAULT 'moderate'
+    CHECK (activity_level IN (
+      'sedentary','light','moderate','active','very_active'
+    )),
+  ADD COLUMN IF NOT EXISTS goal_pace TEXT DEFAULT 'moderate'
+    CHECK (goal_pace IN (
+      'slow','moderate','fast'
+    )),
+  ADD COLUMN IF NOT EXISTS allergies TEXT[] DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS favorite_cuisines TEXT[] DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS favorite_products TEXT[] DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS daily_calorie_target INTEGER DEFAULT 2000,
+  ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT false;

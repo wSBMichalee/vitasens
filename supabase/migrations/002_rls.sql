@@ -386,3 +386,17 @@ CREATE POLICY "recipes_update_own"
 CREATE POLICY "recipes_delete_own"
   ON recipes FOR DELETE
   USING (auth.uid() = created_by);
+
+-- ============================================================
+-- manage-profile: profiles RLS (ujednolicone polityki)
+-- ============================================================
+
+DROP POLICY IF EXISTS "profiles_select_own" ON profiles;
+CREATE POLICY "profiles_select_own"
+  ON profiles FOR SELECT
+  USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "profiles_update_own" ON profiles;
+CREATE POLICY "profiles_update_own"
+  ON profiles FOR UPDATE
+  USING (auth.uid() = id);

@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:vitasense/core/supabase/supabase_client.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
+import 'package:vitasense/features/auth/bloc/auth_bloc.dart';
+import 'package:vitasense/features/auth/bloc/auth_state.dart';
 
 import 'package:vitasense/features/auth/presentation/screens/splash_screen.dart';
 import 'package:vitasense/features/auth/presentation/screens/onboarding_screen.dart';
+import 'package:vitasense/features/auth/presentation/screens/login_screen.dart';
+import 'package:vitasense/features/auth/presentation/screens/signup_screen.dart';
+import 'package:vitasense/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'package:vitasense/features/auth/presentation/screens/user_onboarding_screen.dart';
 import 'package:vitasense/features/subscription/presentation/screens/paywall_screen.dart';
 import 'package:vitasense/features/subscription/presentation/screens/paywall_discount_screen.dart';
 import 'package:vitasense/features/subscription/presentation/screens/success_purchase_screen.dart';
@@ -54,35 +60,46 @@ final GoRouter appRouter = GoRouter(
 
   // ─── REDIRECT LOGIC ─────────────────────────────────────────────────────────
   redirect: (BuildContext context, GoRouterState state) {
-    final isAuthenticated = SupabaseClientService.instance.isAuthenticated;
-    final currentPath = state.matchedLocation;
+    final authBloc = context.read<AuthBloc>();
+    final authState = authBloc.state;
+    final location = state.matchedLocation;
 
-    // Trasy dostępne bez logowania
     final publicRoutes = [
+      AppRoutes.splash,
+      AppRoutes.login,
+      AppRoutes.signup,
+      AppRoutes.forgotPassword,
       AppRoutes.onboarding,
-      AppRoutes.valueExplanation,
-      AppRoutes.socialProof,
-      AppRoutes.reinforcement,
+      AppRoutes.userOnboarding,
       AppRoutes.paywall,
       AppRoutes.paywallDiscount,
       AppRoutes.successPurchase,
     ];
 
-    final isPublicRoute = publicRoutes.any(
-      (route) => currentPath.startsWith(route),
-    );
+    final isPublic = publicRoutes.contains(location);
 
-    // Niezalogowany + trasa chroniona → onboarding
-    if (!isAuthenticated && !isPublicRoute && currentPath != AppRoutes.splash) {
-      return AppRoutes.onboarding;
+    if (authState is AuthInitial || authState is AuthLoading) {
+      return location == AppRoutes.splash ? null : AppRoutes.splash;
     }
 
-    // Zalogowany + splash → home
-    if (isAuthenticated && currentPath == AppRoutes.splash) {
-      return AppRoutes.home;
+    if (authState is AuthUnauthenticated) {
+      return isPublic ? null : AppRoutes.login;
     }
 
-    return null; // bez przekierowania
+    if (authState is AuthAuthenticated) {
+      final user = authState.user;
+
+      if (location == AppRoutes.splash ||
+          location == AppRoutes.login ||
+          location == AppRoutes.signup) {
+        if (!user.onboardingCompleted) {
+          return AppRoutes.userOnboarding;
+        }
+        return AppRoutes.home;
+      }
+    }
+
+    return null;
   },
 
   // ─── DEFINICJE TRAS ──────────────────────────────────────────────────────────
@@ -93,6 +110,36 @@ final GoRouter appRouter = GoRouter(
       pageBuilder: (context, state) => _fadePage(
         state: state,
         child: const SplashScreen(),
+      ),
+    ),
+
+    // ─── AUTH FLOW ───────────────────────────────────────────────────────────
+    GoRoute(
+      path: AppRoutes.login,
+      pageBuilder: (context, state) => _slideHorizontalPage(
+        state: state,
+        child: const LoginScreen(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.signup,
+      pageBuilder: (context, state) => _slideHorizontalPage(
+        state: state,
+        child: const SignupScreen(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.forgotPassword,
+      pageBuilder: (context, state) => _slideHorizontalPage(
+        state: state,
+        child: const ForgotPasswordScreen(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.userOnboarding,
+      pageBuilder: (context, state) => _slideHorizontalPage(
+        state: state,
+        child: const UserOnboardingScreen(),
       ),
     ),
 

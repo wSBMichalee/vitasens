@@ -4,6 +4,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_theme.dart';
+import 'package:vitasense/features/auth/bloc/auth_bloc.dart';
+import 'package:vitasense/features/auth/bloc/auth_event.dart';
+import 'package:vitasense/features/auth/data/auth_repository.dart';
 import 'package:vitasense/features/detect/bloc/detect_bloc.dart';
 import 'package:vitasense/features/detect/data/detect_repository.dart';
 import 'package:vitasense/features/macros/bloc/macros_bloc.dart';
@@ -25,6 +28,11 @@ class MyApp extends StatelessWidget {
       builder: (context, child) {
         return MultiBlocProvider(
           providers: [
+            BlocProvider<AuthBloc>(
+              create: (context) => AuthBloc(
+                authRepository: AuthRepository(),
+              )..add(const AppStarted()),
+            ),
             BlocProvider<PantryBloc>(
               create: (context) => PantryBloc(
                 repository: PantryRepository(),

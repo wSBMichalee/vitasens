@@ -68,5 +68,18 @@
 		</array>
 		<key>UIStatusBarHidden</key>
 		<false/>
+
+		<!-- Permissions: Camera, Microphone, Photo Library -->
+		<key>NSCameraUsageDescription</key>
+		<string>VitaSense needs camera access to scan your meals, fridge, and product barcodes.</string>
+
+		<key>NSMicrophoneUsageDescription</key>
+		<string>VitaSense needs microphone access to log your meals using voice.</string>
+
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>VitaSense needs photo library access to upload meal and recipe photos.</string>
+
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>VitaSense needs permission to save recipe photos to your library.</string>
 	</dict>
 </plist>

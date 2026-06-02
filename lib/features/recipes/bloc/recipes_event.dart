@@ -43,3 +43,68 @@ class CookRecipe extends RecipesEvent {
   @override
   List<Object?> get props => [recipeId, servings];
 }
+
+class LoadMyRecipes extends RecipesEvent {
+  const LoadMyRecipes();
+}
+
+class CreateRecipe extends RecipesEvent {
+  final String title;
+  final String description;
+  final List<Map<String, dynamic>> ingredients;
+  final List<String> steps;
+  final int cookTimeMinutes;
+  final int servings;
+  final String? cuisineType;
+  final List<String> dietTags;
+
+  const CreateRecipe({
+    required this.title,
+    required this.description,
+    required this.ingredients,
+    required this.steps,
+    required this.cookTimeMinutes,
+    required this.servings,
+    this.cuisineType,
+    this.dietTags = const [],
+  });
+
+  @override
+  List<Object?> get props => [
+        title,
+        description,
+        ingredients,
+        steps,
+        cookTimeMinutes,
+        servings,
+        cuisineType,
+        dietTags,
+      ];
+}
+
+class PublishRecipe extends RecipesEvent {
+  final String recipeId;
+
+  const PublishRecipe(this.recipeId);
+
+  @override
+  List<Object?> get props => [recipeId];
+}
+
+class DeleteRecipe extends RecipesEvent {
+  final String recipeId;
+
+  const DeleteRecipe(this.recipeId);
+
+  @override
+  List<Object?> get props => [recipeId];
+}
+
+class LikeRecipe extends RecipesEvent {
+  final String recipeId;
+
+  const LikeRecipe(this.recipeId);
+
+  @override
+  List<Object?> get props => [recipeId];
+}

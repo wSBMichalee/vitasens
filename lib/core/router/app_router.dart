@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
@@ -23,6 +22,14 @@ import 'package:vitasense/features/detect/presentation/screens/scanning_screen.d
 import 'package:vitasense/features/recipes/presentation/screens/ai_meals_screen.dart';
 import 'package:vitasense/features/recipes/presentation/screens/recipe_detail_screen.dart';
 import 'package:vitasense/features/macros/presentation/screens/progress_screen.dart';
+import 'package:vitasense/features/auth/presentation/screens/profile_screen.dart';
+import 'package:vitasense/features/subscription/presentation/screens/settings_screen.dart';
+import 'package:vitasense/features/shopping/presentation/screens/shopping_list_screen.dart';
+import 'package:vitasense/features/browse/presentation/screens/browse_screen.dart';
+import 'package:vitasense/features/family/presentation/screens/family_screen.dart';
+import 'package:vitasense/features/extract/presentation/screens/extract_screen.dart';
+import 'package:vitasense/features/recipes/presentation/screens/create_recipe_screen.dart';
+import 'package:vitasense/features/voice/presentation/screens/voice_log_screen.dart';
 
 // ─── STAŁE NAZWY TRAS ─────────────────────────────────────────────────────────
 class AppRoutes {
@@ -50,7 +57,10 @@ class AppRoutes {
   static const String progressHistory = '/progress-history';
   static const String profile = '/profile';
   static const String settings = '/settings';
-  static const String familyInvite = '/family-invite';
+  static const String family = '/family';
+  static const String extract = '/extract';
+  static const String myRecipes = '/my-recipes';
+  static const String voiceLog = '/voice-log';
 }
 
 // ─── INSTANCJA ROUTERA ────────────────────────────────────────────────────────
@@ -241,28 +251,27 @@ final GoRouter appRouter = GoRouter(
           path: AppRoutes.profile,
           pageBuilder: (context, state) => _fadePage(
             state: state,
-            child: Scaffold(
-              appBar: AppBar(title: const Text('Profile')),
-              body: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('Coming soon', style: AppTextStyles.headingMedium),
-                    SizedBox(height: 24.h),
-                    ElevatedButton(
-                      onPressed: () => context.go(AppRoutes.onboarding),
-                      child: const Text('Sign Out'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            child: const ProfileScreen(),
           ),
         ),
       ],
     ),
 
     // ─── FULLSCREEN ROUTES (poza shell) ──────────────────────────────────────
+    GoRoute(
+      path: '/browse-recipes',
+      pageBuilder: (context, state) => _slideUpPage(
+        state: state,
+        child: const BrowseScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/shopping',
+      pageBuilder: (context, state) => _slideUpPage(
+        state: state,
+        child: const ShoppingListScreen(),
+      ),
+    ),
     GoRoute(
       path: AppRoutes.addIngredient,
       pageBuilder: (context, state) => _slideUpPage(
@@ -298,14 +307,35 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.settings,
       pageBuilder: (context, state) => _fadePage(
         state: state,
-        child: const _PlaceholderScreen(name: 'Settings ⚙️'),
+        child: const SettingsScreen(),
       ),
     ),
     GoRoute(
-      path: AppRoutes.familyInvite,
+      path: AppRoutes.family,
       pageBuilder: (context, state) => _slideUpPage(
         state: state,
-        child: const _PlaceholderScreen(name: 'Family Invite 👨‍👩‍👧'),
+        child: const FamilyScreen(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.extract,
+      pageBuilder: (context, state) => _slideUpPage(
+        state: state,
+        child: const ExtractScreen(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.myRecipes,
+      pageBuilder: (context, state) => _slideUpPage(
+        state: state,
+        child: const CreateRecipeScreen(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.voiceLog,
+      pageBuilder: (context, state) => _slideUpPage(
+        state: state,
+        child: const VoiceLogScreen(),
       ),
     ),
   ],

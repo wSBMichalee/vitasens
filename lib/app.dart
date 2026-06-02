@@ -15,6 +15,18 @@ import 'package:vitasense/features/pantry/bloc/pantry_bloc.dart';
 import 'package:vitasense/features/pantry/data/pantry_repository.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_bloc.dart';
 import 'package:vitasense/features/recipes/data/recipes_repository.dart';
+import 'package:vitasense/features/shopping/bloc/shopping_bloc.dart';
+import 'package:vitasense/features/shopping/data/shopping_repository.dart';
+import 'package:vitasense/features/family/bloc/family_bloc.dart';
+import 'package:vitasense/features/family/data/family_repository.dart';
+import 'package:vitasense/features/browse/bloc/browse_bloc.dart';
+import 'package:vitasense/features/browse/data/browse_repository.dart';
+import 'package:vitasense/features/extract/bloc/extract_bloc.dart';
+import 'package:vitasense/features/extract/data/extract_repository.dart';
+import 'package:vitasense/features/subscription/bloc/subscription_bloc.dart';
+import 'package:vitasense/features/subscription/data/subscription_repository.dart';
+import 'package:vitasense/features/voice/bloc/voice_bloc.dart';
+import 'package:vitasense/features/voice/data/voice_repository.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -51,6 +63,36 @@ class MyApp extends StatelessWidget {
             BlocProvider<DetectBloc>(
               create: (context) => DetectBloc(
                 repository: DetectRepository(),
+              ),
+            ),
+            BlocProvider<ShoppingBloc>(
+              create: (context) => ShoppingBloc(
+                repository: ShoppingRepository(),
+              ),
+            ),
+            BlocProvider<FamilyBloc>(
+              create: (context) => FamilyBloc(
+                repository: FamilyRepository(),
+              ),
+            ),
+            BlocProvider<BrowseBloc>(
+              create: (context) => BrowseBloc(
+                repository: BrowseRepository(),
+              ),
+            ),
+            BlocProvider<ExtractBloc>(
+              create: (context) => ExtractBloc(
+                repository: ExtractRepository(),
+              ),
+            ),
+            BlocProvider<SubscriptionBloc>(
+              create: (context) => SubscriptionBloc(
+                repository: SubscriptionRepository(),
+              ),
+            ),
+            BlocProvider<VoiceBloc>(
+              create: (context) => VoiceBloc(
+                repository: VoiceRepository(),
               ),
             ),
           ],

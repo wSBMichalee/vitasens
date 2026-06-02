@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
@@ -151,11 +152,25 @@ class _RecipeDetailView extends StatelessWidget {
                       fit: StackFit.expand,
                       children: [
                         imageUrl != null && imageUrl.isNotEmpty
-                            ? Image.network(
-                                imageUrl,
+                            ? CachedNetworkImage(
+                                imageUrl: imageUrl,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(
+                                placeholder: (context, url) => Container(
                                   color: AppColors.borderLight,
+                                  child: const Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) => Container(
+                                  color: AppColors.borderLight,
+                                  child: Icon(
+                                    Icons.image_not_supported_outlined,
+                                    color: AppColors.textMuted,
+                                    size: 32.r,
+                                  ),
                                 ),
                               )
                             : Container(color: AppColors.borderLight),
@@ -473,13 +488,25 @@ class _IngredientRow extends StatelessWidget {
             child: imageUrl != null && imageUrl.isNotEmpty
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(8.r),
-                    child: Image.network(
-                      imageUrl,
+                    child: CachedNetworkImage(
+                      imageUrl: imageUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Icon(
-                        Icons.restaurant,
-                        color: AppColors.textMuted,
-                        size: 24.r,
+                      placeholder: (context, url) => Container(
+                        color: AppColors.borderLight,
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        color: AppColors.borderLight,
+                        child: Icon(
+                          Icons.image_not_supported_outlined,
+                          color: AppColors.textMuted,
+                          size: 32.r,
+                        ),
                       ),
                     ),
                   )

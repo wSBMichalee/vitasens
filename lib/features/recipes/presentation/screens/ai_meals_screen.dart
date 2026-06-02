@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_bloc.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_event.dart';
@@ -318,12 +319,28 @@ class _RecipeCard extends StatelessWidget {
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                   child: imageUrl != null && imageUrl.toString().isNotEmpty
-                      ? Image.network(
-                          imageUrl,
+                      ? CachedNetworkImage(
+                          imageUrl: imageUrl.toString(),
                           width: double.infinity,
                           height: 240.h,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Container(color: Colors.grey),
+                          placeholder: (context, url) => Container(
+                            color: AppColors.borderLight,
+                            child: const Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            color: AppColors.borderLight,
+                            child: Icon(
+                              Icons.image_not_supported_outlined,
+                              color: AppColors.textMuted,
+                              size: 32.r,
+                            ),
+                          ),
                         )
                       : Container(color: Colors.grey),
                 ),

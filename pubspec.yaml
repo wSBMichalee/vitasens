@@ -33,7 +33,6 @@ dependencies:
   # APARAT I ZDJĘCIA
   camera: ^0.11.0
   image_picker: ^1.1.2
-  image_cropper: ^5.0.1
 
   # SHARE SHEET (import z TikTok/YouTube/Instagram)
   receive_sharing_intent: ^1.8.0
@@ -41,27 +40,15 @@ dependencies:
 
   # RESPONSYWNOŚĆ
   flutter_screenutil: ^5.9.3
-  responsive_framework: ^1.4.0
 
   # ANIMACJE
   flutter_animate: ^4.5.0
   animations: ^2.0.11
-  animated_text_kit: ^4.2.2
-  confetti: ^0.7.0
-  flutter_staggered_animations: ^1.1.1
-  lottie: ^3.1.0
 
   # UI KOMPONENTY
   cached_network_image: ^3.3.1
   shimmer: ^3.0.0
-  fl_chart: ^0.68.0
-  flutter_svg: ^2.0.10
-  gap: ^3.0.1
-  dotted_border: ^2.1.0
   smooth_page_indicator: ^1.1.0
-  flutter_rating_bar: ^4.0.1
-  badges: ^3.1.2
-  percent_indicator: ^4.2.3
 
   # LOKALNE PRZECHOWYWANIE
   shared_preferences: ^2.3.0
@@ -89,6 +76,7 @@ dependencies:
   google_fonts: ^6.2.1
   flutter_native_splash: ^2.4.0
   cupertino_icons: ^1.0.8
+  speech_to_text: ^6.6.0
 
 dev_dependencies:
   flutter_test:

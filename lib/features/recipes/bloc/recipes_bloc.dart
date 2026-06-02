@@ -12,6 +12,11 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
     on<FilterRecipes>(_onFilterRecipes);
     on<SelectRecipe>(_onSelectRecipe);
     on<CookRecipe>(_onCookRecipe);
+    on<LoadMyRecipes>(_onLoadMyRecipes);
+    on<CreateRecipe>(_onCreateRecipe);
+    on<PublishRecipe>(_onPublishRecipe);
+    on<DeleteRecipe>(_onDeleteRecipe);
+    on<LikeRecipe>(_onLikeRecipe);
   }
 
   Future<void> _onLoadRecipes(
@@ -68,6 +73,76 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
     try {
       await repository.cookRecipe(event.recipeId, 'default', event.servings);
       emit(const RecipesCookingSuccess());
+    } catch (e) {
+      emit(RecipesError(e.toString()));
+    }
+  }
+  Future<void> _onLoadMyRecipes(
+    LoadMyRecipes event,
+    Emitter<RecipesState> emit,
+  ) async {
+    emit(const RecipesLoading());
+    try {
+      final recipes = await repository.getMyRecipes();
+      emit(MyRecipesLoaded(recipes));
+    } catch (e) {
+      emit(RecipesError(e.toString()));
+    }
+  }
+
+  Future<void> _onCreateRecipe(
+    CreateRecipe event,
+    Emitter<RecipesState> emit,
+  ) async {
+    emit(const RecipeCreating());
+    try {
+      final recipe = await repository.createRecipe(
+        title: event.title,
+        description: event.description,
+        ingredients: event.ingredients,
+        steps: event.steps,
+        cookTimeMinutes: event.cookTimeMinutes,
+        servings: event.servings,
+        cuisineType: event.cuisineType,
+        dietTags: event.dietTags,
+      );
+      emit(RecipeCreated(recipe));
+    } catch (e) {
+      emit(RecipesError(e.toString()));
+    }
+  }
+
+  Future<void> _onPublishRecipe(
+    PublishRecipe event,
+    Emitter<RecipesState> emit,
+  ) async {
+    try {
+      await repository.publishRecipe(event.recipeId);
+      add(const LoadMyRecipes());
+    } catch (e) {
+      emit(RecipesError(e.toString()));
+    }
+  }
+
+  Future<void> _onDeleteRecipe(
+    DeleteRecipe event,
+    Emitter<RecipesState> emit,
+  ) async {
+    try {
+      await repository.deleteRecipe(event.recipeId);
+      add(const LoadMyRecipes());
+    } catch (e) {
+      emit(RecipesError(e.toString()));
+    }
+  }
+
+  Future<void> _onLikeRecipe(
+    LikeRecipe event,
+    Emitter<RecipesState> emit,
+  ) async {
+    try {
+      await repository.likeRecipe(event.recipeId);
+      add(const LoadMyRecipes());
     } catch (e) {
       emit(RecipesError(e.toString()));
     }

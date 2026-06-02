@@ -34,16 +34,11 @@ dependencies:
   camera: ^0.11.0
   image_picker: ^1.1.2
 
-  # SHARE SHEET (import z TikTok/YouTube/Instagram)
-  receive_sharing_intent: ^1.8.0
-  share_plus: ^9.0.0
-
   # RESPONSYWNOŚĆ
   flutter_screenutil: ^5.9.3
 
   # ANIMACJE
   flutter_animate: ^4.5.0
-  animations: ^2.0.11
 
   # UI KOMPONENTY
   cached_network_image: ^3.3.1
@@ -52,16 +47,7 @@ dependencies:
 
   # LOKALNE PRZECHOWYWANIE
   shared_preferences: ^2.3.0
-  sqflite: ^2.3.3
   flutter_secure_storage: ^9.0.0
-
-  # SIEĆ
-  dio: ^5.4.3
-  connectivity_plus: ^6.0.3
-
-  # MODELE DANYCH
-  freezed_annotation: ^2.4.1
-  json_annotation: ^4.9.0
 
   # NARZĘDZIA
   intl: ^0.20.2

@@ -98,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             value: 0.71,
                             strokeWidth: 8,
                             color: AppColors.primary,
-                            backgroundColor: Color(0xFFF3F4F6),
+                            backgroundColor: AppColors.borderLight,
                           ),
                           Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -167,9 +167,9 @@ class _HomeScreenState extends State<HomeScreen> {
               Container(
                 padding: EdgeInsets.all(20.r),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF0F9FF),
+                  color: AppColors.infoLight,
                   borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(color: const Color(0xFFBAE6FD)),
+                  border: Border.all(color: AppColors.infoBorder),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -411,7 +411,7 @@ class _MacroRow extends StatelessWidget {
         SizedBox(height: 6.h),
         LinearProgressIndicator(
           value: progress,
-          backgroundColor: const Color(0xFFF3F4F6),
+          backgroundColor: AppColors.borderLight,
           color: color,
           minHeight: 6,
           borderRadius: BorderRadius.circular(3.r),
@@ -480,7 +480,7 @@ class _MealCard extends StatelessWidget {
           ),
           const Icon(
             Icons.chevron_right,
-            color: Color(0xFFD1D5DB),
+            color: AppColors.borderMedium,
           ),
         ],
       ),

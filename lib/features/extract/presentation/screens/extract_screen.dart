@@ -291,15 +291,15 @@ class _ExtractViewState extends State<_ExtractView> {
               Container(
                 padding: EdgeInsets.all(16.r),
                 decoration: BoxDecoration(
-                  color: isGoodMatch ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0),
+                  color: isGoodMatch ? AppColors.successLight : AppColors.mismatchLight,
                   borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(color: isGoodMatch ? const Color(0xFFA5D6A7) : const Color(0xFFFFCC80)),
+                  border: Border.all(color: isGoodMatch ? AppColors.successBorder : AppColors.mismatchBorder),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.kitchen,
-                      color: isGoodMatch ? const Color(0xFF2E7D32) : const Color(0xFFE65100),
+                      color: isGoodMatch ? AppColors.successDark : AppColors.mismatchText,
                       size: 24.r,
                     ),
                     SizedBox(width: 12.w),
@@ -312,14 +312,14 @@ class _ExtractViewState extends State<_ExtractView> {
                             style: TextStyle(
                               fontSize: 14.sp,
                               fontWeight: FontWeight.w700,
-                              color: isGoodMatch ? const Color(0xFF1B5E20) : const Color(0xFFE65100),
+                              color: isGoodMatch ? AppColors.successDeepDark : AppColors.mismatchText,
                             ),
                           ),
                           Text(
                             isGoodMatch ? 'You have almost everything!' : 'You need to buy a few things.',
                             style: TextStyle(
                               fontSize: 12.sp,
-                              color: isGoodMatch ? const Color(0xFF2E7D32) : const Color(0xFFF57C00),
+                              color: isGoodMatch ? AppColors.successDark : AppColors.mismatchTextDark,
                             ),
                           ),
                         ],

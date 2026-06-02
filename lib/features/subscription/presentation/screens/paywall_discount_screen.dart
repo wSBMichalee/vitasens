@@ -48,7 +48,7 @@ class _PaywallDiscountScreenState extends State<PaywallDiscountScreen> {
     final int seconds = _totalSeconds % 60;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1F2E),
+      backgroundColor: AppColors.backgroundNavy,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(24.0.r),

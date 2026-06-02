@@ -44,4 +44,31 @@ class AppColors {
   // ─── RAMKI I LINIE (BORDERS & DIVIDERS) ────────────────────────────────────────
   static const Color border = Color(0xFFE5E7EB);           // Standardowa ramka
   static const Color borderLight = Color(0xFFF3F4F6);      // Bardzo jasna linia
+  static const Color borderMedium = Color(0xFFD1D5DB);     // Średnia ramka szara
+
+  // ─── AMBER (SPIŻARNIA / EXPIRY) ──────────────────────────────────────────────
+  static const Color warningDark = Color(0xFFD97706);      // Amber ciemny (expiry pilne)
+  static const Color warningBorder = Color(0xFFFED7AA);    // Amber ramka (expiry ostrzeżenie)
+
+  // ─── INFO (SKY BLUE — KARTY PODPOWIEDZI) ─────────────────────────────────────
+  static const Color infoLight = Color(0xFFF0F9FF);        // Sky blue tło
+  static const Color infoBorder = Color(0xFFBAE6FD);       // Sky blue ramka
+
+  // ─── INDIGO ───────────────────────────────────────────────────────────────────
+  static const Color indigoLight = Color(0xFFEEF2FF);      // Jasne indigo (zaznaczony chip)
+
+  // ─── SUCCESS STATES (ZGODNOŚĆ SKŁADNIKÓW) ────────────────────────────────────
+  static const Color successLight = Color(0xFFE8F5E9);     // Bardzo jasny zielony bg
+  static const Color successBorder = Color(0xFFA5D6A7);    // Zielona ramka zgodności
+  static const Color successDark = Color(0xFF2E7D32);      // Ciemny zielony tekst
+  static const Color successDeepDark = Color(0xFF1B5E20);  // Bardzo ciemny zielony
+
+  // ─── MISMATCH STATES (NIEZGODNOŚĆ — EXTRACT SCREEN) ─────────────────────────
+  static const Color mismatchLight = Color(0xFFFFF3E0);    // Jasny pomarańczowy bg
+  static const Color mismatchBorder = Color(0xFFFFCC80);   // Bursztynowa ramka
+  static const Color mismatchText = Color(0xFFE65100);     // Ciemny pomarańczowy tekst
+  static const Color mismatchTextDark = Color(0xFFF57C00); // Pomarańczowy tekst
+
+  // ─── CIEMNE TŁA ────────────────────────────────────────────────────────────
+  static const Color backgroundNavy = Color(0xFF1A1F2E);   // Ciemny granat (paywall dark)
 }

@@ -29,6 +29,7 @@ import 'package:vitasense/features/browse/presentation/screens/browse_screen.dar
 import 'package:vitasense/features/family/presentation/screens/family_screen.dart';
 import 'package:vitasense/features/extract/presentation/screens/extract_screen.dart';
 import 'package:vitasense/features/recipes/presentation/screens/create_recipe_screen.dart';
+import 'package:vitasense/features/macros/presentation/screens/progress_history_screen.dart';
 import 'package:vitasense/features/voice/presentation/screens/voice_log_screen.dart';
 
 // ─── STAŁE NAZWY TRAS ─────────────────────────────────────────────────────────
@@ -300,7 +301,7 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.progressHistory,
       pageBuilder: (context, state) => _fadePage(
         state: state,
-        child: const _PlaceholderScreen(name: 'Progress History'),
+        child: const ProgressHistoryScreen(),
       ),
     ),
     GoRoute(

@@ -308,7 +308,7 @@ class _ValueExplanationPage extends StatelessWidget {
           _buildFeatureCard(
             icon: Icons.check_circle_outline,
             iconColor: AppColors.textSecondary,
-            iconBgColor: const Color(0xFFF3F4F6),
+            iconBgColor: AppColors.borderLight,
             title: 'No more guessing',
             desc: 'Know exactly what to cook every day',
           ).animate(delay: 300.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, duration: 400.ms),

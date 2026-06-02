@@ -242,7 +242,7 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
                                   width: 64.w,
                                   height: 64.h,
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF3F4F6),
+                                    color: AppColors.borderLight,
                                     borderRadius: BorderRadius.circular(12.r),
                                   ),
                                   child: Icon(
@@ -303,7 +303,7 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
                                         width: 40.w,
                                         height: 40.h,
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFFF3F4F6),
+                                          color: AppColors.borderLight,
                                           shape: BoxShape.circle,
                                           border: Border.all(color: AppColors.border),
                                         ),
@@ -339,7 +339,7 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
                                         width: 40.w,
                                         height: 40.h,
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFFF3F4F6),
+                                          color: AppColors.borderLight,
                                           shape: BoxShape.circle,
                                           border: Border.all(color: AppColors.border),
                                         ),

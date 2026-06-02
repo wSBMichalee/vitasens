@@ -17,7 +17,7 @@ class SuccessPurchaseScreen extends StatelessWidget {
           Container(
             width: double.infinity,
             height: 260.h,
-            color: const Color(0xFFE8F5E9),
+            color: AppColors.successLight,
           ),
           Expanded(
             child: SingleChildScrollView(

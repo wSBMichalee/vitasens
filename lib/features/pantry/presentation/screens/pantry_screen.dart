@@ -164,7 +164,7 @@ class _PantryView extends StatelessWidget {
                         padding: EdgeInsets.all(20.r),
                         decoration: BoxDecoration(
                           color: AppColors.warningLight,
-                          border: Border.all(color: const Color(0xFFFED7AA)),
+                          border: Border.all(color: AppColors.warningBorder),
                           borderRadius: BorderRadius.circular(16.r),
                         ),
                         child: Column(
@@ -199,7 +199,7 @@ class _PantryView extends StatelessWidget {
                                 Container(
                                   padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFD97706),
+                                    color: AppColors.warningDark,
                                     borderRadius: BorderRadius.circular(6.r),
                                   ),
                                   child: Text(
@@ -250,7 +250,7 @@ class _PantryView extends StatelessWidget {
                                   Container(
                                     padding: EdgeInsets.all(8.r),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFF3F4F6),
+                                      color: AppColors.borderLight,
                                       borderRadius: BorderRadius.circular(8.r),
                                     ),
                                     child: Icon(Icons.camera_alt_outlined, size: 20.r, color: AppColors.textPrimary),
@@ -291,7 +291,7 @@ class _PantryView extends StatelessWidget {
                                   Container(
                                     padding: EdgeInsets.all(8.r),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFF3F4F6),
+                                      color: AppColors.borderLight,
                                       borderRadius: BorderRadius.circular(8.r),
                                     ),
                                     child: Icon(Icons.receipt_long_outlined, size: 20.r, color: AppColors.textPrimary),
@@ -337,7 +337,7 @@ class _PantryView extends StatelessWidget {
                                 width: 48.w,
                                 height: 48.h,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFEEF2FF),
+                                  color: AppColors.indigoLight,
                                   borderRadius: BorderRadius.circular(12.r),
                                 ),
                                 child: Icon(Icons.auto_awesome, color: AppColors.secondary, size: 24.r),
@@ -518,7 +518,7 @@ class _ExpiryItem extends StatelessWidget {
             width: 40.w,
             height: 40.h,
             decoration: BoxDecoration(
-              color: const Color(0xFFF3F4F6),
+              color: AppColors.borderLight,
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Icon(Icons.eco, color: Colors.grey, size: 20.r),
@@ -543,7 +543,7 @@ class _ExpiryItem extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11.sp,
                     fontWeight: FontWeight.w600,
-                    color: days <= 1 ? const Color(0xFFD97706) : const Color(0xFFD97706),
+                    color: days <= 1 ? AppColors.warningDark : AppColors.warningDark,
                   ),
                 ),
               ],
@@ -612,7 +612,7 @@ class _IngredientCard extends StatelessWidget {
               width: 48.w,
               height: 48.h,
               decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
+                color: AppColors.borderLight,
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Icon(

@@ -31,7 +31,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                Container(color: const Color(0xFFE8F5E9)), // Placeholder
+                Container(color: AppColors.successLight), // Placeholder
                 Container(
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(

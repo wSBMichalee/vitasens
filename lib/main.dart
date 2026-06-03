@@ -29,11 +29,11 @@ Future<void> main() async {
   // Dane Supabase (konfigurowalne przez --dart-define lub z wartościami domyślnymi)
   const supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
-    defaultValue: 'https://placeholder.supabase.co',
+    defaultValue: 'https://jtggjdiaziggnpnfdcrv.supabase.co',
   );
   const supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
-    defaultValue: 'placeholder-anon-key',
+    defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0Z2dqZGlhemlnZ25wbmZkY3J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NTQ4MzIsImV4cCI6MjA5NjAzMDgzMn0.AAcLu3sb7TmJ7ol1YbVW-NlxUDuFNEup9L4VpxbK7D8',
   );
 
   // Inicjalizacja Supabase
@@ -45,7 +45,7 @@ Future<void> main() async {
   // Klucz RevenueCat (konfigurowalny przez --dart-define)
   const revenueCatApiKey = String.fromEnvironment(
     'REVENUECAT_API_KEY',
-    defaultValue: 'placeholder-rc-key',
+    defaultValue: 'sb_publishable_zTDgWgJw1Npfl2KqBkuK4w_qFToVItm',
   );
 
   // Konfiguracja RevenueCat (tylko jeśli podano poprawny klucz)

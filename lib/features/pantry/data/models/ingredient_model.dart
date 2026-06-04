@@ -34,21 +34,21 @@ class IngredientModel extends Equatable {
   factory IngredientModel.fromJson(Map<String, dynamic> json) {
     return IngredientModel(
       id: json['id'] as String? ?? '',
-      pantryId: json['pantry_id'] as String?,
+      pantryId: (json['pantry_id'] ?? json['pantryId']) as String?,
       name: json['name'] as String? ?? '',
       quantity: (json['quantity'] as num?)?.toDouble() ?? 0.0,
       unit: json['unit'] as String? ?? '',
       category: json['category'] as String? ?? 'other',
-      minimumQuantity: (json['minimum_quantity'] as num?)?.toDouble() ?? 0.0,
-      expiryDate: json['expiry_date'] != null 
-          ? DateTime.tryParse(json['expiry_date'] as String) 
+      minimumQuantity: (json['minimum_quantity'] ?? json['minimumQuantity'] as num?)?.toDouble() ?? 0.0,
+      expiryDate: (json['expiry_date'] ?? json['expiryDate']) != null 
+          ? DateTime.tryParse((json['expiry_date'] ?? json['expiryDate']) as String) 
           : null,
-      addedBy: json['added_by'] as String?,
-      createdAt: json['created_at'] != null 
-          ? DateTime.tryParse(json['created_at'] as String) 
+      addedBy: (json['added_by'] ?? json['addedBy']) as String?,
+      createdAt: (json['created_at'] ?? json['createdAt']) != null 
+          ? DateTime.tryParse((json['created_at'] ?? json['createdAt']) as String) 
           : null,
-      updatedAt: json['updated_at'] != null 
-          ? DateTime.tryParse(json['updated_at'] as String) 
+      updatedAt: (json['updated_at'] ?? json['updatedAt']) != null 
+          ? DateTime.tryParse((json['updated_at'] ?? json['updatedAt']) as String) 
           : null,
       barcode: json['barcode'] as String?,
       brand: json['brand'] as String?,

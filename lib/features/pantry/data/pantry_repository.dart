@@ -23,7 +23,9 @@ class PantryRepository {
       body: {'action': 'expiring', 'days': days},
     );
 
-    final List<dynamic> data = response.data['data'] ?? [];
+    final payload = response.data['data'] as Map<String, dynamic>?;
+    if (payload == null) return [];
+    final List<dynamic> data = payload['expiringSoonItems'] ?? [];
     return data.map((json) => IngredientModel.fromJson(json as Map<String, dynamic>)).toList();
   }
 

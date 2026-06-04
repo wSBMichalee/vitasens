@@ -102,7 +102,7 @@ class _PantryView extends StatelessWidget {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () => context.go(AppRoutes.addIngredient),
+                          onTap: () => context.push(AppRoutes.addIngredient),
                           child: Container(
                             width: 44.w,
                             height: 44.h,
@@ -236,7 +236,7 @@ class _PantryView extends StatelessWidget {
                       children: [
                         Expanded(
                           child: GestureDetector(
-                            onTap: () => context.go(AppRoutes.scanning),
+                            onTap: () => context.push(AppRoutes.scanning),
                             child: Container(
                               padding: EdgeInsets.symmetric(vertical: 20.h),
                               decoration: BoxDecoration(
@@ -277,7 +277,7 @@ class _PantryView extends StatelessWidget {
                         SizedBox(width: 12.w),
                         Expanded(
                           child: GestureDetector(
-                            onTap: () => context.go(AppRoutes.scanning),
+                            onTap: () => context.push(AppRoutes.scanning),
                             child: Container(
                               padding: EdgeInsets.symmetric(vertical: 20.h),
                               decoration: BoxDecoration(

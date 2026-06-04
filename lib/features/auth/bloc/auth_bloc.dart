@@ -54,7 +54,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final user = UserModel.fromJson(profileData);
       emit(AuthAuthenticated(user: user));
     } catch (e) {
-      emit(AuthError(message: e.toString()));
+      emit(AuthError(message: _parseError(e)));
     }
   }
 
@@ -73,7 +73,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final user = UserModel.fromJson(data);
       emit(AuthAuthenticated(user: user));
     } catch (e) {
-      emit(AuthError(message: e.toString()));
+      emit(AuthError(message: _parseError(e)));
     }
   }
 
@@ -89,7 +89,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final user = UserModel.fromJson(profileData);
       emit(AuthAuthenticated(user: user));
     } catch (e) {
-      emit(AuthError(message: e.toString()));
+      emit(AuthError(message: _parseError(e)));
     }
   }
 
@@ -105,7 +105,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final user = UserModel.fromJson(profileData);
       emit(AuthAuthenticated(user: user));
     } catch (e) {
-      emit(AuthError(message: e.toString()));
+      emit(AuthError(message: _parseError(e)));
     }
   }
 
@@ -127,7 +127,44 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await _authRepository.resetPassword(event.email);
       emit(const AuthPasswordResetSent());
     } catch (e) {
-      emit(AuthError(message: e.toString()));
+      emit(AuthError(message: _parseError(e)));
     }
+  }
+
+  // ─── Error Parser ─────────────────────────────────────────────────────────────
+  String _parseError(dynamic e) {
+    final raw = e.toString().toLowerCase();
+
+    if (raw.contains('already been registered') ||
+        raw.contains('already registered') ||
+        raw.contains('email already')) {
+      return 'This email is already registered. Sign in instead.';
+    }
+    if (raw.contains('invalid email') || raw.contains('invalid_email')) {
+      return 'Please enter a valid email address.';
+    }
+    if (raw.contains('wrong password') ||
+        raw.contains('invalid password') ||
+        raw.contains('invalid_credentials')) {
+      return 'Incorrect email or password.';
+    }
+    if (raw.contains('password') && raw.contains('characters')) {
+      return 'Password must be at least 8 characters.';
+    }
+    if (raw.contains('network') ||
+        raw.contains('socket') ||
+        raw.contains('connection')) {
+      return 'No internet connection. Please try again.';
+    }
+    if (raw.contains('too many') || raw.contains('rate limit')) {
+      return 'Too many attempts. Please wait a moment.';
+    }
+    if (raw.contains('not found') || raw.contains('user not found')) {
+      return 'Account not found. Please sign up first.';
+    }
+    if (raw.contains('expired') || raw.contains('token expired')) {
+      return 'Session expired. Please sign in again.';
+    }
+    return 'Something went wrong. Please try again.';
   }
 }

@@ -39,7 +39,7 @@ class VoiceBloc extends Bloc<VoiceEvent, VoiceState> {
         emit(const VoiceError('Speech recognition not available.'));
       }
     } catch (e) {
-      emit(VoiceError(e.toString()));
+      emit(VoiceError(_parseError(e)));
     }
   }
 
@@ -67,7 +67,7 @@ class VoiceBloc extends Bloc<VoiceEvent, VoiceState> {
         parsedMeal: parsedMeal,
       ));
     } catch (e) {
-      emit(VoiceError(e.toString()));
+      emit(VoiceError(_parseError(e)));
     }
   }
 
@@ -80,7 +80,7 @@ class VoiceBloc extends Bloc<VoiceEvent, VoiceState> {
       await _repository.logMeal(event.mealData);
       emit(const VoiceLogged());
     } catch (e) {
-      emit(VoiceError(e.toString()));
+      emit(VoiceError(_parseError(e)));
     }
   }
 
@@ -92,5 +92,23 @@ class VoiceBloc extends Bloc<VoiceEvent, VoiceState> {
       _speech.stop();
     }
     emit(const VoiceInitial());
+  }
+
+  // ─── Error Parser ──────────────────────────────────────────────────────────────
+  String _parseError(dynamic e) {
+    final raw = e.toString().toLowerCase();
+
+    if (raw.contains('permission')) {
+      return 'Microphone permission required. Please enable in Settings.';
+    }
+    if (raw.contains('network') ||
+        raw.contains('socket') ||
+        raw.contains('connection')) {
+      return 'No internet connection.';
+    }
+    if (raw.contains('not recognized')) {
+      return 'Could not understand. Please speak clearly and try again.';
+    }
+    return 'Could not process voice. Try again.';
   }
 }

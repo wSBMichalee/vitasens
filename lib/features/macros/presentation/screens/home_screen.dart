@@ -330,7 +330,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.go(AppRoutes.scanning),
+        onPressed: () => context.push(AppRoutes.scanning),
         backgroundColor: AppColors.textPrimary,
         elevation: 4,
         shape: const CircleBorder(),

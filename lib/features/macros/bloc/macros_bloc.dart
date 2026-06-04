@@ -35,7 +35,7 @@ class MacrosBloc extends Bloc<MacrosEvent, MacrosState> {
         streakDays: streakDays,
       ));
     } catch (e) {
-      emit(MacrosError(e.toString()));
+      emit(MacrosError(_parseError(e)));
     }
   }
 
@@ -67,5 +67,17 @@ class MacrosBloc extends Bloc<MacrosEvent, MacrosState> {
     } catch (e) {
       // Weekly load failure is non-critical — don't overwrite existing state
     }
+  }
+
+  // ─── Error Parser ──────────────────────────────────────────────────────────────
+  String _parseError(dynamic e) {
+    final raw = e.toString().toLowerCase();
+
+    if (raw.contains('network') ||
+        raw.contains('socket') ||
+        raw.contains('connection')) {
+      return 'No internet connection.';
+    }
+    return 'Could not load your progress. Try again.';
   }
 }

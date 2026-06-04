@@ -26,7 +26,7 @@ class PantryBloc extends Bloc<PantryEvent, PantryState> {
         expiringSoon: expiring,
       ));
     } catch (e) {
-      emit(PantryError(e.toString()));
+      emit(PantryError(_parseError(e)));
     }
   }
 
@@ -52,7 +52,7 @@ class PantryBloc extends Bloc<PantryEvent, PantryState> {
         selectedFilter: filter,
       ));
     } catch (e) {
-      emit(PantryError(e.toString()));
+      emit(PantryError(_parseError(e)));
     }
   }
 
@@ -86,7 +86,21 @@ class PantryBloc extends Bloc<PantryEvent, PantryState> {
       emit(const PantryIngredientAdded());
       add(const RefreshPantry());
     } catch (e) {
-      emit(PantryError(e.toString()));
+      emit(PantryError(_parseError(e)));
     }
+  }
+
+  // ─── Error Parser ──────────────────────────────────────────────────────────────
+  String _parseError(dynamic e) {
+    final raw = e.toString().toLowerCase();
+
+    if (raw.contains('not found')) return 'Ingredient not found.';
+    if (raw.contains('permission')) return "You don't have permission.";
+    if (raw.contains('network') ||
+        raw.contains('socket') ||
+        raw.contains('connection')) {
+      return 'No internet connection.';
+    }
+    return 'Could not update pantry. Try again.';
   }
 }

@@ -23,7 +23,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
       final subscription = await _repository.getStatus();
       emit(SubscriptionLoaded(subscription));
     } catch (e) {
-      emit(SubscriptionError(e.toString()));
+      emit(SubscriptionError(_parseError(e)));
     }
   }
 
@@ -36,7 +36,7 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
       final subscription = await _repository.syncSubscription();
       emit(SubscriptionLoaded(subscription));
     } catch (e) {
-      emit(SubscriptionError(e.toString()));
+      emit(SubscriptionError(_parseError(e)));
     }
   }
 
@@ -49,7 +49,21 @@ class SubscriptionBloc extends Bloc<SubscriptionEvent, SubscriptionState> {
       await _repository.cancelSubscription();
       emit(const SubscriptionCancelled());
     } catch (e) {
-      emit(SubscriptionError(e.toString()));
+      emit(SubscriptionError(_parseError(e)));
     }
+  }
+
+  // ─── Error Parser ──────────────────────────────────────────────────────────────
+  String _parseError(dynamic e) {
+    final raw = e.toString().toLowerCase();
+
+    if (raw.contains('cancelled')) return 'Subscription was cancelled.';
+    if (raw.contains('expired')) return 'Your subscription has expired.';
+    if (raw.contains('network') ||
+        raw.contains('socket') ||
+        raw.contains('connection')) {
+      return 'No internet connection.';
+    }
+    return 'Could not update subscription. Try again.';
   }
 }

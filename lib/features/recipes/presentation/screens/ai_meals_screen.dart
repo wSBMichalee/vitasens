@@ -483,7 +483,7 @@ class _RecipeCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16.r),
                       ),
                     ),
-                    onPressed: () => context.go('/recipe-details/${recipe['id']}', extra: recipe),
+                    onPressed: () => context.push('/recipe-details/${recipe['id']}', extra: recipe),
                     child: Text(
                       "COOK THIS",
                       style: TextStyle(

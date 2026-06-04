@@ -32,7 +32,7 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
         selectedFilter: 'ALL',
       ));
     } catch (e) {
-      emit(RecipesError(e.toString()));
+      emit(RecipesError(_parseError(e)));
     }
   }
 
@@ -74,7 +74,7 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
       await repository.cookRecipe(event.recipeId, 'default', event.servings);
       emit(const RecipesCookingSuccess());
     } catch (e) {
-      emit(RecipesError(e.toString()));
+      emit(RecipesError(_parseError(e)));
     }
   }
   Future<void> _onLoadMyRecipes(
@@ -86,7 +86,7 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
       final recipes = await repository.getMyRecipes();
       emit(MyRecipesLoaded(recipes));
     } catch (e) {
-      emit(RecipesError(e.toString()));
+      emit(RecipesError(_parseError(e)));
     }
   }
 
@@ -108,7 +108,7 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
       );
       emit(RecipeCreated(recipe));
     } catch (e) {
-      emit(RecipesError(e.toString()));
+      emit(RecipesError(_parseError(e)));
     }
   }
 
@@ -120,7 +120,7 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
       await repository.publishRecipe(event.recipeId);
       add(const LoadMyRecipes());
     } catch (e) {
-      emit(RecipesError(e.toString()));
+      emit(RecipesError(_parseError(e)));
     }
   }
 
@@ -132,7 +132,7 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
       await repository.deleteRecipe(event.recipeId);
       add(const LoadMyRecipes());
     } catch (e) {
-      emit(RecipesError(e.toString()));
+      emit(RecipesError(_parseError(e)));
     }
   }
 
@@ -144,7 +144,21 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
       await repository.likeRecipe(event.recipeId);
       add(const LoadMyRecipes());
     } catch (e) {
-      emit(RecipesError(e.toString()));
+      emit(RecipesError(_parseError(e)));
     }
+  }
+
+  // ─── Error Parser ──────────────────────────────────────────────────────────────
+  String _parseError(dynamic e) {
+    final raw = e.toString().toLowerCase();
+
+    if (raw.contains('not found')) return 'Recipe not found.';
+    if (raw.contains('network') ||
+        raw.contains('socket') ||
+        raw.contains('connection')) {
+      return 'No internet connection.';
+    }
+    if (raw.contains('ingredients')) return 'Not enough ingredients in pantry.';
+    return 'Could not load recipes. Try again.';
   }
 }

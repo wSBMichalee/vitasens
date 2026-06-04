@@ -184,7 +184,7 @@ class _SubscriptionCardSection extends StatelessWidget {
                   )
                 else
                   FilledButton(
-                    onPressed: () => context.go(AppRoutes.paywall),
+                    onPressed: () => context.push(AppRoutes.paywall),
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.textWhite,
                       foregroundColor: AppColors.textSecondary,

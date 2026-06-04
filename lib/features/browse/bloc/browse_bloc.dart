@@ -52,7 +52,7 @@ class BrowseBloc extends Bloc<BrowseEvent, BrowseState> {
         isLoadingMore: false,
       ));
     } catch (e) {
-      emit(BrowseError(e.toString()));
+      emit(BrowseError(_parseError(e)));
     }
   }
 
@@ -199,7 +199,19 @@ class BrowseBloc extends Bloc<BrowseEvent, BrowseState> {
         isLoadingMore: false,
       ));
     } catch (e) {
-      emit(BrowseError(e.toString()));
+      emit(BrowseError(_parseError(e)));
     }
+  }
+
+  // ─── Error Parser ──────────────────────────────────────────────────────────────
+  String _parseError(dynamic e) {
+    final raw = e.toString().toLowerCase();
+
+    if (raw.contains('network') ||
+        raw.contains('socket') ||
+        raw.contains('connection')) {
+      return 'No internet connection.';
+    }
+    return 'Could not load recipes. Try again.';
   }
 }

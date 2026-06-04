@@ -104,7 +104,7 @@ class _ScanningViewState extends State<_ScanningView> {
       body: BlocListener<DetectBloc, DetectState>(
         listener: (context, state) {
           if (state is DetectSuccess) {
-            context.go(AppRoutes.aiMeals, extra: state.result);
+            context.push(AppRoutes.aiMeals, extra: state.result);
           } else if (state is DetectError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

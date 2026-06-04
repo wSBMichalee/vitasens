@@ -30,7 +30,7 @@ class ShoppingBloc extends Bloc<ShoppingEvent, ShoppingState> {
       
       emit(ShoppingLoaded(itemsToBuy, purchasedItems));
     } catch (e) {
-      emit(ShoppingError(e.toString()));
+      emit(ShoppingError(_parseError(e)));
     }
   }
 
@@ -43,7 +43,7 @@ class ShoppingBloc extends Bloc<ShoppingEvent, ShoppingState> {
       await _repository.addItem(event.name, event.quantity, event.unit);
       add(const LoadShoppingList()); // reload
     } catch (e) {
-      emit(ShoppingError(e.toString()));
+      emit(ShoppingError(_parseError(e)));
       add(const LoadShoppingList()); // reload on error to restore view
     }
   }
@@ -57,7 +57,7 @@ class ShoppingBloc extends Bloc<ShoppingEvent, ShoppingState> {
       await _repository.markPurchased(event.itemId);
       add(const LoadShoppingList()); // reload
     } catch (e) {
-      emit(ShoppingError(e.toString()));
+      emit(ShoppingError(_parseError(e)));
       add(const LoadShoppingList());
     }
   }
@@ -71,7 +71,7 @@ class ShoppingBloc extends Bloc<ShoppingEvent, ShoppingState> {
       await _repository.deleteItem(event.itemId);
       add(const LoadShoppingList()); // reload
     } catch (e) {
-      emit(ShoppingError(e.toString()));
+      emit(ShoppingError(_parseError(e)));
       add(const LoadShoppingList());
     }
   }
@@ -85,7 +85,7 @@ class ShoppingBloc extends Bloc<ShoppingEvent, ShoppingState> {
       await _repository.clearPurchased();
       add(const LoadShoppingList()); // reload
     } catch (e) {
-      emit(ShoppingError(e.toString()));
+      emit(ShoppingError(_parseError(e)));
       add(const LoadShoppingList());
     }
   }
@@ -99,8 +99,20 @@ class ShoppingBloc extends Bloc<ShoppingEvent, ShoppingState> {
       await _repository.moveToPantry();
       add(const LoadShoppingList()); // reload
     } catch (e) {
-      emit(ShoppingError(e.toString()));
+      emit(ShoppingError(_parseError(e)));
       add(const LoadShoppingList());
     }
+  }
+
+  // ─── Error Parser ──────────────────────────────────────────────────────────────
+  String _parseError(dynamic e) {
+    final raw = e.toString().toLowerCase();
+
+    if (raw.contains('network') ||
+        raw.contains('socket') ||
+        raw.contains('connection')) {
+      return 'No internet connection.';
+    }
+    return 'Could not update shopping list. Try again.';
   }
 }

@@ -20,7 +20,8 @@ class AuthRepository {
         'fullName': fullName,
       },
     );
-    return Map<String, dynamic>.from(response.data as Map);
+    final responseData = response.data as Map;
+    return Map<String, dynamic>.from(responseData['data'] as Map);
   }
 
   // ─── Sign In ──────────────────────────────────────────────────────────────────
@@ -87,7 +88,8 @@ class AuthRepository {
       },
     );
 
-    return Map<String, dynamic>.from(response.data as Map);
+    final responseData = response.data as Map;
+    return Map<String, dynamic>.from(responseData['data'] as Map);
   }
 
   // ─── Sign In with Apple ───────────────────────────────────────────────────────
@@ -117,7 +119,8 @@ class AuthRepository {
       },
     );
 
-    return Map<String, dynamic>.from(response.data as Map);
+    final responseData = response.data as Map;
+    return Map<String, dynamic>.from(responseData['data'] as Map);
   }
 
   // ─── Get User Profile ─────────────────────────────────────────────────────────
@@ -128,7 +131,8 @@ class AuthRepository {
         'action': 'get_user',
       },
     );
-    return Map<String, dynamic>.from(response.data as Map);
+    final responseData = response.data as Map;
+    return Map<String, dynamic>.from(responseData['data'] as Map);
   }
 
   // ─── Update Profile ───────────────────────────────────────────────────────────
@@ -150,7 +154,8 @@ class AuthRepository {
         'action': 'calculate_targets',
       },
     );
-    return Map<String, dynamic>.from(response.data as Map);
+    final responseData = response.data as Map;
+    return Map<String, dynamic>.from(responseData['data'] as Map);
   }
 
   // ─── Complete Onboarding ──────────────────────────────────────────────────────

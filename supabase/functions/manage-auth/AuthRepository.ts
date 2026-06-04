@@ -47,6 +47,17 @@ export class AuthRepository {
       throw new ValidationError(`Potwierdzanie konta nie powiodło się: ${confirmError.message}`);
     }
 
+    // Ensure the profile is created in the database
+    const { error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .upsert({
+        id: data.user.id,
+        name: fullName,
+      }, { onConflict: 'id' });
+    if (profileError) {
+      throw new ValidationError(`Błąd podczas tworzenia profilu: ${profileError.message}`);
+    }
+
     return {
       userId: data.user.id,
       email: data.user.email ?? email,

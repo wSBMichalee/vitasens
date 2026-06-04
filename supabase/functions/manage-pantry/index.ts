@@ -15,12 +15,42 @@ serve(async (req: Request) => {
     const { action, ...data } = await req.json();
     let result;
     switch (action) {
-      case 'add': result = await PantryRepository.add(AddIngredientSchema.parse(data)); break;
-      case 'update': result = await PantryRepository.update(UpdateIngredientSchema.parse(data)); break;
-      case 'delete': await PantryRepository.delete(DeleteIngredientSchema.parse(data).id); result = { success: true }; break;
-      case 'list': result = await PantryRepository.list(ListPantrySchema.parse(data).pantryId); break;
-      case 'expiring': result = await ExpiryChecker.getSummary(ListPantrySchema.parse(data).pantryId); break;
-      default: throw new ValidationError('Nieznana akcja');
+      case 'add': {
+        let pantryId = data.pantryId || data.pantry_id;
+        if (!pantryId || pantryId === 'default') {
+          pantryId = await PantryRepository.getPantryIdForUser(userId);
+        }
+        const parsedData = AddIngredientSchema.parse({ ...data, pantryId });
+        result = await PantryRepository.add(parsedData);
+        break;
+      }
+      case 'update': {
+        result = await PantryRepository.update(UpdateIngredientSchema.parse(data));
+        break;
+      }
+      case 'delete': {
+        await PantryRepository.delete(DeleteIngredientSchema.parse(data).id);
+        result = { success: true };
+        break;
+      }
+      case 'list': {
+        let pantryId = data.pantryId || data.pantry_id;
+        if (!pantryId || pantryId === 'default') {
+          pantryId = await PantryRepository.getPantryIdForUser(userId);
+        }
+        result = await PantryRepository.list(pantryId);
+        break;
+      }
+      case 'expiring': {
+        let pantryId = data.pantryId || data.pantry_id;
+        if (!pantryId || pantryId === 'default') {
+          pantryId = await PantryRepository.getPantryIdForUser(userId);
+        }
+        result = await ExpiryChecker.getSummary(pantryId);
+        break;
+      }
+      default:
+        throw new ValidationError('Nieznana akcja');
     }
     return new Response(JSON.stringify({ success: true, data: result }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (error) {

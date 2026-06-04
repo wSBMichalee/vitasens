@@ -23,18 +23,25 @@ class UserModel {
     this.dailyFatTarget,
   });
 
+  static int? _toInt(dynamic val) {
+    if (val == null) return null;
+    if (val is num) return val.toInt();
+    if (val is String) return int.tryParse(val);
+    return null;
+  }
+
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id'] as String,
-      email: json['email'] as String,
-      fullName: json['full_name'] as String?,
-      onboardingCompleted: (json['onboarding_completed'] as bool?) ?? false,
-      subscriptionStatus: json['subscription_status'] as String?,
-      goalType: json['goal_type'] as String?,
-      dailyCalorieTarget: json['daily_calorie_target'] as int?,
-      dailyProteinTarget: json['daily_protein_target'] as int?,
-      dailyCarbsTarget: json['daily_carbs_target'] as int?,
-      dailyFatTarget: json['daily_fat_target'] as int?,
+      id: (json['id'] ?? json['userId'] ?? '') as String,
+      email: (json['email'] ?? '') as String,
+      fullName: (json['full_name'] ?? json['fullName']) as String?,
+      onboardingCompleted: (json['onboarding_completed'] as bool?) ?? (json['onboardingCompleted'] as bool?) ?? false,
+      subscriptionStatus: (json['subscription_status'] ?? json['subscriptionStatus']) as String?,
+      goalType: (json['goal_type'] ?? json['goalType']) as String?,
+      dailyCalorieTarget: _toInt(json['daily_calorie_target'] ?? json['dailyCalorieTarget']),
+      dailyProteinTarget: _toInt(json['daily_protein_target'] ?? json['dailyProteinTarget']),
+      dailyCarbsTarget: _toInt(json['daily_carbs_target'] ?? json['dailyCarbsTarget']),
+      dailyFatTarget: _toInt(json['daily_fat_target'] ?? json['dailyFatTarget']),
     );
   }
 

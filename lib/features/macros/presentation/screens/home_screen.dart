@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
+import 'package:vitasense/core/theme/app_text_styles.dart';
+import 'package:vitasense/features/auth/bloc/auth_bloc.dart';
+import 'package:vitasense/features/auth/bloc/auth_state.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,20 +32,24 @@ class _HomeScreenState extends State<HomeScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "Welcome back, Alex",
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          color: AppColors.textSecondary,
-                        ),
+                      BlocBuilder<AuthBloc, AuthState>(
+                        builder: (context, state) {
+                          final name = (state is AuthAuthenticated)
+                              ? (state.user.fullName?.split(' ').first ?? 'there')
+                              : 'there';
+                          return Text(
+                            'Welcome back, $name',
+                            style: AppTextStyles.bodyMedium,
+                          );
+                        },
                       ),
-                      Text(
-                        "Today's progress",
-                        style: TextStyle(
-                          fontSize: 24.sp,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
+                      BlocBuilder<AuthBloc, AuthState>(
+                        builder: (context, state) {
+                          return Text(
+                            "Today's progress",
+                            style: AppTextStyles.headingLarge,
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -69,10 +77,30 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   SizedBox(width: 12.w),
-                  CircleAvatar(
-                    radius: 20.r,
-                    backgroundColor: AppColors.border,
-                    child: Icon(Icons.person, color: AppColors.textSecondary, size: 20.r),
+                  BlocBuilder<AuthBloc, AuthState>(
+                    builder: (context, state) {
+                      final name = (state is AuthAuthenticated)
+                          ? (state.user.fullName ?? 'U')
+                          : 'U';
+                      final initials = name
+                          .split(' ')
+                          .map((e) => e.isNotEmpty ? e[0] : '')
+                          .take(2)
+                          .join()
+                          .toUpperCase();
+                      return CircleAvatar(
+                        radius: 20.r,
+                        backgroundColor: AppColors.borderLight,
+                        child: Text(
+                          initials.isNotEmpty ? initials : 'U',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

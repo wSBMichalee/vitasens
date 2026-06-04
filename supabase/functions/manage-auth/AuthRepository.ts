@@ -28,14 +28,25 @@ export class AuthRepository {
     password: string,
     fullName: string,
   ): Promise<AuthResult> {
-    const supabase = getSupabaseAdmin();
-    const { data, error } = await supabase.auth.admin.createUser({
+    const supabaseAdmin = getSupabaseAdmin();
+    const { data, error } = await supabaseAdmin.auth.signUp({
       email,
       password,
-      email_confirm: false,
-      user_metadata: { full_name: fullName },
+      options: {
+        data: { full_name: fullName }
+      }
     });
-    if (error) throw new ValidationError(error.message);
+    if (error || !data.user) throw new ValidationError(error?.message ?? 'Rejestracja nie powiodła się.');
+
+    // Auto-confirm email to allow immediate sign-in
+    const { error: confirmError } = await supabaseAdmin.auth.admin.updateUserById(
+      data.user.id,
+      { email_confirm: true }
+    );
+    if (confirmError) {
+      throw new ValidationError(`Potwierdzanie konta nie powiodło się: ${confirmError.message}`);
+    }
+
     return {
       userId: data.user.id,
       email: data.user.email ?? email,

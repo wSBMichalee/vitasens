@@ -1,274 +1,203 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:vitasense/core/router/app_router.dart';
-import 'package:vitasense/core/theme/app_text_styles.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
+import 'package:vitasense/core/theme/app_text_styles.dart';
 
-class PaywallScreen extends StatefulWidget {
+class PaywallScreen extends StatelessWidget {
   const PaywallScreen({super.key});
 
-  @override
-  State<PaywallScreen> createState() => _PaywallScreenState();
-}
+  static const String _heroImageUrl =
+      'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=1200&q=80';
 
-class _PaywallScreenState extends State<PaywallScreen> {
-  bool _yearlySelected = true;
+  static const List<String> _features = [
+    'Meals from your own ingredients',
+    'Tailored to your health',
+    'No more guessing what to eat',
+    'Save time and reduce food waste',
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.backgroundWhite,
       body: Stack(
         children: [
-          // 1. Hero image (góra, fullWidth, height 280)
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 280.h,
-            child: Stack(
-              fit: StackFit.expand,
+          // ─── Scrollable content ────────────────────────────────────────────
+          SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(color: AppColors.successLight), // Placeholder
-                Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        AppColors.background,
-                      ],
+                // ─── Hero image ──────────────────────────────────────────────
+                SizedBox(
+                  height: 240.h,
+                  width: double.infinity,
+                  child: CachedNetworkImage(
+                    imageUrl: _heroImageUrl,
+                    fit: BoxFit.cover,
+                    placeholder: (_, __) => Shimmer.fromColors(
+                      baseColor: AppColors.border,
+                      highlightColor: AppColors.borderLight,
+                      child: Container(color: AppColors.border),
                     ),
+                    errorWidget: (_, __, ___) =>
+                        Container(color: AppColors.successLight),
+                  ),
+                ).animate().fadeIn(duration: 500.ms),
+
+                // ─── Body ────────────────────────────────────────────────────
+                Padding(
+                  padding: EdgeInsets.fromLTRB(24.w, 24.h, 24.w, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Unlock your\npersonalized meal plan',
+                        style: TextStyle(
+                          fontSize: 26.sp,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                          fontFamily: AppTextStyles.headingXL.fontFamily,
+                          height: 1.2,
+                        ),
+                      ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0),
+
+                      SizedBox(height: 24.h),
+
+                      // Feature bullets
+                      ...List.generate(_features.length, (i) => Padding(
+                        padding: EdgeInsets.only(bottom: 16.h),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 28.r,
+                              height: 28.r,
+                              decoration: const BoxDecoration(
+                                color: AppColors.primaryLight,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.check,
+                                  color: AppColors.primary, size: 14.r),
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: Text(
+                                _features[i],
+                                style: TextStyle(
+                                  fontSize: 15.sp,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ).animate(delay: Duration(milliseconds: 80 + i * 60))
+                        .fadeIn(duration: 400.ms)
+                        .slideX(begin: -0.04, end: 0)),
+
+                      SizedBox(height: 8.h),
+
+                      // ─── Yearly plan card (selected) ──────────────────────
+                      const _PlanCard(
+                        title: 'Yearly Plan',
+                        price: '\$4.91',
+                        priceSuffix: '/mo',
+                        billingNote: '\$59.00 billed annually',
+                        badgeText: 'BEST VALUE',
+                        isSelected: true,
+                        delay: 280,
+                      ),
+
+                      SizedBox(height: 12.h),
+
+                      // ─── Monthly plan card ────────────────────────────────
+                      const _PlanCard(
+                        title: 'Monthly Plan',
+                        price: '\$9.99',
+                        priceSuffix: '/mo',
+                        billingNote: 'Billed monthly',
+                        badgeText: null,
+                        isSelected: false,
+                        delay: 320,
+                      ),
+
+                      SizedBox(height: 24.h),
+
+                      // ─── CTA ──────────────────────────────────────────────
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56.h,
+                        child: FilledButton(
+                          onPressed: () =>
+                              context.go(AppRoutes.successPurchase),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.backgroundDark,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16.r),
+                            ),
+                          ),
+                          child: Text(
+                            'Start My Plan',
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              fontFamily: AppTextStyles.labelLarge.fontFamily,
+                            ),
+                          ),
+                        ),
+                      ).animate(delay: 360.ms).fadeIn(duration: 400.ms),
+
+                      SizedBox(height: 12.h),
+
+                      Center(
+                        child: Text(
+                          'CANCEL ANYTIME',
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textMuted,
+                            letterSpacing: 1.0,
+                          ),
+                        ),
+                      ).animate(delay: 360.ms).fadeIn(duration: 400.ms),
+
+                      SizedBox(height: 40.h),
+                    ],
                   ),
                 ),
               ],
-            ).animate().fadeIn(duration: 400.ms),
-          ),
-
-          // 3. Scrollowalny content
-          Positioned.fill(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(
-                left: 24,
-                right: 24,
-                top: 240, // Zawartość zaczyna się pod końcem Hero Image
-                bottom: 40,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    "Unlock Your Kitchen's Full Potential",
-                    style: TextStyle(
-                      fontSize: 26.sp,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                      fontFamily: AppTextStyles.headingXL.fontFamily,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 8.h),
-                  Text(
-                    "Get personalized meal ideas for every\nhealth goal and every ingredient in your pantry.",
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      color: AppColors.textSecondary,
-                      height: 1.5,
-                      fontFamily: AppTextStyles.bodyMedium.fontFamily,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 24.h),
-                  
-                  _buildFeatureRow("Unlimited Meal Matching"),
-                  _buildFeatureRow("Advanced Health Goal Analytics"),
-                  _buildFeatureRow("Priority Support & New Recipes Daily"),
-                  
-                  SizedBox(height: 28.h),
-
-                  // PLAN SELECTOR - Yearly plan
-                  GestureDetector(
-                    onTap: () => setState(() => _yearlySelected = true),
-                    child: Container(
-                      padding: EdgeInsets.all(16.r),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(
-                          color: _yearlySelected ? AppColors.primary : AppColors.border,
-                          width: _yearlySelected ? 2 : 1,
-                        ),
-                        borderRadius: BorderRadius.circular(16.r),
-                      ),
-                      child: Row(
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Yearly",
-                                style: TextStyle(
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
-                                  fontFamily: AppTextStyles.labelLarge.fontFamily,
-                                ),
-                              ),
-                              Text(
-                                "BEST VALUE",
-                                style: TextStyle(
-                                  fontSize: 11.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.primary,
-                                  letterSpacing: 1.0,
-                                  fontFamily: AppTextStyles.captionBold.fontFamily,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const Spacer(),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                "\$4.99/mo",
-                                style: TextStyle(
-                                  fontSize: 20.sp,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
-                                  fontFamily: AppTextStyles.numberMedium.fontFamily,
-                                ),
-                              ),
-                              Text(
-                                "Billed annually",
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  color: AppColors.textSecondary,
-                                  fontFamily: AppTextStyles.bodySmall.fontFamily,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ).animate(delay: 100.ms).fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0, duration: 400.ms),
-
-                  SizedBox(height: 12.h),
-
-                  // PLAN SELECTOR - Monthly plan
-                  GestureDetector(
-                    onTap: () => setState(() => _yearlySelected = false),
-                    child: Container(
-                      padding: EdgeInsets.all(16.r),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(
-                          color: !_yearlySelected ? AppColors.primary : AppColors.border,
-                          width: !_yearlySelected ? 2 : 1,
-                        ),
-                        borderRadius: BorderRadius.circular(16.r),
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            "Monthly",
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w600,
-                              color: !_yearlySelected ? AppColors.textPrimary : AppColors.textSecondary,
-                              fontFamily: AppTextStyles.labelLarge.fontFamily,
-                            ),
-                          ),
-                          const Spacer(),
-                          Text(
-                            "\$9.99/mo",
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w600,
-                              color: !_yearlySelected ? AppColors.textPrimary : AppColors.textSecondary,
-                              fontFamily: AppTextStyles.labelLarge.fontFamily,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ).animate(delay: 200.ms).fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0, duration: 400.ms),
-
-                  SizedBox(height: 28.h),
-
-                  // CTA Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56.h,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.backgroundDark,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16.r),
-                        ),
-                      ),
-                      onPressed: () => context.go(AppRoutes.successPurchase),
-                      child: Text(
-                        _yearlySelected ? "Try Free for 3 Days" : "Try Free for 7 Days",
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                          fontFamily: AppTextStyles.labelLarge.fontFamily,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: 12.h),
-
-                  Text(
-                    _yearlySelected
-                        ? "3 DAYS FREE, THEN \$59/YEAR. CANCEL ANYTIME."
-                        : "7 DAYS FREE, THEN \$9.99/MONTH. CANCEL ANYTIME.",
-                    style: TextStyle(
-                      fontSize: 11.sp,
-                      color: AppColors.textMuted,
-                      letterSpacing: 0.5,
-                      fontFamily: AppTextStyles.caption.fontFamily,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ).animate(delay: 200.ms).fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0, duration: 400.ms),
             ),
           ),
 
-          // 2. X button (top-right)
+          // ─── X close button ────────────────────────────────────────────────
           SafeArea(
             child: Align(
               alignment: Alignment.topRight,
               child: Padding(
-                padding: EdgeInsets.all(16.0.r),
+                padding: EdgeInsets.all(16.r),
                 child: GestureDetector(
                   onTap: () => context.go(AppRoutes.home),
                   child: Container(
-                    width: 36.w,
-                    height: 36.h,
+                    width: 36.r,
+                    height: 36.r,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.9),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
+                          color: Colors.black.withValues(alpha: 0.12),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
                       ],
                     ),
-                    child: Icon(
-                      Icons.close,
-                      color: AppColors.textPrimary,
-                      size: 18.r,
-                    ),
+                    child: Icon(Icons.close,
+                        color: AppColors.textPrimary, size: 18.r),
                   ),
                 ),
               ),
@@ -278,26 +207,114 @@ class _PaywallScreenState extends State<PaywallScreen> {
       ),
     );
   }
+}
 
-  Widget _buildFeatureRow(String feature) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Row(
-        children: [
-          Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 20.r),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Text(
-              feature,
-              style: TextStyle(
-                fontSize: 15.sp,
-                color: AppColors.textPrimary,
-                fontFamily: AppTextStyles.bodyLarge.fontFamily,
+// ─── Plan card ─────────────────────────────────────────────────────────────────
+class _PlanCard extends StatelessWidget {
+  const _PlanCard({
+    required this.title,
+    required this.price,
+    required this.priceSuffix,
+    required this.billingNote,
+    required this.badgeText,
+    required this.isSelected,
+    required this.delay,
+  });
+
+  final String title;
+  final String price;
+  final String priceSuffix;
+  final String billingNote;
+  final String? badgeText;
+  final bool isSelected;
+  final int delay;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 16.h),
+          decoration: BoxDecoration(
+            color: AppColors.backgroundWhite,
+            border: Border.all(
+              color: isSelected ? AppColors.primary : AppColors.border,
+              width: isSelected ? 2 : 1,
+            ),
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      billingNote,
+                      style: TextStyle(
+                          fontSize: 13.sp, color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    price,
+                    style: TextStyle(
+                      fontSize: 22.sp,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                      fontFamily: AppTextStyles.numberMedium.fontFamily,
+                    ),
+                  ),
+                  Text(
+                    priceSuffix,
+                    style: TextStyle(
+                        fontSize: 13.sp, color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        if (badgeText != null)
+          Positioned(
+            top: -12.h,
+            right: 16.w,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(20.r),
+              ),
+              child: Text(
+                badgeText!,
+                style: TextStyle(
+                  fontSize: 11.sp,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  letterSpacing: 0.5,
+                ),
               ),
             ),
           ),
-        ],
-      ),
-    );
+      ],
+    )
+        .animate(delay: Duration(milliseconds: delay))
+        .fadeIn(duration: 400.ms)
+        .slideY(begin: 0.05, end: 0);
   }
 }

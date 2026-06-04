@@ -24,6 +24,15 @@ class DeleteIngredient extends PantryEvent {
   List<Object?> get props => [id];
 }
 
+class FilterPantry extends PantryEvent {
+  final String filter; // 'all' | 'expiring' | 'low_stock'
+
+  const FilterPantry(this.filter);
+
+  @override
+  List<Object?> get props => [filter];
+}
+
 class AddIngredient extends PantryEvent {
   final String name;
   final double quantity;

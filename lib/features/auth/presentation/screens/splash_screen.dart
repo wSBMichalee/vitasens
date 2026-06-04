@@ -28,7 +28,7 @@ class _SplashScreenState extends State<SplashScreen> {
             context.go(AppRoutes.home);
           }
         } else if (state is AuthUnauthenticated) {
-          context.go(AppRoutes.login);
+          context.go(AppRoutes.landing);
         }
       },
       child: Scaffold(

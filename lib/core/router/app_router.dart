@@ -7,6 +7,7 @@ import 'package:vitasense/features/auth/bloc/auth_bloc.dart';
 import 'package:vitasense/features/auth/bloc/auth_state.dart';
 
 import 'package:vitasense/features/auth/presentation/screens/splash_screen.dart';
+import 'package:vitasense/features/auth/presentation/screens/landing_screen.dart';
 import 'package:vitasense/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:vitasense/features/auth/presentation/screens/login_screen.dart';
 import 'package:vitasense/features/auth/presentation/screens/signup_screen.dart';
@@ -14,6 +15,7 @@ import 'package:vitasense/features/auth/presentation/screens/forgot_password_scr
 import 'package:vitasense/features/auth/presentation/screens/user_onboarding_screen.dart';
 import 'package:vitasense/features/subscription/presentation/screens/paywall_screen.dart';
 import 'package:vitasense/features/subscription/presentation/screens/paywall_discount_screen.dart';
+import 'package:vitasense/features/subscription/presentation/screens/social_proof_screen.dart';
 import 'package:vitasense/features/subscription/presentation/screens/success_purchase_screen.dart';
 import 'package:vitasense/features/macros/presentation/screens/home_screen.dart';
 import 'package:vitasense/features/pantry/presentation/screens/pantry_screen.dart';
@@ -31,18 +33,23 @@ import 'package:vitasense/features/extract/presentation/screens/extract_screen.d
 import 'package:vitasense/features/recipes/presentation/screens/create_recipe_screen.dart';
 import 'package:vitasense/features/macros/presentation/screens/progress_history_screen.dart';
 import 'package:vitasense/features/voice/presentation/screens/voice_log_screen.dart';
+import 'package:vitasense/features/showcase/presentation/screens/vitasense_mockup_screens.dart';
 
 // ─── STAŁE NAZWY TRAS ─────────────────────────────────────────────────────────
 class AppRoutes {
   const AppRoutes._();
 
   static const String splash = '/';
+  static const String landing = '/landing';
   static const String login = '/login';
   static const String signup = '/signup';
   static const String forgotPassword = '/forgot-password';
   static const String userOnboarding = '/user-onboarding';
   static const String onboarding = '/onboarding';
   static const String valueExplanation = '/value-explanation';
+  static const String problemFatigue = '/problem-fatigue';
+  static const String featureMatcher = '/feature-matcher';
+  static const String resultsAnalysis = '/results-analysis';
   static const String socialProof = '/social-proof';
   static const String reinforcement = '/reinforcement';
   static const String paywall = '/paywall';
@@ -77,11 +84,18 @@ final GoRouter appRouter = GoRouter(
 
     final publicRoutes = [
       AppRoutes.splash,
+      AppRoutes.landing,
       AppRoutes.login,
       AppRoutes.signup,
       AppRoutes.forgotPassword,
       AppRoutes.onboarding,
       AppRoutes.userOnboarding,
+      AppRoutes.valueExplanation,
+      AppRoutes.problemFatigue,
+      AppRoutes.featureMatcher,
+      AppRoutes.resultsAnalysis,
+      AppRoutes.socialProof,
+      AppRoutes.reinforcement,
       AppRoutes.paywall,
       AppRoutes.paywallDiscount,
       AppRoutes.successPurchase,
@@ -94,13 +108,14 @@ final GoRouter appRouter = GoRouter(
     }
 
     if (authState is AuthUnauthenticated) {
-      return isPublic ? null : AppRoutes.login;
+      return isPublic ? null : AppRoutes.landing;
     }
 
     if (authState is AuthAuthenticated) {
       final user = authState.user;
 
       if (location == AppRoutes.splash ||
+          location == AppRoutes.landing ||
           location == AppRoutes.login ||
           location == AppRoutes.signup) {
         if (!user.onboardingCompleted) {
@@ -118,26 +133,27 @@ final GoRouter appRouter = GoRouter(
     // SPLASH
     GoRoute(
       path: AppRoutes.splash,
-      pageBuilder: (context, state) => _fadePage(
-        state: state,
-        child: const SplashScreen(),
-      ),
+      pageBuilder: (context, state) =>
+          _fadePage(state: state, child: const SplashScreen()),
+    ),
+
+    // LANDING
+    GoRoute(
+      path: AppRoutes.landing,
+      pageBuilder: (context, state) =>
+          _fadePage(state: state, child: const LandingScreen()),
     ),
 
     // ─── AUTH FLOW ───────────────────────────────────────────────────────────
     GoRoute(
       path: AppRoutes.login,
-      pageBuilder: (context, state) => _slideHorizontalPage(
-        state: state,
-        child: const LoginScreen(),
-      ),
+      pageBuilder: (context, state) =>
+          _slideHorizontalPage(state: state, child: const LoginScreen()),
     ),
     GoRoute(
       path: AppRoutes.signup,
-      pageBuilder: (context, state) => _slideHorizontalPage(
-        state: state,
-        child: const SignupScreen(),
-      ),
+      pageBuilder: (context, state) =>
+          _slideHorizontalPage(state: state, child: const SignupScreen()),
     ),
     GoRoute(
       path: AppRoutes.forgotPassword,
@@ -157,24 +173,41 @@ final GoRouter appRouter = GoRouter(
     // ─── ONBOARDING FLOW ─────────────────────────────────────────────────────
     GoRoute(
       path: AppRoutes.onboarding,
-      pageBuilder: (context, state) => _slideHorizontalPage(
-        state: state,
-        child: const OnboardingScreen(),
-      ),
+      pageBuilder: (context, state) =>
+          _slideHorizontalPage(state: state, child: const OnboardingScreen()),
     ),
     GoRoute(
       path: AppRoutes.valueExplanation,
       pageBuilder: (context, state) => _slideHorizontalPage(
         state: state,
-        child: const _PlaceholderScreen(name: 'Why VitaSense?'),
+        child: const ProblemFatigueScreen(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.problemFatigue,
+      pageBuilder: (context, state) => _slideHorizontalPage(
+        state: state,
+        child: const ProblemFatigueScreen(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.featureMatcher,
+      pageBuilder: (context, state) => _slideHorizontalPage(
+        state: state,
+        child: const FeatureMatcherScreen(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.resultsAnalysis,
+      pageBuilder: (context, state) => _slideHorizontalPage(
+        state: state,
+        child: const ResultsAnalysisScreen(),
       ),
     ),
     GoRoute(
       path: AppRoutes.socialProof,
-      pageBuilder: (context, state) => _slideHorizontalPage(
-        state: state,
-        child: const _PlaceholderScreen(name: '50,000+ Social Proof'),
-      ),
+      pageBuilder: (context, state) =>
+          _slideHorizontalPage(state: state, child: const SocialProofScreen()),
     ),
     GoRoute(
       path: AppRoutes.reinforcement,
@@ -187,24 +220,18 @@ final GoRouter appRouter = GoRouter(
     // ─── PAYWALL FLOW ────────────────────────────────────────────────────────
     GoRoute(
       path: AppRoutes.paywall,
-      pageBuilder: (context, state) => _slideUpPage(
-        state: state,
-        child: const PaywallScreen(),
-      ),
+      pageBuilder: (context, state) =>
+          _slideUpPage(state: state, child: const PaywallScreen()),
     ),
     GoRoute(
       path: AppRoutes.paywallDiscount,
-      pageBuilder: (context, state) => _slideUpPage(
-        state: state,
-        child: const PaywallDiscountScreen(),
-      ),
+      pageBuilder: (context, state) =>
+          _slideUpPage(state: state, child: const PaywallDiscountScreen()),
     ),
     GoRoute(
       path: AppRoutes.successPurchase,
-      pageBuilder: (context, state) => _slideUpPage(
-        state: state,
-        child: const SuccessPurchaseScreen(),
-      ),
+      pageBuilder: (context, state) =>
+          _slideUpPage(state: state, child: const SuccessPurchaseScreen()),
     ),
 
     // ─── MAIN APP (SHELL ROUTE z bottom navigation) ──────────────────────────
@@ -215,17 +242,13 @@ final GoRouter appRouter = GoRouter(
       routes: [
         GoRoute(
           path: AppRoutes.home,
-          pageBuilder: (context, state) => _fadePage(
-            state: state,
-            child: const HomeScreen(),
-          ),
+          pageBuilder: (context, state) =>
+              _fadePage(state: state, child: const HomeScreen()),
         ),
         GoRoute(
           path: AppRoutes.pantry,
-          pageBuilder: (context, state) => _fadePage(
-            state: state,
-            child: const PantryScreen(),
-          ),
+          pageBuilder: (context, state) =>
+              _fadePage(state: state, child: const PantryScreen()),
         ),
         GoRoute(
           path: AppRoutes.aiMeals,
@@ -234,26 +257,22 @@ final GoRouter appRouter = GoRouter(
             child: AiMealsScreen(
               ingredients: state.extra is Map<String, dynamic>
                   ? (state.extra as Map<String, dynamic>)['ingredients']
-                      as List<String>?
+                        as List<String>?
                   : state.extra is List<String>
-                      ? state.extra as List<String>
-                      : null,
+                  ? state.extra as List<String>
+                  : null,
             ),
           ),
         ),
         GoRoute(
           path: AppRoutes.progress,
-          pageBuilder: (context, state) => _fadePage(
-            state: state,
-            child: const ProgressScreen(),
-          ),
+          pageBuilder: (context, state) =>
+              _fadePage(state: state, child: const ProgressScreen()),
         ),
         GoRoute(
           path: AppRoutes.profile,
-          pageBuilder: (context, state) => _fadePage(
-            state: state,
-            child: const ProfileScreen(),
-          ),
+          pageBuilder: (context, state) =>
+              _fadePage(state: state, child: const ProfileScreen()),
         ),
       ],
     ),
@@ -261,31 +280,23 @@ final GoRouter appRouter = GoRouter(
     // ─── FULLSCREEN ROUTES (poza shell) ──────────────────────────────────────
     GoRoute(
       path: '/browse-recipes',
-      pageBuilder: (context, state) => _slideUpPage(
-        state: state,
-        child: const BrowseScreen(),
-      ),
+      pageBuilder: (context, state) =>
+          _slideUpPage(state: state, child: const BrowseScreen()),
     ),
     GoRoute(
       path: '/shopping',
-      pageBuilder: (context, state) => _slideUpPage(
-        state: state,
-        child: const ShoppingListScreen(),
-      ),
+      pageBuilder: (context, state) =>
+          _slideUpPage(state: state, child: const ShoppingListScreen()),
     ),
     GoRoute(
       path: AppRoutes.addIngredient,
-      pageBuilder: (context, state) => _slideUpPage(
-        state: state,
-        child: const AddIngredientScreen(),
-      ),
+      pageBuilder: (context, state) =>
+          _slideUpPage(state: state, child: const AddIngredientScreen()),
     ),
     GoRoute(
       path: AppRoutes.scanning,
-      pageBuilder: (context, state) => _slideUpPage(
-        state: state,
-        child: const ScanningScreen(),
-      ),
+      pageBuilder: (context, state) =>
+          _slideUpPage(state: state, child: const ScanningScreen()),
     ),
     GoRoute(
       path: AppRoutes.recipeDetails,
@@ -299,45 +310,33 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.progressHistory,
-      pageBuilder: (context, state) => _fadePage(
-        state: state,
-        child: const ProgressHistoryScreen(),
-      ),
+      pageBuilder: (context, state) =>
+          _fadePage(state: state, child: const ProgressHistoryScreen()),
     ),
     GoRoute(
       path: AppRoutes.settings,
-      pageBuilder: (context, state) => _fadePage(
-        state: state,
-        child: const SettingsScreen(),
-      ),
+      pageBuilder: (context, state) =>
+          _fadePage(state: state, child: const SettingsScreen()),
     ),
     GoRoute(
       path: AppRoutes.family,
-      pageBuilder: (context, state) => _slideUpPage(
-        state: state,
-        child: const FamilyScreen(),
-      ),
+      pageBuilder: (context, state) =>
+          _slideUpPage(state: state, child: const FamilyScreen()),
     ),
     GoRoute(
       path: AppRoutes.extract,
-      pageBuilder: (context, state) => _slideUpPage(
-        state: state,
-        child: const ExtractScreen(),
-      ),
+      pageBuilder: (context, state) =>
+          _slideUpPage(state: state, child: const ExtractScreen()),
     ),
     GoRoute(
       path: AppRoutes.myRecipes,
-      pageBuilder: (context, state) => _slideUpPage(
-        state: state,
-        child: const CreateRecipeScreen(),
-      ),
+      pageBuilder: (context, state) =>
+          _slideUpPage(state: state, child: const CreateRecipeScreen()),
     ),
     GoRoute(
       path: AppRoutes.voiceLog,
-      pageBuilder: (context, state) => _slideUpPage(
-        state: state,
-        child: const VoiceLogScreen(),
-      ),
+      pageBuilder: (context, state) =>
+          _slideUpPage(state: state, child: const VoiceLogScreen()),
     ),
   ],
 );
@@ -373,10 +372,7 @@ CustomTransitionPage<void> _slideUpPage({
         begin: const Offset(0, 1),
         end: Offset.zero,
       ).chain(CurveTween(curve: Curves.easeOutCubic));
-      return SlideTransition(
-        position: animation.drive(tween),
-        child: child,
-      );
+      return SlideTransition(position: animation.drive(tween), child: child);
     },
   );
 }
@@ -395,10 +391,7 @@ CustomTransitionPage<void> _slideHorizontalPage({
         begin: const Offset(1, 0),
         end: Offset.zero,
       ).chain(CurveTween(curve: Curves.easeOutCubic));
-      return SlideTransition(
-        position: animation.drive(tween),
-        child: child,
-      );
+      return SlideTransition(position: animation.drive(tween), child: child);
     },
   );
 }
@@ -423,16 +416,10 @@ class ScaffoldWithBottomNav extends StatelessWidget {
       route: AppRoutes.pantry,
     ),
     _NavItem(
-      label: 'AI',
+      label: 'AI MEALS',
       icon: Icons.auto_awesome_outlined,
       activeIcon: Icons.auto_awesome,
       route: AppRoutes.aiMeals,
-    ),
-    _NavItem(
-      label: 'PROGRESS',
-      icon: Icons.bar_chart_outlined,
-      activeIcon: Icons.bar_chart,
-      route: AppRoutes.progress,
     ),
     _NavItem(
       label: 'PROFILE',
@@ -459,9 +446,7 @@ class ScaffoldWithBottomNav extends StatelessWidget {
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           color: AppColors.bottomNavBg,
-          border: Border(
-            top: BorderSide(color: AppColors.border, width: 1),
-          ),
+          border: Border(top: BorderSide(color: AppColors.border, width: 1)),
         ),
         child: BottomNavigationBar(
           currentIndex: currentIndex,
@@ -518,7 +503,11 @@ class _PlaceholderScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.construction, size: 48, color: AppColors.textMuted),
+            const Icon(
+              Icons.construction,
+              size: 48,
+              color: AppColors.textMuted,
+            ),
             const SizedBox(height: 16),
             Text(name, style: AppTextStyles.headingMedium),
             const SizedBox(height: 8),

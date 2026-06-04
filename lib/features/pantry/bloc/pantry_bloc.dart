@@ -9,6 +9,7 @@ class PantryBloc extends Bloc<PantryEvent, PantryState> {
   PantryBloc({required this.repository}) : super(const PantryInitial()) {
     on<LoadPantry>(_onLoadPantry);
     on<RefreshPantry>(_onRefreshPantry);
+    on<FilterPantry>(_onFilterPantry);
     on<DeleteIngredient>(_onDeleteIngredient);
     on<AddIngredient>(_onAddIngredient);
   }
@@ -27,6 +28,12 @@ class PantryBloc extends Bloc<PantryEvent, PantryState> {
       ));
     } catch (e) {
       emit(PantryError(_parseError(e)));
+    }
+  }
+
+  void _onFilterPantry(FilterPantry event, Emitter<PantryState> emit) {
+    if (state is PantryLoaded) {
+      emit((state as PantryLoaded).copyWith(selectedFilter: event.filter));
     }
   }
 

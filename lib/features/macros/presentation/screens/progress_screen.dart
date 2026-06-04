@@ -1,7 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
@@ -19,10 +19,8 @@ class ProgressScreen extends StatelessWidget {
       create: (context) {
         final now = DateTime.now();
         final today = now.toIso8601String().split('T')[0];
-        final weekStart =
-            now.subtract(Duration(days: now.weekday - 1));
+        final weekStart = now.subtract(Duration(days: now.weekday - 1));
         final weekStartStr = weekStart.toIso8601String().split('T')[0];
-
         return MacrosBloc(repository: MacrosRepository())
           ..add(LoadDailyMacros(today))
           ..add(LoadWeeklyMacros(weekStartStr, today));
@@ -46,76 +44,126 @@ class _ProgressView extends StatelessWidget {
               return _buildShimmer();
             }
             if (state is MacrosError) {
-              final today = DateTime.now().toIso8601String().split('T')[0];
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error_outline,
-                        color: AppColors.error, size: 48.r),
-                    SizedBox(height: 16.h),
-                    Text(
-                      'Błąd ładowania danych',
-                      style: AppTextStyles.bodyLarge,
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 16.h),
-                    ElevatedButton(
-                      onPressed: () => context
-                          .read<MacrosBloc>()
-                          .add(LoadDailyMacros(today)),
-                      child: const Text('Spróbuj ponownie'),
-                    ),
-                  ],
-                ),
-              );
+              return _buildError(context, state.message);
             }
-
             if (state is MacrosLoaded) {
               return _buildContent(context, state);
             }
-
-            return const SizedBox();
+            return const SizedBox.shrink();
           },
         ),
       ),
     );
   }
 
+  // ─── Shimmer ──────────────────────────────────────────────────────────────
+  Widget _buildShimmer() {
+    return Shimmer.fromColors(
+      baseColor: AppColors.borderLight,
+      highlightColor: AppColors.border,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+        child: Column(
+          children: [
+            _shimmerBox(h: 60.h),
+            SizedBox(height: 16.h),
+            _shimmerBox(h: 140.h),
+            SizedBox(height: 16.h),
+            _shimmerBox(h: 160.h),
+            SizedBox(height: 16.h),
+            _shimmerBox(h: 100.h),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _shimmerBox({required double h}) => Container(
+        width: double.infinity,
+        height: h,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+      );
+
+  // ─── Error ────────────────────────────────────────────────────────────────
+  Widget _buildError(BuildContext context, String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, color: AppColors.error, size: 48.r),
+          SizedBox(height: 16.h),
+          Text(message,
+              style: AppTextStyles.bodyMedium, textAlign: TextAlign.center),
+          SizedBox(height: 16.h),
+          FilledButton(
+            onPressed: () => context.read<MacrosBloc>().add(
+                  LoadDailyMacros(
+                      DateTime.now().toIso8601String().split('T')[0]),
+                ),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r)),
+            ),
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Main content ─────────────────────────────────────────────────────────
   Widget _buildContent(BuildContext context, MacrosLoaded state) {
     return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+      padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 20.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ─── HEADER ──────────────────────────────────────────────
+          // ─── Header ─────────────────────────────────────────────────────
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Progress', style: AppTextStyles.headingLarge),
-                  Text('Stay consistent', style: AppTextStyles.bodyMedium),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Progress',
+                      style: TextStyle(
+                        fontSize: 32.sp,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                        fontFamily: AppTextStyles.headingLarge.fontFamily,
+                      ),
+                    ),
+                    Text('Stay consistent', style: AppTextStyles.bodyMedium),
+                  ],
+                ),
               ),
-              const Spacer(),
+              // Streak pill badge
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                padding:
+                    EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
                 decoration: BoxDecoration(
                   color: AppColors.warningLight,
-                  borderRadius: BorderRadius.circular(12.r),
+                  borderRadius: BorderRadius.circular(24.r),
+                  border: Border.all(color: AppColors.warningBorder),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('✨', style: TextStyle(fontSize: 16.sp)),
+                    Text('✨', style: TextStyle(fontSize: 14.sp)),
                     SizedBox(width: 4.w),
                     Text(
                       '${state.streakDays}',
                       style: TextStyle(
-                        fontSize: 18.sp,
+                        fontSize: 16.sp,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.warning,
+                        color: AppColors.warningDark,
+                        fontFamily: AppTextStyles.numberMedium.fontFamily,
                       ),
                     ),
                   ],
@@ -124,136 +172,55 @@ class _ProgressView extends StatelessWidget {
             ],
           ),
 
-          SizedBox(height: 24.h),
+          SizedBox(height: 20.h),
 
-          // ─── WEEKLY CONSISTENCY CARD ─────────────────────────────
+          // ─── Weekly consistency ──────────────────────────────────────────
           _WeeklyConsistencyCard(weekly: state.weekly),
 
-          SizedBox(height: 24.h),
+          SizedBox(height: 20.h),
 
-          // ─── TODAY'S SUMMARY HEADER ───────────────────────────────
-          Row(
-            children: [
-              Text(
-                "TODAY'S SUMMARY",
-                style: TextStyle(
-                  fontSize: 11.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '${_safeInt(state.daily, ['calories', 'actual'])} kcal consumed',
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.secondary,
-                ),
-              ),
-            ],
-          ),
+          // ─── Today's summary header ──────────────────────────────────────
+          _TodaySummaryHeader(daily: state.daily),
 
           SizedBox(height: 12.h),
 
-          // ─── MACROS CARD ─────────────────────────────────────────
-          _MacrosSummaryCard(daily: state.daily),
+          // ─── Macros list card ────────────────────────────────────────────
+          _MacrosListCard(daily: state.daily),
 
-          SizedBox(height: 24.h),
+          SizedBox(height: 20.h),
 
-          // ─── RECENT MEALS ─────────────────────────────────────────
+          // ─── Recent meals ────────────────────────────────────────────────
           Text(
             'RECENT MEALS',
             style: TextStyle(
               fontSize: 11.sp,
               fontWeight: FontWeight.w600,
               color: AppColors.textSecondary,
-              letterSpacing: 0.5,
+              letterSpacing: 0.8,
             ),
           ),
-
           SizedBox(height: 12.h),
+          _RecentMealsList(meals: state.meals),
 
-          state.meals.isEmpty
-              ? Container(
-                  padding: EdgeInsets.all(20.r),
-                  decoration: BoxDecoration(
-                    color: AppColors.backgroundWhite,
-                    borderRadius: BorderRadius.circular(12.r),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Center(
-                    child: Text('No meals logged today',
-                        style: AppTextStyles.bodyMedium),
-                  ),
-                )
-              : ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: state.meals.length,
-                  itemBuilder: (context, index) =>
-                      _MealHistoryCard(meal: state.meals[index]),
-                ),
-
-          SizedBox(height: 32.h),
+          SizedBox(height: 16.h),
         ],
       ),
     );
   }
-
-  Widget _buildShimmer() {
-    return Shimmer.fromColors(
-      baseColor: AppColors.borderLight,
-      highlightColor: AppColors.border,
-      child: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-        child: Column(
-          children: List.generate(
-            4,
-            (i) => Container(
-              margin: EdgeInsets.only(bottom: 16.h),
-              height: i == 0 ? 60.h : 120.h,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16.r),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  int _safeInt(Map<String, dynamic> map, List<String> keys) {
-    dynamic val = map;
-    for (final key in keys) {
-      if (val is Map<String, dynamic> && val.containsKey(key)) {
-        val = val[key];
-      } else {
-        return 0;
-      }
-    }
-    if (val is int) return val;
-    if (val is double) return val.toInt();
-    return 0;
-  }
 }
 
-// ─── WEEKLY CONSISTENCY CARD ─────────────────────────────────────────────────
-
+// ─── Weekly consistency card ──────────────────────────────────────────────────
 class _WeeklyConsistencyCard extends StatelessWidget {
-  final List<Map<String, dynamic>> weekly;
-
   const _WeeklyConsistencyCard({required this.weekly});
+  final List<Map<String, dynamic>> weekly;
 
   @override
   Widget build(BuildContext context) {
-    const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+    const labels = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
     final todayIndex = DateTime.now().weekday - 1;
 
     return Container(
-      padding: EdgeInsets.all(20.r),
+      padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
         color: AppColors.backgroundWhite,
         borderRadius: BorderRadius.circular(16.r),
@@ -264,49 +231,90 @@ class _WeeklyConsistencyCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(
-                'Weekly consistency',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Weekly consistency',
+                      style: TextStyle(
+                        fontSize: 17.sp,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      "YOU'RE DOING BETTER THAN LAST WEEK",
+                      style: TextStyle(
+                        fontSize: 10.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const Spacer(),
-              Icon(Icons.trending_up, color: AppColors.primary, size: 20.r),
+              Icon(Icons.trending_up_rounded,
+                  color: AppColors.primary, size: 22.r),
             ],
           ),
-          SizedBox(height: 4.h),
-          Text(
-            "YOU'RE DOING BETTER THAN LAST WEEK",
-            style: TextStyle(
-              fontSize: 10.sp,
-              fontWeight: FontWeight.w700,
-              color: AppColors.primary,
-              letterSpacing: 0.3,
-            ),
-          ),
+
           SizedBox(height: 16.h),
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: days.asMap().entries.map((entry) {
-              final index = entry.key;
-              final day = entry.value;
+            children: List.generate(labels.length, (i) {
+              final data = weekly.length > i ? weekly[i] : null;
+              final isCompleted = data != null &&
+                  (data['completed'] == true || data['calories'] != null);
+              final isMissed = i < todayIndex && !isCompleted;
 
-              final dayData = weekly.length > index ? weekly[index] : null;
-              final isToday = index == todayIndex;
-              final isCompleted = dayData != null &&
-                  (dayData['completed'] == true ||
-                      dayData['calories'] != null);
-              final isMissed = index < todayIndex && !isCompleted;
-
-              return _DayCard(
-                day: day,
-                isToday: isToday,
-                isCompleted: isCompleted,
-                isMissed: isMissed,
+              return Expanded(
+                child: Column(
+                  children: [
+                    Container(
+                      width: 34.r,
+                      height: 34.r,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isCompleted
+                            ? AppColors.primary
+                            : isMissed
+                                ? AppColors.errorLight
+                                : AppColors.borderLight,
+                      ),
+                      child: Icon(
+                        isCompleted
+                            ? Icons.check
+                            : isMissed
+                                ? Icons.close
+                                : Icons.remove,
+                        size: 15.r,
+                        color: isCompleted
+                            ? Colors.white
+                            : isMissed
+                                ? AppColors.error
+                                : AppColors.textMuted,
+                      ),
+                    ),
+                    SizedBox(height: 6.h),
+                    Text(
+                      labels[i],
+                      style: TextStyle(
+                        fontSize: 9.sp,
+                        fontWeight: FontWeight.w600,
+                        color: isMissed
+                            ? AppColors.error
+                            : AppColors.textSecondary,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ],
+                ),
               );
-            }).toList(),
+            }),
           ),
         ],
       ),
@@ -314,79 +322,67 @@ class _WeeklyConsistencyCard extends StatelessWidget {
   }
 }
 
-class _DayCard extends StatelessWidget {
-  final String day;
-  final bool isToday;
-  final bool isCompleted;
-  final bool isMissed;
+// ─── Today's summary header ───────────────────────────────────────────────────
+class _TodaySummaryHeader extends StatelessWidget {
+  const _TodaySummaryHeader({required this.daily});
+  final Map<String, dynamic> daily;
 
-  const _DayCard({
-    required this.day,
-    required this.isToday,
-    required this.isCompleted,
-    required this.isMissed,
-  });
+  int _toInt(dynamic val) {
+    if (val is int) return val;
+    if (val is double) return val.toInt();
+    return 0;
+  }
+
+  String _formatCalories(int cal) {
+    if (cal >= 1000) {
+      final thousands = cal ~/ 1000;
+      final remainder = (cal % 1000).toString().padLeft(3, '0');
+      return '$thousands,$remainder';
+    }
+    return '$cal';
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 8.h),
-      decoration: BoxDecoration(
-        color: isToday ? AppColors.backgroundWhite : Colors.transparent,
-        border: isToday
-            ? Border.all(color: AppColors.textPrimary, width: 2)
-            : null,
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            day,
-            style: TextStyle(
-              fontSize: 10.sp,
-              fontWeight: FontWeight.w500,
-              color: isMissed ? AppColors.error : AppColors.textSecondary,
-            ),
+    final calories = _toInt(
+        (daily['calories'] as Map<String, dynamic>?)?['actual'] ??
+            daily['calories']);
+
+    return Row(
+      children: [
+        Text(
+          "TODAY'S SUMMARY",
+          style: TextStyle(
+            fontSize: 11.sp,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textSecondary,
+            letterSpacing: 0.8,
           ),
-          SizedBox(height: 8.h),
-          Container(
-            width: 28.r,
-            height: 28.r,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isCompleted
-                  ? AppColors.primary
-                  : isMissed
-                      ? AppColors.errorLight
-                      : AppColors.borderLight,
-            ),
-            child: Icon(
-              isCompleted
-                  ? Icons.check
-                  : isMissed
-                      ? Icons.close
-                      : Icons.remove,
-              size: 14.r,
-              color: isCompleted
-                  ? AppColors.textWhite
-                  : isMissed
-                      ? AppColors.error
-                      : AppColors.textMuted,
-            ),
+        ),
+        const Spacer(),
+        Text(
+          '${_formatCalories(calories)} kcal consumed',
+          style: TextStyle(
+            fontSize: 12.sp,
+            fontWeight: FontWeight.w600,
+            color: AppColors.secondary,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-// ─── MACROS SUMMARY CARD ─────────────────────────────────────────────────────
-
-class _MacrosSummaryCard extends StatelessWidget {
+// ─── Macros list card ─────────────────────────────────────────────────────────
+class _MacrosListCard extends StatelessWidget {
+  const _MacrosListCard({required this.daily});
   final Map<String, dynamic> daily;
 
-  const _MacrosSummaryCard({required this.daily});
+  int _toInt(dynamic val) {
+    if (val is int) return val;
+    if (val is double) return val.toInt();
+    return 0;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -395,7 +391,6 @@ class _MacrosSummaryCard extends StatelessWidget {
     final fat = daily['fat'] as Map<String, dynamic>? ?? {};
 
     return Container(
-      padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
         color: AppColors.backgroundWhite,
         borderRadius: BorderRadius.circular(16.r),
@@ -405,184 +400,219 @@ class _MacrosSummaryCard extends StatelessWidget {
         children: [
           _MacroRow(
             icon: Icons.shield_outlined,
-            iconColor: AppColors.proteinColor,
             iconBg: AppColors.secondaryLight,
+            iconColor: AppColors.proteinColor,
             label: 'Protein',
             actual: _toInt(protein['actual']),
             target: _toInt(protein['target']),
-            unit: 'g',
           ),
-          Divider(color: AppColors.border, height: 20.h),
+          Divider(
+              color: AppColors.border,
+              height: 1,
+              thickness: 1,
+              indent: 68.w,
+              endIndent: 0),
           _MacroRow(
             icon: Icons.eco_outlined,
-            iconColor: AppColors.primary,
             iconBg: AppColors.primaryLight,
+            iconColor: AppColors.primary,
             label: 'Carbs',
             actual: _toInt(carbs['actual']),
             target: _toInt(carbs['target']),
-            unit: 'g',
           ),
-          Divider(color: AppColors.border, height: 20.h),
+          Divider(
+              color: AppColors.border,
+              height: 1,
+              thickness: 1,
+              indent: 68.w,
+              endIndent: 0),
           _MacroRow(
             icon: Icons.local_fire_department_outlined,
-            iconColor: AppColors.fatColor,
             iconBg: AppColors.warningLight,
+            iconColor: AppColors.fatColor,
             label: 'Fat',
             actual: _toInt(fat['actual']),
             target: _toInt(fat['target']),
-            unit: 'g',
           ),
         ],
       ),
     );
-  }
-
-  int _toInt(dynamic val) {
-    if (val is int) return val;
-    if (val is double) return val.toInt();
-    return 0;
   }
 }
 
 class _MacroRow extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final Color iconBg;
-  final String label;
-  final int actual;
-  final int target;
-  final String unit;
-
   const _MacroRow({
     required this.icon,
-    required this.iconColor,
     required this.iconBg,
+    required this.iconColor,
     required this.label,
     required this.actual,
     required this.target,
-    required this.unit,
   });
+
+  final IconData icon;
+  final Color iconBg;
+  final Color iconColor;
+  final String label;
+  final int actual;
+  final int target;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 40.r,
-          height: 40.r,
-          decoration: BoxDecoration(
-            color: iconBg,
-            borderRadius: BorderRadius.circular(10.r),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+      child: Row(
+        children: [
+          Container(
+            width: 40.r,
+            height: 40.r,
+            decoration: BoxDecoration(
+              color: iconBg,
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+            child: Icon(icon, color: iconColor, size: 20.r),
           ),
-          child: Icon(icon, color: iconColor, size: 20.r),
-        ),
-        SizedBox(width: 12.w),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 15.sp,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 15.sp,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
           ),
-        ),
-        const Spacer(),
-        Text(
-          '$actual/$target$unit',
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
+          Text(
+            '$actual/${target}g',
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
-// ─── MEAL HISTORY CARD ────────────────────────────────────────────────────────
+// ─── Recent meals list ────────────────────────────────────────────────────────
+class _RecentMealsList extends StatelessWidget {
+  const _RecentMealsList({required this.meals});
+  final List<Map<String, dynamic>> meals;
 
-class _MealHistoryCard extends StatelessWidget {
-  final Map<String, dynamic> meal;
-
-  const _MealHistoryCard({required this.meal});
+  static const String _fallbackImageUrl =
+      'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80';
 
   @override
   Widget build(BuildContext context) {
-    final name = meal['foodName']?.toString() ?? meal['name']?.toString() ?? 'Unknown';
-    final calories = meal['calories'] ?? 0;
-    final imageUrl = meal['image']?.toString();
+    if (meals.isEmpty) {
+      return Container(
+        padding: EdgeInsets.all(24.r),
+        decoration: BoxDecoration(
+          color: AppColors.backgroundWhite,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(Icons.restaurant_outlined,
+                  color: AppColors.textMuted, size: 36.r),
+              SizedBox(height: 8.h),
+              Text(
+                'No meals logged today',
+                style:
+                    TextStyle(fontSize: 14.sp, color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Container(
-      margin: EdgeInsets.only(bottom: 8.h),
-      padding: EdgeInsets.all(12.r),
       decoration: BoxDecoration(
         color: AppColors.backgroundWhite,
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: AppColors.border),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 56.r,
-            height: 56.r,
-            decoration: BoxDecoration(
-              color: AppColors.borderLight,
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-            child: imageUrl != null && imageUrl.isNotEmpty
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(8.r),
+      child: ListView.separated(
+        physics: const NeverScrollableScrollPhysics(),
+        shrinkWrap: true,
+        itemCount: meals.length,
+        separatorBuilder: (_, __) =>
+            const Divider(color: AppColors.border, height: 1, thickness: 1),
+        itemBuilder: (_, i) {
+          final meal = meals[i];
+          final name =
+              (meal['name'] ?? meal['title'] ?? 'Meal').toString();
+          final calories = meal['calories'] is int
+              ? meal['calories'] as int
+              : meal['calories'] is double
+                  ? (meal['calories'] as double).toInt()
+                  : 0;
+          final imageUrl =
+              (meal['imageUrl'] ?? meal['image_url'] ?? _fallbackImageUrl)
+                  .toString();
+          final streak = meal['streak'] as int? ?? 1;
+
+          return Padding(
+            padding:
+                EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10.r),
+                  child: SizedBox(
+                    width: 60.r,
+                    height: 60.r,
                     child: CachedNetworkImage(
                       imageUrl: imageUrl,
                       fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(
-                        color: AppColors.borderLight,
-                        child: const Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.primary,
-                          ),
-                        ),
+                      placeholder: (_, __) => Shimmer.fromColors(
+                        baseColor: AppColors.border,
+                        highlightColor: AppColors.borderLight,
+                        child: Container(color: AppColors.border),
                       ),
-                      errorWidget: (context, url, error) => Container(
-                        color: AppColors.borderLight,
-                        child: Icon(
-                          Icons.image_not_supported_outlined,
-                          color: AppColors.textMuted,
-                          size: 32.r,
-                        ),
-                      ),
+                      errorWidget: (_, __, ___) =>
+                          Container(color: AppColors.borderLight),
                     ),
-                  )
-                : Icon(Icons.restaurant, color: AppColors.textMuted, size: 24.r),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: TextStyle(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
                   ),
                 ),
-                SizedBox(height: 2.h),
-                Text(
-                  '$calories KCAL • +1 DAY STREAK',
-                  style: TextStyle(
-                    fontSize: 11.sp,
-                    color: AppColors.textSecondary,
-                    letterSpacing: 0.3,
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: TextStyle(
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        '$calories KCAL  •  +$streak DAY STREAK',
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+                Icon(Icons.chevron_right,
+                    color: AppColors.textMuted, size: 20.r),
               ],
             ),
-          ),
-          Icon(Icons.chevron_right, color: AppColors.textMuted, size: 20.r),
-        ],
+          );
+        },
       ),
     );
   }

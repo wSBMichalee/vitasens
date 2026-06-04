@@ -1,3 +1,4 @@
+
 import 'package:equatable/equatable.dart';
 
 class IngredientModel extends Equatable {

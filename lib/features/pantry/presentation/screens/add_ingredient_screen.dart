@@ -1,12 +1,15 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:vitasense/core/theme/app_colors.dart';
+import 'package:vitasense/core/theme/app_text_styles.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_bloc.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_event.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_state.dart';
 import 'package:vitasense/features/pantry/data/pantry_repository.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:vitasense/core/theme/app_colors.dart';
 
 class AddIngredientScreen extends StatelessWidget {
   const AddIngredientScreen({super.key});
@@ -14,9 +17,7 @@ class AddIngredientScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => PantryBloc(
-        repository: PantryRepository(),
-      ),
+      create: (context) => PantryBloc(repository: PantryRepository()),
       child: const _AddIngredientView(),
     );
   }
@@ -31,15 +32,59 @@ class _AddIngredientView extends StatefulWidget {
 
 class _AddIngredientViewState extends State<_AddIngredientView> {
   final TextEditingController _searchController = TextEditingController();
-  
+
   String _selectedName = '';
+  String _displayName = '';
   double _quantity = 400;
-  final String _unit = 'grams';
+  String _unit = 'grams';
   String _selectedExpiry = '3 days';
   DateTime? _customExpiry;
   String? _category;
 
-  final List<String> _commonItems = ["Eggs", "Chicken", "Milk", "Rice", "Spinach"];
+  static const List<String> _commonItems = [
+    'Eggs', 'Chicken', 'Milk', 'Rice', 'Spinach',
+  ];
+
+  // Replace with CDN URLs before release
+  static const Map<String, String> _ingredientImages = {
+    'eggs':    'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=300&q=80',
+    'chicken': 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=300&q=80',
+    'milk':    'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=300&q=80',
+    'rice':    'https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?w=300&q=80',
+    'spinach': 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=300&q=80',
+  };
+
+  static const Map<String, String> _displayNames = {
+    'eggs':    'Eggs',
+    'chicken': 'Chicken Breast',
+    'milk':    'Whole Milk',
+    'rice':    'White Rice',
+    'spinach': 'Fresh Spinach',
+  };
+
+  static const Map<String, String> _categoryLabels = {
+    'protein':    'PROTEIN SOURCE',
+    'dairy':      'DAIRY PRODUCT',
+    'grains':     'WHOLE GRAIN',
+    'grain':      'WHOLE GRAIN',
+    'vegetables': 'VEGETABLE',
+    'vegetable':  'VEGETABLE',
+    'other':      'PANTRY ITEM',
+  };
+
+  static const Map<String, String> _categoryUnits = {
+    'protein': 'grams',
+    'dairy':   'ml',
+    'grains':  'grams',
+    'grain':   'grams',
+    'vegetables': 'grams',
+    'vegetable': 'grams',
+    'other':   'grams',
+  };
+
+  String? get _imageUrl => _ingredientImages[_selectedName.toLowerCase()];
+  String get _categoryLabel =>
+      _categoryLabels[_category ?? 'other'] ?? 'PANTRY ITEM';
 
   @override
   void dispose() {
@@ -47,43 +92,43 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
     super.dispose();
   }
 
-  void _filterSuggestions(String query) {
+  void _resolveCategory(String name) {
+    final key = name.toLowerCase();
+    if (key.contains('chicken') || key.contains('beef') ||
+        key.contains('fish') || key.contains('egg')) {
+      _category = 'protein';
+    } else if (key.contains('milk') || key.contains('cheese') ||
+        key.contains('yogurt')) {
+      _category = 'dairy';
+    } else if (key.contains('rice') || key.contains('pasta') ||
+        key.contains('bread') || key.contains('oat')) {
+      _category = 'grains';
+    } else if (key.contains('spinach') || key.contains('broccoli') ||
+        key.contains('carrot') || key.contains('tomato')) {
+      _category = 'vegetables';
+    } else {
+      _category = 'other';
+    }
+    _unit = _categoryUnits[_category] ?? 'grams';
+  }
+
+  void _onSearch(String query) {
     setState(() {
       _selectedName = query;
-      if (_selectedName.toLowerCase().contains('chicken')) {
-        _category = 'protein';
-      } else {
-        _category = 'other';
-      }
+      _displayName = query;
+      _resolveCategory(query);
     });
   }
 
-  void _selectIngredient(String name) {
+  void _selectCommon(String name) {
+    final key = name.toLowerCase();
+    final display = _displayNames[key] ?? name;
+    _resolveCategory(name);
     setState(() {
-      _selectedName = name;
-      _searchController.text = name;
-      if (name.toLowerCase() == 'chicken' || name.toLowerCase() == 'eggs') {
-        _category = 'protein';
-      } else if (name.toLowerCase() == 'milk') {
-        _category = 'dairy';
-      } else if (name.toLowerCase() == 'rice') {
-        _category = 'grains';
-      } else if (name.toLowerCase() == 'spinach') {
-        _category = 'vegetables';
-      } else {
-        _category = 'other';
-      }
+      _selectedName = key;
+      _displayName = display;
+      _searchController.text = display;
     });
-  }
-
-  void _decreaseQty() {
-    if (_quantity > 50) {
-      setState(() => _quantity -= 50);
-    }
-  }
-
-  void _increaseQty() {
-    setState(() => _quantity += 50);
   }
 
   DateTime? _calculateExpiry() {
@@ -104,14 +149,14 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
 
   void _addIngredient() {
     context.read<PantryBloc>().add(
-      AddIngredient(
-        name: _selectedName,
-        quantity: _quantity,
-        unit: _unit,
-        category: _category,
-        expiryDate: _calculateExpiry(),
-      ),
-    );
+          AddIngredient(
+            name: _displayName.isNotEmpty ? _displayName : _selectedName,
+            quantity: _quantity,
+            unit: _unit,
+            category: _category,
+            expiryDate: _calculateExpiry(),
+          ),
+        );
   }
 
   @override
@@ -135,26 +180,27 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
           child: Stack(
             children: [
               SingleChildScrollView(
-                padding: const EdgeInsets.only(left: 20, right: 20, top: 16, bottom: 120),
+                padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 120.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ─── HEADER ──────────────────────────────────────────────────
+                    // ─── Header ─────────────────────────────────────────
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          "Add ingredient",
+                          'Add ingredient',
                           style: TextStyle(
                             fontSize: 24.sp,
                             fontWeight: FontWeight.w700,
                             color: AppColors.textPrimary,
+                            fontFamily: AppTextStyles.headingLarge.fontFamily,
                           ),
                         ),
                         GestureDetector(
                           onTap: () => context.pop(),
                           child: Text(
-                            "Cancel",
+                            'Cancel',
                             style: TextStyle(
                               fontSize: 15.sp,
                               color: AppColors.textSecondary,
@@ -165,56 +211,62 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
                     ),
                     SizedBox(height: 24.h),
 
-                    // ─── SEARCH BAR ──────────────────────────────────────────────
+                    // ─── Search bar ──────────────────────────────────────
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.backgroundWhite,
                         borderRadius: BorderRadius.circular(16.r),
                         border: Border.all(color: AppColors.border),
                       ),
                       child: TextField(
                         controller: _searchController,
-                        onChanged: _filterSuggestions,
+                        onChanged: _onSearch,
+                        style: TextStyle(
+                            fontSize: 15.sp, color: AppColors.textPrimary),
                         decoration: InputDecoration(
-                          hintText: "Search or type ingredient...",
-                          hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 15.sp),
-                          prefixIcon: const Icon(Icons.search, color: AppColors.textMuted),
+                          hintText: 'Search or type ingredient...',
+                          hintStyle: TextStyle(
+                              color: AppColors.textMuted, fontSize: 15.sp),
+                          prefixIcon: Icon(Icons.search,
+                              color: AppColors.textMuted, size: 22.r),
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 16.h),
+                          contentPadding:
+                              EdgeInsets.symmetric(vertical: 16.h),
                         ),
                       ),
                     ),
                     SizedBox(height: 24.h),
 
-                    // ─── COMMON ITEMS ────────────────────────────────────────────
+                    // ─── Common items ────────────────────────────────────
                     if (_selectedName.isEmpty) ...[
                       Text(
-                        "COMMON ITEMS",
+                        'COMMON ITEMS',
                         style: TextStyle(
                           fontSize: 11.sp,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textSecondary,
-                          letterSpacing: 0.5,
+                          letterSpacing: 0.8,
                         ),
                       ),
                       SizedBox(height: 12.h),
                       Wrap(
                         spacing: 8,
-                        runSpacing: 12,
+                        runSpacing: 10,
                         children: _commonItems.map((name) {
                           return GestureDetector(
-                            onTap: () => _selectIngredient(name),
+                            onTap: () => _selectCommon(name),
                             child: Container(
-                              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 16.w, vertical: 9.h),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: AppColors.backgroundWhite,
                                 border: Border.all(color: AppColors.border),
                                 borderRadius: BorderRadius.circular(20.r),
                               ),
                               child: Text(
                                 name,
                                 style: TextStyle(
-                                  fontSize: 13.sp,
+                                  fontSize: 14.sp,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.textPrimary,
                                 ),
@@ -225,48 +277,63 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
                       ),
                     ],
 
-                    // ─── SELECTED INGREDIENT CARD ────────────────────────────────
+                    // ─── Ingredient card ─────────────────────────────────
                     if (_selectedName.isNotEmpty) ...[
                       Container(
                         padding: EdgeInsets.all(16.r),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.backgroundWhite,
                           border: Border.all(color: AppColors.border),
                           borderRadius: BorderRadius.circular(16.r),
                         ),
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               children: [
-                                Container(
-                                  width: 64.w,
-                                  height: 64.h,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.borderLight,
-                                    borderRadius: BorderRadius.circular(12.r),
-                                  ),
-                                  child: Icon(
-                                    Icons.set_meal,
-                                    color: AppColors.textMuted,
-                                    size: 32.r,
+                                // Photo / icon
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12.r),
+                                  child: SizedBox(
+                                    width: 72.r,
+                                    height: 72.r,
+                                    child: _imageUrl != null
+                                        ? CachedNetworkImage(
+                                            imageUrl: _imageUrl!,
+                                            fit: BoxFit.cover,
+                                            placeholder: (ctx, url) =>
+                                                Shimmer.fromColors(
+                                              baseColor: AppColors.border,
+                                              highlightColor:
+                                                  AppColors.borderLight,
+                                              child: Container(
+                                                  color: AppColors.border),
+                                            ),
+                                            errorWidget: (ctx, url, err) =>
+                                                _fallbackIcon(),
+                                          )
+                                        : _fallbackIcon(),
                                   ),
                                 ),
-                                SizedBox(width: 12.w),
+                                SizedBox(width: 16.w),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        _selectedName,
+                                        _displayName.isNotEmpty
+                                            ? _displayName
+                                            : _selectedName,
                                         style: TextStyle(
                                           fontSize: 18.sp,
                                           fontWeight: FontWeight.w700,
                                           color: AppColors.textPrimary,
                                         ),
                                       ),
-                                      const SizedBox(height: 4),
+                                      SizedBox(height: 4.h),
                                       Text(
-                                        "PROTEIN SOURCE",
+                                        _categoryLabel,
                                         style: TextStyle(
                                           fontSize: 11.sp,
                                           fontWeight: FontWeight.w600,
@@ -279,90 +346,75 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
                                 ),
                               ],
                             ),
+
                             SizedBox(height: 16.h),
                             const Divider(color: AppColors.border),
                             SizedBox(height: 16.h),
-                            
-                            // ─── QUANTITY SELECTOR ─────────────────────────────
+
+                            // ─── Quantity stepper ────────────────────────
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  "Quantity",
+                                  'Quantity',
                                   style: TextStyle(
                                     fontSize: 15.sp,
                                     fontWeight: FontWeight.w600,
                                     color: AppColors.textPrimary,
                                   ),
                                 ),
-                                Row(
+                                const Spacer(),
+                                _StepperButton(
+                                  icon: Icons.remove,
+                                  onTap: () {
+                                    if (_quantity > 50) {
+                                      setState(() => _quantity -= 50);
+                                    }
+                                  },
+                                ),
+                                SizedBox(width: 20.w),
+                                Column(
                                   children: [
-                                    GestureDetector(
-                                      onTap: _decreaseQty,
-                                      child: Container(
-                                        width: 40.w,
-                                        height: 40.h,
-                                        decoration: BoxDecoration(
-                                          color: AppColors.borderLight,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(color: AppColors.border),
-                                        ),
-                                        child: Icon(Icons.remove, color: AppColors.textPrimary, size: 18.r),
+                                    Text(
+                                      _quantity.toInt().toString(),
+                                      style: TextStyle(
+                                        fontSize: 26.sp,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.textPrimary,
                                       ),
                                     ),
-                                    SizedBox(width: 16.w),
-                                    Column(
-                                      children: [
-                                        Text(
-                                          _quantity.toInt().toString(),
-                                          style: TextStyle(
-                                            fontSize: 24.sp,
-                                            fontWeight: FontWeight.w700,
-                                            color: AppColors.textPrimary,
-                                          ),
-                                        ),
-                                        Text(
-                                          _unit.toUpperCase(),
-                                          style: TextStyle(
-                                            fontSize: 11.sp,
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.textSecondary,
-                                            letterSpacing: 0.5,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    SizedBox(width: 16.w),
-                                    GestureDetector(
-                                      onTap: _increaseQty,
-                                      child: Container(
-                                        width: 40.w,
-                                        height: 40.h,
-                                        decoration: BoxDecoration(
-                                          color: AppColors.borderLight,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(color: AppColors.border),
-                                        ),
-                                        child: Icon(Icons.add, color: AppColors.textPrimary, size: 18.r),
+                                    Text(
+                                      _unit.toUpperCase(),
+                                      style: TextStyle(
+                                        fontSize: 10.sp,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.textSecondary,
+                                        letterSpacing: 0.5,
                                       ),
                                     ),
                                   ],
+                                ),
+                                SizedBox(width: 20.w),
+                                _StepperButton(
+                                  icon: Icons.add,
+                                  onTap: () =>
+                                      setState(() => _quantity += 50),
                                 ),
                               ],
                             ),
                           ],
                         ),
                       ),
-                      SizedBox(height: 32.h),
 
-                      // ─── EXPIRY SELECTOR ───────────────────────────────────────
+                      SizedBox(height: 28.h),
+
+                      // ─── Expiry selector ─────────────────────────────
                       Text(
-                        "EXPIRES IN",
+                        'EXPIRES IN',
                         style: TextStyle(
                           fontSize: 11.sp,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textSecondary,
-                          letterSpacing: 0.5,
+                          letterSpacing: 0.8,
                         ),
                       ),
                       SizedBox(height: 12.h),
@@ -371,29 +423,34 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
                         runSpacing: 8,
                         children: [
                           _ExpiryChip(
-                            label: "1 day",
+                            label: '1 day',
                             isSelected: _selectedExpiry == '1 day',
-                            onTap: () => setState(() => _selectedExpiry = '1 day'),
+                            onTap: () =>
+                                setState(() => _selectedExpiry = '1 day'),
                           ),
                           _ExpiryChip(
-                            label: "3 days",
+                            label: '3 days',
                             isSelected: _selectedExpiry == '3 days',
-                            onTap: () => setState(() => _selectedExpiry = '3 days'),
+                            onTap: () =>
+                                setState(() => _selectedExpiry = '3 days'),
                           ),
                           _ExpiryChip(
-                            label: "1 week",
+                            label: '1 week',
                             isSelected: _selectedExpiry == '1 week',
-                            onTap: () => setState(() => _selectedExpiry = '1 week'),
+                            onTap: () =>
+                                setState(() => _selectedExpiry = '1 week'),
                           ),
                           _ExpiryChip(
-                            label: "Custom",
+                            label: 'Custom',
                             isSelected: _selectedExpiry == 'Custom',
                             onTap: () async {
                               final date = await showDatePicker(
                                 context: context,
-                                initialDate: DateTime.now().add(const Duration(days: 3)),
+                                initialDate: DateTime.now()
+                                    .add(const Duration(days: 3)),
                                 firstDate: DateTime.now(),
-                                lastDate: DateTime.now().add(const Duration(days: 365)),
+                                lastDate: DateTime.now()
+                                    .add(const Duration(days: 365)),
                               );
                               if (date != null) {
                                 setState(() {
@@ -410,39 +467,40 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
                 ),
               ),
 
-              // ─── BOTTOM BUTTON ─────────────────────────────────────────────
+              // ─── Bottom CTA ───────────────────────────────────────────
               Positioned(
-                left: 20,
-                right: 20,
-                bottom: 32,
+                left: 20.w,
+                right: 20.w,
+                bottom: 32.h,
                 child: BlocBuilder<PantryBloc, PantryState>(
                   builder: (context, state) {
                     final isLoading = state is PantryAddingIngredient;
                     return SizedBox(
                       width: double.infinity,
                       height: 56.h,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.textPrimary,
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.backgroundDark,
+                          disabledBackgroundColor:
+                              AppColors.backgroundDark.withValues(alpha: 0.4),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16.r),
                           ),
-                          disabledBackgroundColor: AppColors.textMuted,
                         ),
                         onPressed: (_selectedName.isEmpty || isLoading)
                             ? null
                             : _addIngredient,
                         child: isLoading
                             ? SizedBox(
-                                width: 24.w,
-                                height: 24.h,
+                                width: 22.r,
+                                height: 22.r,
                                 child: const CircularProgressIndicator(
                                   color: Colors.white,
                                   strokeWidth: 2,
                                 ),
                               )
                             : Text(
-                                "Add to pantry",
+                                'Add to pantry',
                                 style: TextStyle(
                                   fontSize: 16.sp,
                                   fontWeight: FontWeight.w600,
@@ -460,27 +518,61 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
       ),
     );
   }
+
+  Widget _fallbackIcon() {
+    return Container(
+      color: AppColors.borderLight,
+      child: Icon(Icons.set_meal, color: AppColors.textMuted, size: 32.r),
+    );
+  }
 }
 
-class _ExpiryChip extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
+// ─── Stepper button ────────────────────────────────────────────────────────────
+class _StepperButton extends StatelessWidget {
+  const _StepperButton({required this.icon, required this.onTap});
 
-  const _ExpiryChip({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
+  final IconData icon;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+        width: 40.r,
+        height: 40.r,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.borderLight,
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Icon(icon, color: AppColors.textPrimary, size: 18.r),
+      ),
+    );
+  }
+}
+
+// ─── Expiry chip ───────────────────────────────────────────────────────────────
+class _ExpiryChip extends StatelessWidget {
+  const _ExpiryChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 11.h),
+        decoration: BoxDecoration(
+          color: AppColors.backgroundWhite,
           border: Border.all(
             color: isSelected ? AppColors.secondary : AppColors.border,
             width: isSelected ? 2 : 1,
@@ -490,9 +582,9 @@ class _ExpiryChip extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 13.sp,
-            color: isSelected ? AppColors.secondary : AppColors.textSecondary,
+            fontSize: 14.sp,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            color: isSelected ? AppColors.secondary : AppColors.textSecondary,
           ),
         ),
       ),

@@ -15,7 +15,8 @@ class MacrosRepository {
       },
     );
 
-    return response.data as Map<String, dynamic>;
+    final body = response.data as Map<String, dynamic>;
+    return body['data'] as Map<String, dynamic>;
   }
 
   Future<Map<String, dynamic>> getWeeklyMacros(
@@ -29,7 +30,8 @@ class MacrosRepository {
       },
     );
 
-    return response.data as Map<String, dynamic>;
+    final body = response.data as Map<String, dynamic>;
+    return body['data'] as Map<String, dynamic>;
   }
 
   Future<List<Map<String, dynamic>>> getTodayMeals() async {
@@ -42,7 +44,8 @@ class MacrosRepository {
       },
     );
 
-    final data = response.data as List<dynamic>;
+    final body = response.data as Map<String, dynamic>;
+    final data = body['data'] as List<dynamic>;
     return data.map((e) => e as Map<String, dynamic>).toList();
   }
 }

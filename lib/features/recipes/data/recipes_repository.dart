@@ -17,8 +17,32 @@ class RecipesRepository {
       },
     );
 
-    final data = response.data as List<dynamic>;
-    return data.map((e) => e as Map<String, dynamic>).toList();
+    final body = response.data as Map<String, dynamic>;
+    final payload = body['data'] as Map<String, dynamic>;
+    final list = payload['recipes'] as List<dynamic>;
+    final pantrySet = pantryIngredients.map((e) => e.toLowerCase()).toSet();
+
+    return list.map((e) {
+      final r = Map<String, dynamic>.from(e as Map);
+      final allIngredients = (r['ingredients'] as List<dynamic>? ?? [])
+          .map((i) => Map<String, dynamic>.from(i as Map))
+          .toList();
+      final used = allIngredients
+          .where((i) => pantrySet.any((p) =>
+              (i['name']?.toString().toLowerCase() ?? '').contains(p)))
+          .toList();
+      final missed = allIngredients
+          .where((i) => !pantrySet.any((p) =>
+              (i['name']?.toString().toLowerCase() ?? '').contains(p)))
+          .toList();
+      return {
+        ...r,
+        'image': r['imageUrl'],
+        'readyInMinutes': r['cookTimeMinutes'],
+        'usedIngredients': used,
+        'missedIngredients': missed,
+      };
+    }).toList();
   }
 
   Future<Map<String, dynamic>> getRecipeDetails(String id) async {

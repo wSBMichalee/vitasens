@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { corsHeaders } from '../_shared/corsHeaders.ts';
 import { handleError, ValidationError } from '../_shared/errorHandler.ts';
-import { getUserId, createServiceClient } from '../_shared/supabaseClient.ts';
+import { getUserId, getSupabaseAdmin } from '../_shared/supabaseClient.ts';
 import { SubscriptionGuard } from '../_shared/SubscriptionGuard.ts';
 import { HealthPromptBuilder, HealthCondition } from '../_shared/HealthPromptBuilder.ts';
 import { ProfileRepository } from '../calculate-daily-macros/ProfileRepository.ts';
@@ -25,7 +25,7 @@ async function buildCacheKey(ingredients: string[]): Promise<string> {
 
 /** Pobiera wynik z cache jeśli istnieje i nie wygasł (7 dni) */
 async function getCachedRecipes(cacheKey: string): Promise<unknown[] | null> {
-  const supabase = createServiceClient();
+  const supabase = getSupabaseAdmin();
   const since = new Date(Date.now() - CACHE_TTL_DAYS * 24 * 60 * 60 * 1000).toISOString();
   const { data } = await supabase
     .from('recipe_cache')
@@ -38,7 +38,7 @@ async function getCachedRecipes(cacheKey: string): Promise<unknown[] | null> {
 
 /** Zapisuje wyniki Spoonacular do cache */
 async function saveRecipesToCache(cacheKey: string, result: unknown): Promise<void> {
-  const supabase = createServiceClient();
+  const supabase = getSupabaseAdmin();
   await supabase
     .from('recipe_cache')
     .upsert({ cache_key: cacheKey, result }, { onConflict: 'cache_key' });
@@ -89,10 +89,10 @@ serve(async (req: Request) => {
             return {
               title: d.title, source: 'spoonacular', sourceId: d.id.toString(),
               ingredients: [...s.usedIngredients, ...s.missedIngredients].map(i => ({ name: i.name, amount: i.amount, unit: i.unit })),
-              proteinG: nut('Protein'),
-              carbsG: nut('Carbohydrates'),
-              fatG: nut('Fat'),
-              calories: nut('Calories'),
+              proteinG: Math.round(nut('Protein') * 10) / 10,
+              carbsG: Math.round(nut('Carbohydrates') * 10) / 10,
+              fatG: Math.round(nut('Fat') * 10) / 10,
+              calories: Math.round(nut('Calories')),
               cookTimeMinutes: d.readyInMinutes, servings: d.servings, imageUrl: d.image,
               matchPercent: matches.find(m => m.recipeId === d.id)?.matchPercent
             };

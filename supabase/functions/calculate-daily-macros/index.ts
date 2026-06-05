@@ -24,7 +24,7 @@ serve(async (req: Request) => {
     let res;
     switch (action) {
       case 'daily': {
-        const { date } = DailyMacrosSchema.parse(data);
+        const { date } = DailyMacrosSchema.parse({ ...data, userId });
         const [m, t] = await Promise.all([
           MacrosRepository.getDailyTotals(userId, date),
           ProfileRepository.getTargets(userId)
@@ -33,7 +33,7 @@ serve(async (req: Request) => {
         break;
       }
       case 'meals': {
-        const { date } = DailyMacrosSchema.parse(data);
+        const { date } = DailyMacrosSchema.parse({ ...data, userId });
         res = await MacrosRepository.getMealsForDay(userId, date);
         break;
       }

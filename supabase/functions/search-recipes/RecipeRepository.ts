@@ -58,8 +58,7 @@ export class RecipeRepository {
         cook_time_minutes: data.cookTimeMinutes,
         servings: data.servings,
         image_url: data.imageUrl,
-        description: data.description,
-        updated_at: new Date().toISOString()
+        description: data.description
       }, {
         onConflict: 'source,source_id'
       })

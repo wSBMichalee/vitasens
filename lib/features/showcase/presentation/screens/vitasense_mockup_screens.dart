@@ -294,14 +294,9 @@ class MockupAiMealsScreen extends StatelessWidget {
 }
 
 class MockupHomeScreen extends StatelessWidget {
-  const MockupHomeScreen({super.key});
+  const MockupHomeScreen({super.key, this.userName = 'there'});
 
-  static const _breakfastImage =
-      'https://images.unsplash.com/photo-1511690743698-d9d85f2fbf38?w=500&q=85';
-  static const _lunchImage =
-      'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500&q=85';
-  static const _avatarImage =
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&q=85';
+  final String userName;
 
   @override
   Widget build(BuildContext context) {
@@ -330,7 +325,7 @@ class MockupHomeScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Welcome back, Alex',
+                          'Welcome back, $userName',
                           style: TextStyle(
                             fontSize: 16.sp,
                             color: AppColors.textSecondary,
@@ -384,10 +379,14 @@ class MockupHomeScreen extends StatelessWidget {
                   SizedBox(width: 14.w),
                   CircleAvatar(
                     radius: 25.r,
-                    backgroundColor: Colors.white,
-                    child: CircleAvatar(
-                      radius: 21.r,
-                      backgroundImage: const NetworkImage(_avatarImage),
+                    backgroundColor: AppColors.primary,
+                    child: Text(
+                      userName.isNotEmpty ? userName[0].toUpperCase() : '?',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ],
@@ -517,16 +516,29 @@ class MockupHomeScreen extends StatelessWidget {
                 ],
               ),
               SizedBox(height: 20.h),
-              const _MealRow(
-                imageUrl: _breakfastImage,
-                label: 'BREAKFAST',
-                title: 'Greek Berry Bowl',
-              ),
-              SizedBox(height: 16.h),
-              const _MealRow(
-                imageUrl: _lunchImage,
-                label: 'LUNCH',
-                title: 'Quinoa & Grill Salad',
+              Center(
+                child: Column(
+                  children: [
+                    Icon(Icons.no_meals, color: AppColors.textMuted, size: 48.r),
+                    SizedBox(height: 12.h),
+                    Text(
+                      'No meals logged today',
+                      style: TextStyle(
+                        fontSize: 15.sp,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      'Tap + to add a meal',
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -1136,69 +1148,6 @@ class _MacroLine extends StatelessWidget {
   }
 }
 
-class _MealRow extends StatelessWidget {
-  const _MealRow({
-    required this.imageUrl,
-    required this.label,
-    required this.title,
-  });
-
-  final String imageUrl;
-  final String label;
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(13.r),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22.r),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(14.r),
-            child: CachedNetworkImage(
-              imageUrl: imageUrl,
-              width: 64.r,
-              height: 64.r,
-              fit: BoxFit.cover,
-            ),
-          ),
-          SizedBox(width: 16.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 2.5,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                SizedBox(height: 10.h),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Icon(Icons.chevron_right, color: AppColors.borderMedium, size: 30.r),
-        ],
-      ),
-    );
-  }
-}
 
 class _PillFilter extends StatelessWidget {
   const _PillFilter({required this.label, this.selected = false});

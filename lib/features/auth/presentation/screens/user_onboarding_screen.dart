@@ -32,6 +32,7 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
   String? _activity;
   final List<String> _allergies = [];
   final List<String> _cuisines = [];
+  List<String> _healthConditions = ['none'];
   bool _isLoading = false;
 
   @override
@@ -41,7 +42,7 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
   }
 
   void _nextStep() {
-    if (_currentStep < 7) {
+    if (_currentStep < 8) {
       _pageController.animateToPage(
         _currentStep + 1,
         duration: const Duration(milliseconds: 300),
@@ -75,6 +76,7 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
         'activity_level': _activity,
         'allergies': _allergies,
         'favorite_cuisines': _cuisines,
+        'health_conditions': _healthConditions,
       });
       await _authRepository.calculateTargets();
       await _authRepository.completeOnboarding();
@@ -121,7 +123,7 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
                     child: TweenAnimationBuilder<double>(
                       tween: Tween(
                         begin: 0,
-                        end: (_currentStep + 1) / 8,
+                        end: (_currentStep + 1) / 9,
                       ),
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeOutCubic,
@@ -138,7 +140,7 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
                   ),
                   SizedBox(width: 16.w),
                   Text(
-                    '${_currentStep + 1}/8',
+                    '${_currentStep + 1}/9',
                     style: TextStyle(
                       fontSize: 13.sp,
                       color: AppColors.textSecondary,
@@ -217,6 +219,25 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
                         _cuisines.contains(v)
                             ? _cuisines.remove(v)
                             : _cuisines.add(v);
+                      });
+                    },
+                    onNext: _nextStep,
+                  ),
+                  _HealthConditionsStep(
+                    selected: _healthConditions,
+                    onToggle: (v) {
+                      setState(() {
+                        if (v == 'none') {
+                          _healthConditions = ['none'];
+                        } else {
+                          _healthConditions.remove('none');
+                          _healthConditions.contains(v)
+                              ? _healthConditions.remove(v)
+                              : _healthConditions.add(v);
+                          if (_healthConditions.isEmpty) {
+                            _healthConditions = ['none'];
+                          }
+                        }
                       });
                     },
                     onComplete: _isLoading ? null : _completeOnboarding,
@@ -995,16 +1016,14 @@ class _PreferencesStep extends StatelessWidget {
     required this.cuisines,
     required this.onToggleAllergy,
     required this.onToggleCuisine,
-    required this.onComplete,
-    required this.isLoading,
+    required this.onNext,
   });
 
   final List<String> allergies;
   final List<String> cuisines;
   final ValueChanged<String> onToggleAllergy;
   final ValueChanged<String> onToggleCuisine;
-  final VoidCallback? onComplete;
-  final bool isLoading;
+  final VoidCallback onNext;
 
   @override
   Widget build(BuildContext context) {
@@ -1092,37 +1111,7 @@ class _PreferencesStep extends StatelessWidget {
 
           SizedBox(height: 40.h),
 
-          // COMPLETE BUTTON
-          SizedBox(
-            width: double.infinity,
-            height: 56.h,
-            child: FilledButton(
-              onPressed: onComplete,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.r),
-                ),
-              ),
-              child: isLoading
-                  ? SizedBox(
-                      width: 22.r,
-                      height: 22.r,
-                      child: const CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : Text(
-                      'Complete Setup',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-            ),
-          ),
+          _ContinueButton(onPressed: onNext),
 
           SizedBox(height: 16.h),
         ],
@@ -1168,6 +1157,125 @@ class _SelectableChip extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STEP 9: HEALTH CONDITIONS
+// ─────────────────────────────────────────────────────────────────────────────
+class _HealthConditionsStep extends StatelessWidget {
+  const _HealthConditionsStep({
+    required this.selected,
+    required this.onToggle,
+    required this.onComplete,
+    required this.isLoading,
+  });
+
+  final List<String> selected;
+  final ValueChanged<String> onToggle;
+  final VoidCallback? onComplete;
+  final bool isLoading;
+
+  @override
+  Widget build(BuildContext context) {
+    const conditions = [
+      ('Post-surgery recovery', 'post_surgery'),
+      ('Diabetes', 'diabetes'),
+      ('Thyroid issues', 'thyroid'),
+      ('Celiac disease', 'celiac'),
+      ('IBS', 'ibs'),
+      ('Heart condition', 'heart'),
+      ('Hypertension', 'hypertension'),
+      ('Pregnancy', 'pregnancy'),
+      ('None of the above', 'none'),
+    ];
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Any health conditions?', style: AppTextStyles.headingLarge),
+          SizedBox(height: 8.h),
+          Text(
+            "We'll personalize your meals accordingly",
+            style: AppTextStyles.bodyMedium,
+          ),
+          SizedBox(height: 32.h),
+
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: conditions.map((c) {
+              final isSelected = selected.contains(c.$2);
+              return GestureDetector(
+                onTap: () => onToggle(c.$2),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                  decoration: BoxDecoration(
+                    color: isSelected ? AppColors.primaryLight : Colors.white,
+                    border: Border.all(
+                      color:
+                          isSelected ? AppColors.primary : AppColors.border,
+                    ),
+                    borderRadius: BorderRadius.circular(20.r),
+                  ),
+                  child: Text(
+                    c.$1,
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.textPrimary,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w400,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+
+          SizedBox(height: 40.h),
+
+          SizedBox(
+            width: double.infinity,
+            height: 56.h,
+            child: FilledButton(
+              onPressed: onComplete,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16.r),
+                ),
+              ),
+              child: isLoading
+                  ? SizedBox(
+                      width: 22.r,
+                      height: 22.r,
+                      child: const CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      'Complete Setup',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+            ),
+          ),
+
+          SizedBox(height: 16.h),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.05, end: 0);
   }
 }
 

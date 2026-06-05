@@ -640,7 +640,7 @@ class _ShimmerLayout extends StatelessWidget {
           ),
           SizedBox(height: 20.h),
           // Ingredient cards
-          for (int i = 0; i < 4; i++) ...[
+          for (int i = 0; i < 3; i++) ...[
             _box(w: double.infinity, h: 72.h, r: 12.r),
             SizedBox(height: 10.h),
           ],

@@ -10,6 +10,8 @@ import 'package:vitasense/features/recipes/bloc/recipes_bloc.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_event.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_state.dart';
 import 'package:vitasense/features/recipes/data/recipes_repository.dart';
+import 'package:vitasense/features/shopping/bloc/shopping_bloc.dart';
+import 'package:vitasense/features/shopping/bloc/shopping_event.dart';
 
 class RecipeDetailScreen extends StatelessWidget {
   final Map<String, dynamic> recipe;
@@ -44,24 +46,46 @@ class _RecipeDetailView extends StatelessWidget {
     final calories = recipe['calories'] ?? 0;
     final imageUrl = recipe['image']?.toString();
 
-    List<Map<String, dynamic>> ingredients = [];
-    if (recipe['ingredients'] is List) {
-      for (var item in recipe['ingredients']) {
+    final usedIngredients = <Map<String, dynamic>>[];
+    final missedIngredients = <Map<String, dynamic>>[];
+
+    if (recipe['usedIngredients'] is List) {
+      for (var item in recipe['usedIngredients'] as List) {
         if (item is Map<String, dynamic>) {
-          ingredients.add(item);
+          usedIngredients.add(item);
         } else if (item is String) {
-          ingredients.add({'name': item});
-        }
-      }
-    } else if (recipe['usedIngredients'] is List) {
-      for (var item in recipe['usedIngredients']) {
-        if (item is Map<String, dynamic>) {
-          ingredients.add(item);
-        } else if (item is String) {
-          ingredients.add({'name': item});
+          usedIngredients.add({'name': item});
         }
       }
     }
+    if (recipe['missedIngredients'] is List) {
+      for (var item in recipe['missedIngredients'] as List) {
+        if (item is Map<String, dynamic>) {
+          missedIngredients.add(item);
+        } else if (item is String) {
+          missedIngredients.add({'name': item});
+        }
+      }
+    }
+    if (usedIngredients.isEmpty && missedIngredients.isEmpty &&
+        recipe['ingredients'] is List) {
+      for (var item in recipe['ingredients'] as List) {
+        if (item is Map<String, dynamic>) {
+          usedIngredients.add(item);
+        } else if (item is String) {
+          usedIngredients.add({'name': item});
+        }
+      }
+    }
+
+    final allIngredients = [
+      ...usedIngredients.map((i) => (i, true)),
+      ...missedIngredients.map((i) => (i, false)),
+    ];
+
+    final missingNames = missedIngredients
+        .map((i) => (i['name']?.toString() ?? '').toLowerCase())
+        .toList();
 
     return BlocListener<RecipesBloc, RecipesState>(
       listener: (context, state) {
@@ -214,11 +238,15 @@ class _RecipeDetailView extends StatelessWidget {
 
                         // Subtitle
                         Text(
-                          'You already have everything you need',
+                          missedIngredients.isEmpty
+                              ? 'You already have everything you need'
+                              : '${missedIngredients.length} ingredient${missedIngredients.length == 1 ? '' : 's'} missing',
                           style: TextStyle(
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.primary,
+                            color: missedIngredients.isEmpty
+                                ? AppColors.primary
+                                : AppColors.error,
                           ),
                         ),
 
@@ -305,7 +333,7 @@ class _RecipeDetailView extends StatelessWidget {
                         SizedBox(height: 14.h),
 
                         // Ingredients list
-                        ingredients.isEmpty
+                        allIngredients.isEmpty
                             ? Padding(
                                 padding: EdgeInsets.symmetric(vertical: 16.h),
                                 child: Text(
@@ -316,11 +344,20 @@ class _RecipeDetailView extends StatelessWidget {
                             : ListView.builder(
                                 shrinkWrap: true,
                                 physics: const NeverScrollableScrollPhysics(),
-                                itemCount: ingredients.length,
+                                itemCount: allIngredients.length,
                                 itemBuilder: (context, index) {
-                                  return _IngredientRow(ingredient: ingredients[index]);
+                                  final (ingredient, inPantry) =
+                                      allIngredients[index];
+                                  return _IngredientRow(
+                                    ingredient: ingredient,
+                                    inPantry: inPantry,
+                                  );
                                 },
                               ),
+
+                        // Substitutes section
+                        if (missingNames.isNotEmpty)
+                          _SubstitutesSection(missingNames: missingNames),
                       ],
                     ),
                   ),
@@ -460,13 +497,80 @@ class _InfoChip extends StatelessWidget {
 
 class _IngredientRow extends StatelessWidget {
   final Map<String, dynamic> ingredient;
+  final bool inPantry;
 
-  const _IngredientRow({required this.ingredient});
+  const _IngredientRow({required this.ingredient, required this.inPantry});
 
   @override
   Widget build(BuildContext context) {
     final name = ingredient['name']?.toString() ?? 'Unknown';
     final imageUrl = ingredient['image']?.toString();
+
+    if (!inPantry) {
+      return Container(
+        margin: EdgeInsets.only(bottom: 10.h),
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+        decoration: BoxDecoration(
+          color: AppColors.backgroundWhite,
+          border: Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.cancel_outlined, color: AppColors.error, size: 18.r),
+            SizedBox(width: 8.w),
+            Text(
+              name,
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const Spacer(),
+            GestureDetector(
+              onTap: () {
+                context.read<ShoppingBloc>().add(
+                      AddShoppingItem(
+                        name,
+                        (ingredient['amount'] as num?)?.toDouble() ?? 1.0,
+                        ingredient['unit']?.toString() ?? 'piece',
+                      ),
+                    );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Added to shopping list ✓',
+                      style: TextStyle(
+                        color: AppColors.textWhite,
+                        fontSize: 13.sp,
+                      ),
+                    ),
+                    backgroundColor: AppColors.primary,
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              },
+              child: Container(
+                padding:
+                    EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight,
+                  borderRadius: BorderRadius.circular(6.r),
+                ),
+                child: Text(
+                  '+ List',
+                  style: TextStyle(
+                    fontSize: 10.sp,
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Container(
       margin: EdgeInsets.only(bottom: 10.h),
@@ -527,7 +631,111 @@ class _IngredientRow extends StatelessWidget {
               ),
             ),
           ),
-          Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 22.r),
+          Icon(Icons.check_circle_rounded,
+              color: AppColors.primary, size: 22.r),
+        ],
+      ),
+    );
+  }
+}
+
+class _SubstitutesSection extends StatelessWidget {
+  final List<String> missingNames;
+
+  const _SubstitutesSection({required this.missingNames});
+
+  static const _substitutes = <String, List<String>>{
+    'butter': ['margarine', 'coconut oil', 'applesauce'],
+    'milk': ['almond milk', 'oat milk', 'soy milk'],
+    'eggs': ['flax eggs', 'chia eggs', 'applesauce'],
+    'flour': ['almond flour', 'oat flour', 'rice flour'],
+    'sugar': ['honey', 'maple syrup', 'stevia'],
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final matchedSubstitutes = <String, List<String>>{};
+    for (final missing in missingNames) {
+      for (final entry in _substitutes.entries) {
+        if (missing.contains(entry.key)) {
+          matchedSubstitutes[entry.key] = entry.value;
+        }
+      }
+    }
+
+    if (matchedSubstitutes.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      margin: EdgeInsets.only(top: 16.h),
+      padding: EdgeInsets.all(14.r),
+      decoration: BoxDecoration(
+        color: AppColors.warningLight,
+        border: Border.all(color: AppColors.warning),
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'MISSING INGREDIENTS',
+            style: TextStyle(
+              fontSize: 11.sp,
+              color: AppColors.warning,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
+          ),
+          SizedBox(height: 6.h),
+          Text(
+            'Common substitutes:',
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          SizedBox(height: 10.h),
+          ...matchedSubstitutes.entries.map((entry) {
+            return Padding(
+              padding: EdgeInsets.only(bottom: 8.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    entry.key,
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: entry.value.map((sub) {
+                      return Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 8.w, vertical: 4.h),
+                        decoration: BoxDecoration(
+                          color: AppColors.backgroundWhite,
+                          border: Border.all(
+                              color: AppColors.warning.withValues(alpha: 0.4)),
+                          borderRadius: BorderRadius.circular(6.r),
+                        ),
+                        child: Text(
+                          sub,
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );

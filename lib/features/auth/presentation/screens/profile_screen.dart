@@ -126,7 +126,7 @@ class _HeroBanner extends StatelessWidget {
     final badgeLabel = isProActive ? 'PRO ACTIVE' : 'FREE PLAN';
     final badgeBg = isProActive
         ? AppColors.primaryLight.withValues(alpha: 0.25)
-        : Colors.white.withValues(alpha: 0.15);
+        : AppColors.textWhite.withValues(alpha: 0.15);
 
     return Container(
       decoration: const BoxDecoration(
@@ -152,9 +152,9 @@ class _HeroBanner extends StatelessWidget {
                     height: 64.r,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.2),
+                      color: AppColors.textWhite.withValues(alpha: 0.2),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: AppColors.textWhite.withValues(alpha: 0.5),
                         width: 2,
                       ),
                     ),
@@ -196,7 +196,7 @@ class _HeroBanner extends StatelessWidget {
                             color: badgeBg,
                             borderRadius: BorderRadius.circular(20.r),
                             border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.4),
+                              color: AppColors.textWhite.withValues(alpha: 0.4),
                               width: 1,
                             ),
                           ),
@@ -697,7 +697,7 @@ class _SubscriptionCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12.sp,
                     fontWeight: FontWeight.w400,
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: AppColors.textWhite.withValues(alpha: 0.8),
                   ),
                 ),
               ],
@@ -736,6 +736,7 @@ class _SignOutButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
+      height: 56.h,
       child: OutlinedButton.icon(
         onPressed: () {
           context.read<AuthBloc>().add(const SignOutRequested());
@@ -752,7 +753,6 @@ class _SignOutButton extends StatelessWidget {
         ),
         style: OutlinedButton.styleFrom(
           side: BorderSide(color: AppColors.error.withValues(alpha: 0.4)),
-          padding: EdgeInsets.symmetric(vertical: 14.h),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.r),
           ),
@@ -818,7 +818,13 @@ class _Card extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.backgroundWhite,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.textPrimary.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: child,
     );
@@ -839,6 +845,6 @@ abstract class GoogleFontsSafeStyle {
   static TextStyle get heroSub => TextStyle(
         fontSize: 13.sp,
         fontWeight: FontWeight.w400,
-        color: Colors.white.withValues(alpha: 0.75),
+        color: AppColors.textWhite.withValues(alpha: 0.75),
       );
 }

@@ -114,15 +114,25 @@ class _PantryViewState extends State<_PantryView> {
         children: [
           Text(message, style: const TextStyle(color: AppColors.error)),
           SizedBox(height: 16.h),
-          FilledButton(
-            onPressed: () =>
-                context.read<PantryBloc>().add(const RefreshPantry()),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r)),
+          SizedBox(
+            height: 50.h,
+            child: FilledButton(
+              onPressed: () =>
+                  context.read<PantryBloc>().add(const RefreshPantry()),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16.r)),
+              ),
+              child: Text(
+                'Retry',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textWhite,
+                ),
+              ),
             ),
-            child: const Text('Retry'),
           ),
         ],
       ),
@@ -302,8 +312,14 @@ class _PantryViewState extends State<_PantryView> {
       padding: EdgeInsets.all(20.r),
       decoration: BoxDecoration(
         color: AppColors.backgroundWhite,
-        border: Border.all(color: AppColors.border),
         borderRadius: BorderRadius.circular(20.r),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.textPrimary.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -365,7 +381,7 @@ class _PantryViewState extends State<_PantryView> {
                 style: TextStyle(
                   fontSize: 13.sp,
                   fontWeight: FontWeight.w700,
-                  color: Colors.white,
+                  color: AppColors.textWhite,
                   letterSpacing: 0.5,
                 ),
               ),
@@ -505,22 +521,33 @@ class _PantryViewState extends State<_PantryView> {
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 24.h),
-            FilledButton(
-              onPressed: isFiltered
-                  ? () {
-                      _searchController.clear();
-                      setState(() => _searchQuery = '');
-                      context
-                          .read<PantryBloc>()
-                          .add(const FilterPantry('all'));
-                    }
-                  : () => context.push(AppRoutes.addIngredient),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.r)),
+            SizedBox(
+              height: 56.h,
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: isFiltered
+                    ? () {
+                        _searchController.clear();
+                        setState(() => _searchQuery = '');
+                        context
+                            .read<PantryBloc>()
+                            .add(const FilterPantry('all'));
+                      }
+                    : () => context.push(AppRoutes.addIngredient),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.r)),
+                ),
+                child: Text(
+                  isFiltered ? 'Clear filters' : 'Add ingredient',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textWhite,
+                  ),
+                ),
               ),
-              child: Text(isFiltered ? 'Clear filters' : 'Add ingredient'),
             ),
           ],
         ),
@@ -609,7 +636,7 @@ class _ShimmerLayout extends StatelessWidget {
       width: w,
       height: h,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.backgroundWhite,
         borderRadius: BorderRadius.circular(r),
       ),
     );
@@ -634,7 +661,7 @@ class _FilterChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.textPrimary : AppColors.backgroundWhite,
           border: Border.all(
@@ -677,8 +704,14 @@ class _QuickActionCard extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 18.h),
         decoration: BoxDecoration(
           color: AppColors.backgroundWhite,
-          border: Border.all(color: AppColors.border),
           borderRadius: BorderRadius.circular(14.r),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.textPrimary.withValues(alpha: 0.04),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -841,14 +874,20 @@ class _IngredientCard extends StatelessWidget {
         ),
         alignment: Alignment.centerRight,
         padding: EdgeInsets.only(right: 20.w),
-        child: Icon(Icons.delete_outline, color: Colors.white, size: 22.r),
+        child: Icon(Icons.delete_outline, color: AppColors.textWhite, size: 22.r),
       ),
       child: Container(
         padding: EdgeInsets.all(12.r),
         decoration: BoxDecoration(
           color: AppColors.backgroundWhite,
-          border: Border.all(color: AppColors.border),
           borderRadius: BorderRadius.circular(12.r),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.textPrimary.withValues(alpha: 0.04),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         child: Row(
           children: [

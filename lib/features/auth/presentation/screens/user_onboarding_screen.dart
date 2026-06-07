@@ -119,16 +119,19 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
                     GestureDetector(
                       onTap: _previousStep,
                       child: Container(
+                        width: 44.r,
+                        height: 44.r,
                         margin: EdgeInsets.only(right: 16.w),
-                        padding: EdgeInsets.all(8.r),
                         decoration: const BoxDecoration(
                           color: AppColors.borderLight,
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(
-                          Icons.arrow_back_ios_new,
-                          color: AppColors.textPrimary,
-                          size: 18.r,
+                        child: Center(
+                          child: Icon(
+                            Icons.arrow_back_ios_new,
+                            color: AppColors.textPrimary,
+                            size: 18.r,
+                          ),
                         ),
                       ),
                     ),
@@ -658,9 +661,14 @@ class _GenderCard extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 18.h),
         decoration: BoxDecoration(
           color: selected ? AppColors.primary : AppColors.backgroundWhite,
-          border: Border.all(
-            color: selected ? AppColors.primary : AppColors.border,
-          ),
+          border: selected ? Border.all(color: AppColors.primary) : null,
+          boxShadow: selected ? null : [
+            BoxShadow(
+              color: AppColors.textPrimary.withValues(alpha: 0.04),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
           borderRadius: BorderRadius.circular(16.r),
         ),
         child: Row(
@@ -1021,10 +1029,14 @@ class _GoalCard extends StatelessWidget {
         padding: EdgeInsets.all(16.r),
         decoration: BoxDecoration(
           color: AppColors.backgroundWhite,
-          border: Border.all(
-            color: selected ? AppColors.primary : AppColors.border,
-            width: selected ? 2 : 1,
-          ),
+          border: selected ? Border.all(color: AppColors.primary, width: 2) : null,
+          boxShadow: selected ? null : [
+            BoxShadow(
+              color: AppColors.textPrimary.withValues(alpha: 0.04),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
           borderRadius: BorderRadius.circular(16.r),
         ),
         child: Row(
@@ -1168,10 +1180,14 @@ class _PaceCard extends StatelessWidget {
           color: selected
               ? AppColors.primaryLight.withValues(alpha: 0.3)
               : AppColors.backgroundWhite,
-          border: Border.all(
-            color: selected ? AppColors.primary : AppColors.border,
-            width: selected ? 2 : 1,
-          ),
+          border: selected ? Border.all(color: AppColors.primary, width: 2) : null,
+          boxShadow: selected ? null : [
+            BoxShadow(
+              color: AppColors.textPrimary.withValues(alpha: 0.04),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
           borderRadius: BorderRadius.circular(16.r),
         ),
         child: Column(
@@ -1442,9 +1458,14 @@ class _SelectableChip extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
         decoration: BoxDecoration(
           color: selected ? AppColors.primaryLight : AppColors.backgroundWhite,
-          border: Border.all(
-            color: selected ? AppColors.primary : AppColors.border,
-          ),
+          border: selected ? Border.all(color: AppColors.primary) : null,
+          boxShadow: selected ? null : [
+            BoxShadow(
+              color: AppColors.textPrimary.withValues(alpha: 0.04),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
           borderRadius: BorderRadius.circular(20.r),
         ),
         child: Text(
@@ -1634,8 +1655,8 @@ class _ToggleOption extends StatelessWidget {
         boxShadow: selected
             ? [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 4,
+                  color: AppColors.textPrimary.withValues(alpha: 0.06),
+                  blurRadius: 8,
                   offset: const Offset(0, 2),
                 )
               ]

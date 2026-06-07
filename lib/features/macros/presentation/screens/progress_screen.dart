@@ -2,7 +2,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
 import 'package:vitasense/core/widgets/app_header.dart';
@@ -83,7 +85,7 @@ class _ProgressView extends StatelessWidget {
         width: double.infinity,
         height: h,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.backgroundWhite,
           borderRadius: BorderRadius.circular(16.r),
         ),
       );
@@ -99,17 +101,27 @@ class _ProgressView extends StatelessWidget {
           Text(message,
               style: AppTextStyles.bodyMedium, textAlign: TextAlign.center),
           SizedBox(height: 16.h),
-          FilledButton(
-            onPressed: () => context.read<MacrosBloc>().add(
-                  LoadDailyMacros(
-                      DateTime.now().toIso8601String().split('T')[0]),
+          SizedBox(
+            height: 50.h,
+            child: FilledButton(
+              onPressed: () => context.read<MacrosBloc>().add(
+                    LoadDailyMacros(
+                        DateTime.now().toIso8601String().split('T')[0]),
+                  ),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16.r)),
+              ),
+              child: Text(
+                'Retry',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textWhite,
                 ),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r)),
+              ),
             ),
-            child: const Text('Retry'),
           ),
         ],
       ),
@@ -214,7 +226,13 @@ class _WeeklyConsistencyCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.backgroundWhite,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.textPrimary.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -384,7 +402,13 @@ class _MacrosListCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.backgroundWhite,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.textPrimary.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -503,7 +527,13 @@ class _RecentMealsList extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.backgroundWhite,
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: AppColors.border),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.textPrimary.withValues(alpha: 0.04),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         child: Center(
           child: Column(
@@ -516,6 +546,29 @@ class _RecentMealsList extends StatelessWidget {
                 style:
                     TextStyle(fontSize: 14.sp, color: AppColors.textSecondary),
               ),
+              SizedBox(height: 16.h),
+              SizedBox(
+                height: 44.h,
+                child: FilledButton.icon(
+                  onPressed: () => context.go(AppRoutes.aiMeals),
+                  icon: Icon(Icons.auto_awesome, size: 18.r),
+                  label: Text(
+                    'Get AI Meals',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primaryLight,
+                    foregroundColor: AppColors.primary,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -526,7 +579,13 @@ class _RecentMealsList extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.backgroundWhite,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.textPrimary.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: ListView.separated(
         physics: const NeverScrollableScrollPhysics(),

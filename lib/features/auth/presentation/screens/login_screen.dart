@@ -212,9 +212,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(24.r),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 24,
-                              offset: const Offset(0, 8),
+                              color: AppColors.textPrimary.withValues(alpha: 0.06),
+                              blurRadius: 32,
+                              offset: const Offset(0, 12),
                             ),
                           ],
                         ),
@@ -336,7 +336,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             _buildSocialButton(
                               label: 'Continue with Apple',
                               iconWidget: Icon(Icons.apple, color: AppColors.textWhite, size: 24.r),
-                              backgroundColor: Colors.black,
+                              backgroundColor: AppColors.textPrimary,
                               textColor: AppColors.textWhite,
                               onTap: () => context.read<AuthBloc>().add(const SignInWithAppleRequested()),
                             ),
@@ -402,7 +402,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6), // Light gray background
+        color: AppColors.background, // Light gray background
         borderRadius: BorderRadius.circular(16.r),
       ),
       child: TextField(
@@ -476,7 +476,7 @@ class _LoginScreenState extends State<LoginScreen> {
           style: TextStyle(
             fontSize: 18.sp,
             fontWeight: FontWeight.w900,
-            color: Colors.blue,
+            color: AppColors.primary,
           ),
         ),
       ),

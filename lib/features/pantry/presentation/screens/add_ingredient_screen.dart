@@ -197,7 +197,13 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
                       decoration: BoxDecoration(
                         color: AppColors.backgroundWhite,
                         borderRadius: BorderRadius.circular(16.r),
-                        border: Border.all(color: AppColors.border),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.textPrimary.withValues(alpha: 0.04),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
                       ),
                       child: TextField(
                         controller: _searchController,
@@ -241,8 +247,14 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
                                   horizontal: 16.w, vertical: 9.h),
                               decoration: BoxDecoration(
                                 color: AppColors.backgroundWhite,
-                                border: Border.all(color: AppColors.border),
                                 borderRadius: BorderRadius.circular(20.r),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.textPrimary.withValues(alpha: 0.04),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                               ),
                               child: Text(
                                 name,
@@ -264,8 +276,14 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
                         padding: EdgeInsets.all(16.r),
                         decoration: BoxDecoration(
                           color: AppColors.backgroundWhite,
-                          border: Border.all(color: AppColors.border),
                           borderRadius: BorderRadius.circular(16.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.textPrimary.withValues(alpha: 0.04),
+                              blurRadius: 16,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -520,12 +538,18 @@ class _StepperButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 40.r,
-        height: 40.r,
+        width: 44.r,
+        height: 44.r,
         decoration: BoxDecoration(
-          color: AppColors.borderLight,
+          color: AppColors.backgroundWhite,
           shape: BoxShape.circle,
-          border: Border.all(color: AppColors.border),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.textPrimary.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Icon(icon, color: AppColors.textPrimary, size: 18.r),
       ),
@@ -554,11 +578,18 @@ class _ExpiryChip extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 11.h),
         decoration: BoxDecoration(
           color: AppColors.backgroundWhite,
-          border: Border.all(
-            color: isSelected ? AppColors.secondary : AppColors.border,
-            width: isSelected ? 2 : 1,
-          ),
+          border: isSelected ? Border.all(
+            color: AppColors.secondary,
+            width: 2,
+          ) : null,
           borderRadius: BorderRadius.circular(12.r),
+          boxShadow: isSelected ? null : [
+            BoxShadow(
+              color: AppColors.textPrimary.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Text(
           label,

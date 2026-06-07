@@ -165,39 +165,45 @@ class _SubscriptionCardSection extends StatelessWidget {
                   ),
                 ),
                 if (isActive)
-                  OutlinedButton(
-                    onPressed: () => context.read<SubscriptionBloc>().add(const SyncSubscription()),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.textWhite),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20.r),
+                  SizedBox(
+                    height: 44.h,
+                    child: OutlinedButton(
+                      onPressed: () => context.read<SubscriptionBloc>().add(const SyncSubscription()),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.textWhite),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20.r),
+                        ),
+                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                       ),
-                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                    ),
-                    child: Text(
-                      'Sync',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textWhite,
+                      child: Text(
+                        'Sync',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textWhite,
+                        ),
                       ),
                     ),
                   )
                 else
-                  FilledButton(
-                    onPressed: () => context.push(AppRoutes.paywall),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.textWhite,
-                      foregroundColor: AppColors.textSecondary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20.r),
+                  SizedBox(
+                    height: 44.h,
+                    child: FilledButton(
+                      onPressed: () => context.push(AppRoutes.paywall),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.textWhite,
+                        foregroundColor: AppColors.textSecondary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20.r),
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      'Renew Now',
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.w700,
+                      child: Text(
+                        'Renew Now',
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),
@@ -463,23 +469,32 @@ class _DangerZoneSection extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppColors.backgroundWhite,
                   borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: OutlinedButton(
-                  onPressed: () => _showCancelDialog(context),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: AppColors.error.withValues(alpha: 0.5)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.textPrimary.withValues(alpha: 0.04),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
                     ),
-                    padding: EdgeInsets.symmetric(vertical: 14.h),
-                  ),
-                  child: Text(
-                    'Cancel Subscription',
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.error,
+                  ],
+                ),
+                child: SizedBox(
+                  height: 56.h,
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () => _showCancelDialog(context),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: AppColors.error.withValues(alpha: 0.5)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.r),
+                      ),
+                    ),
+                    child: Text(
+                      'Cancel Subscription',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.error,
+                      ),
                     ),
                   ),
                 ),
@@ -525,7 +540,13 @@ class _BaseCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.backgroundWhite,
             borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: AppColors.border),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.textPrimary.withValues(alpha: 0.04),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
           child: child,
         ),

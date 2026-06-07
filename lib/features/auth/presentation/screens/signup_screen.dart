@@ -137,9 +137,9 @@ class _SignupScreenState extends State<SignupScreen> {
                           borderRadius: BorderRadius.circular(24.r),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 24,
-                              offset: const Offset(0, 8),
+                              color: AppColors.textPrimary.withValues(alpha: 0.06),
+                              blurRadius: 32,
+                              offset: const Offset(0, 12),
                             ),
                           ],
                         ),
@@ -150,11 +150,11 @@ class _SignupScreenState extends State<SignupScreen> {
                             GestureDetector(
                               onTap: () => context.pop(),
                               child: Container(
-                                width: 36.r,
-                                height: 36.r,
+                                width: 44.r,
+                                height: 44.r,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFF3F4F6),
-                                  borderRadius: BorderRadius.circular(10.r),
+                                  color: AppColors.background,
+                                  borderRadius: BorderRadius.circular(12.r),
                                 ),
                                 child: Icon(
                                   Icons.arrow_back_ios_new,
@@ -245,7 +245,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                     width: 20.r,
                                     height: 20.r,
                                     decoration: BoxDecoration(
-                                      color: _agreedToTerms ? AppColors.primary : const Color(0xFFF3F4F6),
+                                      color: _agreedToTerms ? AppColors.primary : AppColors.background,
                                       border: Border.all(
                                         color: _agreedToTerms ? AppColors.primary : AppColors.borderMedium,
                                       ),
@@ -366,7 +366,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             _buildSocialButton(
                               label: 'Continue with Apple',
                               iconWidget: Icon(Icons.apple, color: AppColors.textWhite, size: 24.r),
-                              backgroundColor: Colors.black,
+                              backgroundColor: AppColors.textPrimary,
                               textColor: AppColors.textWhite,
                               onTap: () => context.read<AuthBloc>().add(const SignInWithAppleRequested()),
                             ),
@@ -431,7 +431,7 @@ class _SignupScreenState extends State<SignupScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
+        color: AppColors.background,
         borderRadius: BorderRadius.circular(16.r),
       ),
       child: TextField(
@@ -505,7 +505,7 @@ class _SignupScreenState extends State<SignupScreen> {
           style: TextStyle(
             fontSize: 18.sp,
             fontWeight: FontWeight.w900,
-            color: Colors.blue,
+            color: AppColors.primary,
           ),
         ),
       ),

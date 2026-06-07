@@ -266,11 +266,29 @@ class _ShoppingListViewState extends State<_ShoppingListView> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
+                            Icon(Icons.error_outline, color: AppColors.error, size: 40.r),
+                            SizedBox(height: 12.h),
                             Text('Failed to load shopping list.', style: AppTextStyles.bodyMedium),
-                            SizedBox(height: 8.h),
-                            ElevatedButton(
-                              onPressed: () => context.read<ShoppingBloc>().add(const LoadShoppingList()),
-                              child: const Text('Retry'),
+                            SizedBox(height: 16.h),
+                            SizedBox(
+                              height: 50.h,
+                              child: FilledButton(
+                                onPressed: () => context.read<ShoppingBloc>().add(const LoadShoppingList()),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16.r),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Retry',
+                                  style: TextStyle(
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textWhite,
+                                  ),
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -304,9 +322,67 @@ class _ShoppingListViewState extends State<_ShoppingListView> {
                           
                           // TO BUY list items
                           if (state.items.isEmpty && state.purchasedItems.isEmpty)
-                            const SliverFillRemaining(
+                            SliverFillRemaining(
                               child: Center(
-                                child: Text('Your shopping list is empty', style: TextStyle(color: AppColors.textSecondary)),
+                                child: Padding(
+                                  padding: EdgeInsets.all(32.r),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        width: 72.r,
+                                        height: 72.r,
+                                        decoration: const BoxDecoration(
+                                          color: AppColors.borderLight,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(Icons.shopping_cart_outlined,
+                                            size: 36.r, color: AppColors.textMuted),
+                                      ),
+                                      SizedBox(height: 24.h),
+                                      Text(
+                                        'Your list is empty',
+                                        style: TextStyle(
+                                          fontSize: 18.sp,
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                      SizedBox(height: 8.h),
+                                      Text(
+                                        'Add items you need to buy or get AI generated meals to auto-fill your list.',
+                                        style: TextStyle(
+                                          fontSize: 14.sp,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      SizedBox(height: 24.h),
+                                      SizedBox(
+                                        height: 50.h,
+                                        width: double.infinity,
+                                        child: FilledButton.icon(
+                                          onPressed: () => _showAddItemSheet(context),
+                                          icon: Icon(Icons.add, size: 20.r),
+                                          label: Text(
+                                            'Add Item',
+                                            style: TextStyle(
+                                              fontSize: 16.sp,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppColors.textWhite,
+                                            ),
+                                          ),
+                                          style: FilledButton.styleFrom(
+                                            backgroundColor: AppColors.primary,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(16.r),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             )
                           else
@@ -410,8 +486,14 @@ class _MoveToPantryButton extends StatelessWidget {
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
         color: AppColors.primaryLight,
-        border: Border.all(color: AppColors.primary),
         borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.15),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -439,16 +521,19 @@ class _MoveToPantryButton extends StatelessWidget {
               ],
             ),
           ),
-          FilledButton(
-            onPressed: () => context.read<ShoppingBloc>().add(const MoveAllToPantry()),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.r),
+          SizedBox(
+            height: 44.h,
+            child: FilledButton(
+              onPressed: () => context.read<ShoppingBloc>().add(const MoveAllToPantry()),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 0),
               ),
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 0),
+              child: const Text('MOVE'),
             ),
-            child: const Text('MOVE'),
           ),
         ],
       ),
@@ -484,8 +569,14 @@ class _ShoppingItemCard extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         decoration: BoxDecoration(
           color: AppColors.backgroundWhite,
-          border: Border.all(color: AppColors.border),
           borderRadius: BorderRadius.circular(12.r),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.textPrimary.withValues(alpha: 0.04),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -559,7 +650,6 @@ class _PurchasedItemCard extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         decoration: BoxDecoration(
           color: AppColors.borderLight,
-          border: Border.all(color: AppColors.border),
           borderRadius: BorderRadius.circular(12.r),
         ),
         child: Row(

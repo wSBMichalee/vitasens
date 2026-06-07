@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
@@ -79,7 +80,7 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
             ),
 
             SizedBox(
-              height: 36.h,
+              height: 48.h,
               child: BlocBuilder<RecipesBloc, RecipesState>(
                 builder: (context, state) {
                   final selectedFilter =
@@ -98,7 +99,7 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
                             padding: EdgeInsets.symmetric(
-                                horizontal: 14.w, vertical: 6.h),
+                                horizontal: 16.w, vertical: 12.h),
                             decoration: BoxDecoration(
                               color: selected
                                   ? AppColors.primary
@@ -135,9 +136,25 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
               child: BlocBuilder<RecipesBloc, RecipesState>(
                 builder: (context, state) {
                   if (state is RecipesLoading) {
-                    return const Center(
-                      child:
-                          CircularProgressIndicator(color: AppColors.primary),
+                    return ListView.builder(
+                      padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 24.h),
+                      itemCount: 4,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: EdgeInsets.only(bottom: 16.h),
+                          child: Shimmer.fromColors(
+                            baseColor: AppColors.borderLight,
+                            highlightColor: AppColors.border,
+                            child: Container(
+                              height: 250.h,
+                              decoration: BoxDecoration(
+                                color: AppColors.backgroundWhite,
+                                borderRadius: BorderRadius.circular(16.r),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     );
                   }
                   if (state is RecipesError) {
@@ -150,19 +167,33 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
                           SizedBox(height: 12.h),
                           Text(state.message, style: AppTextStyles.bodyMedium),
                           SizedBox(height: 16.h),
-                          FilledButton(
-                            onPressed: () {
-                              final pantry =
-                                  (widget.ingredients?.isNotEmpty == true)
-                                      ? widget.ingredients!
-                                      : _defaultIngredients;
-                              context
-                                  .read<RecipesBloc>()
-                                  .add(LoadRecipes(pantry));
-                            },
-                            style: FilledButton.styleFrom(
-                                backgroundColor: AppColors.primary),
-                            child: const Text('Retry'),
+                          SizedBox(
+                            height: 50.h,
+                            child: FilledButton(
+                              onPressed: () {
+                                final pantry =
+                                    (widget.ingredients?.isNotEmpty == true)
+                                        ? widget.ingredients!
+                                        : _defaultIngredients;
+                                context
+                                    .read<RecipesBloc>()
+                                    .add(LoadRecipes(pantry));
+                              },
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16.r),
+                                ),
+                              ),
+                              child: Text(
+                                'Retry',
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textWhite,
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -171,8 +202,66 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
                   if (state is RecipesLoaded) {
                     if (state.recipes.isEmpty) {
                       return Center(
-                        child:
-                            Text('No recipes found', style: AppTextStyles.bodyMedium),
+                        child: Padding(
+                          padding: EdgeInsets.all(32.r),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 72.r,
+                                height: 72.r,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.borderLight,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(Icons.restaurant_menu,
+                                    size: 36.r, color: AppColors.textMuted),
+                              ),
+                              SizedBox(height: 24.h),
+                              Text(
+                                'No recipes found',
+                                style: TextStyle(
+                                  fontSize: 18.sp,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              SizedBox(height: 8.h),
+                              Text(
+                                'Try changing your filters or add more ingredients.',
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  color: AppColors.textSecondary,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              SizedBox(height: 24.h),
+                              SizedBox(
+                                height: 50.h,
+                                width: double.infinity,
+                                child: FilledButton(
+                                  onPressed: () => context
+                                      .read<RecipesBloc>()
+                                      .add(const FilterRecipes('ALL')),
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16.r),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Clear filters',
+                                    style: TextStyle(
+                                      fontSize: 16.sp,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textWhite,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       );
                     }
                     return ListView.builder(
@@ -227,13 +316,12 @@ class _RecipeCard extends StatelessWidget {
         margin: EdgeInsets.only(bottom: 16.h),
         decoration: BoxDecoration(
           color: AppColors.backgroundWhite,
-          border: Border.all(color: AppColors.border),
           borderRadius: BorderRadius.circular(16.r),
           boxShadow: [
             BoxShadow(
               color: AppColors.textPrimary.withValues(alpha: 0.04),
-              blurRadius: 8.r,
-              offset: const Offset(0, 2),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
             ),
           ],
         ),

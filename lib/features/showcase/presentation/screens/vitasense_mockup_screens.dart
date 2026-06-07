@@ -392,7 +392,7 @@ class MockupHomeScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: AppColors.secondaryLight,
                         borderRadius: BorderRadius.circular(22.r),
-                        border: Border.all(color: const Color(0xFFBFDBFE)),
+                        border: Border.all(color: AppColors.borderLight),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -467,7 +467,7 @@ class MockupHomeScreen extends StatelessWidget {
                       ),
                     ),
 
-                    SizedBox(height: 20.h),
+                    SizedBox(height: 24.h),
 
                     // ── INGREDIENTS HINT ─────────────────────────────────────────
                     Text.rich(
@@ -489,7 +489,7 @@ class MockupHomeScreen extends StatelessWidget {
                       ),
                     ),
 
-                    SizedBox(height: 36.h),
+                    SizedBox(height: 32.h),
 
                     // ── TODAY'S MEALS ────────────────────────────────────────────
                     Row(
@@ -1104,7 +1104,7 @@ class _ProgressCard extends StatelessWidget {
         (kcalConsumed / kcalGoal).clamp(0.0, 1.0);
 
     return Container(
-      padding: EdgeInsets.fromLTRB(22.w, 24.h, 22.w, 24.h),
+      padding: EdgeInsets.fromLTRB(24.w, 24.h, 24.w, 24.h),
       decoration: BoxDecoration(
         color: AppColors.backgroundWhite,
         borderRadius: BorderRadius.circular(24.r),
@@ -1177,7 +1177,7 @@ class _ProgressCard extends StatelessWidget {
             ],
           ),
 
-          SizedBox(height: 20.h),
+          SizedBox(height: 24.h),
 
           // ── LINIA PODZIAŁU ──────────────────────────────────────────────
           const Divider(
@@ -1186,7 +1186,7 @@ class _ProgressCard extends StatelessWidget {
             height: 1,
           ),
 
-          SizedBox(height: 20.h),
+          SizedBox(height: 24.h),
 
           // ── MAKRA — poziomy rząd 3 kolumn (bez overflow) ───────────────
           IntrinsicHeight(
@@ -1266,13 +1266,19 @@ class _MacroColumn extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11.sp,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textSecondary,
-                  letterSpacing: 0.8,
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 11.sp,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textSecondary,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
                 ),
               ),
               if (isLow) ...[  

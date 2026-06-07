@@ -8,6 +8,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
+import 'package:vitasense/core/widgets/app_header.dart';
 import 'package:vitasense/features/extract/bloc/extract_bloc.dart';
 import 'package:vitasense/features/extract/bloc/extract_event.dart';
 import 'package:vitasense/features/extract/bloc/extract_state.dart';
@@ -56,21 +57,11 @@ class _ExtractViewState extends State<_ExtractView> {
       body: SafeArea(
         child: Column(
           children: [
-            // ─── HEADER ────────────────────────────────────────────────────────
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.arrow_back, color: AppColors.textPrimary, size: 24.r),
-                    onPressed: () => context.pop(),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                  SizedBox(width: 16.w),
-                  Text('Extract Recipe', style: AppTextStyles.headingLarge),
-                ],
-              ),
+            // ── AppHeader: wariant nested ─────────────────────────────────────
+            AppHeader(
+              title: 'Pobierz przepis',
+              variant: AppHeaderVariant.nested,
+              onBack: () => context.pop(),
             ),
 
             Expanded(
@@ -149,7 +140,7 @@ class _ExtractViewState extends State<_ExtractView> {
             decoration: InputDecoration(
               hintText: 'https://...',
               filled: true,
-              fillColor: Colors.white,
+              fillColor: AppColors.backgroundWhite,
               contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12.r),
@@ -225,7 +216,7 @@ class _ExtractViewState extends State<_ExtractView> {
               // ─── RECIPE CARD ──────────────────────────────────────────────────
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.backgroundWhite,
                   border: Border.all(color: AppColors.border),
                   borderRadius: BorderRadius.circular(16.r),
                 ),

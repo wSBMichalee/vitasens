@@ -21,10 +21,15 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
   int _currentStep = 0;
 
   // Collected data
+  final List<String> _accomplishments = [];
+  bool? _usedOtherApps;
   String? _gender;
   int _age = 25;
-  double _height = 170;
-  double _weight = 70;
+  int _height = 170;
+  int _weight = 70;
+  int _targetWeight = 70;
+  bool _sensitiveData = true;
+  bool _tos = true;
   bool _useCm = true;
   bool _useKg = true;
   String? _goal;
@@ -42,7 +47,7 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
   }
 
   void _nextStep() {
-    if (_currentStep < 8) {
+    if (_currentStep < 13) {
       _pageController.animateToPage(
         _currentStep + 1,
         duration: const Duration(milliseconds: 300),
@@ -67,10 +72,13 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
     setState(() => _isLoading = true);
     try {
       await _authRepository.updateProfile({
+        'accomplishments': _accomplishments,
+        'used_other_apps': _usedOtherApps,
         'gender': _gender,
         'age': _age,
         'weight_kg': _useKg ? _weight : _weight * 0.453592,
-        'height_cm': _useCm ? _height : _height * 30.48,
+        'height_cm': _useCm ? _height : _height * 2.54,
+        'target_weight_kg': _useKg ? _targetWeight : _targetWeight * 0.453592,
         'goal_type': _goal,
         'goal_pace': _pace,
         'activity_level': _activity,
@@ -98,7 +106,7 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.backgroundWhite,
       body: SafeArea(
         child: Column(
           children: [
@@ -110,12 +118,17 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
                   if (_currentStep > 0)
                     GestureDetector(
                       onTap: _previousStep,
-                      child: Padding(
-                        padding: EdgeInsets.only(right: 16.w),
+                      child: Container(
+                        margin: EdgeInsets.only(right: 16.w),
+                        padding: EdgeInsets.all(8.r),
+                        decoration: const BoxDecoration(
+                          color: AppColors.borderLight,
+                          shape: BoxShape.circle,
+                        ),
                         child: Icon(
                           Icons.arrow_back_ios_new,
                           color: AppColors.textPrimary,
-                          size: 20.r,
+                          size: 18.r,
                         ),
                       ),
                     ),
@@ -123,7 +136,7 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
                     child: TweenAnimationBuilder<double>(
                       tween: Tween(
                         begin: 0,
-                        end: (_currentStep + 1) / 9,
+                        end: (_currentStep + 1) / 14,
                       ),
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeOutCubic,
@@ -140,7 +153,7 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
                   ),
                   SizedBox(width: 16.w),
                   Text(
-                    '${_currentStep + 1}/9',
+                    '${_currentStep + 1}/14',
                     style: TextStyle(
                       fontSize: 13.sp,
                       color: AppColors.textSecondary,
@@ -156,6 +169,25 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
                 controller: _pageController,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
+                  _AccomplishStep(
+                    selected: _accomplishments,
+                    onToggle: (v) {
+                      setState(() {
+                        _accomplishments.contains(v)
+                            ? _accomplishments.remove(v)
+                            : _accomplishments.add(v);
+                      });
+                    },
+                    onNext: _accomplishments.isNotEmpty ? _nextStep : null,
+                  ),
+                  _NutritionAppsStep(
+                    selected: _usedOtherApps,
+                    onSelected: (v) => setState(() => _usedOtherApps = v),
+                    onNext: _usedOtherApps != null ? _nextStep : null,
+                  ),
+                  _MotivationStep(
+                    onNext: _nextStep,
+                  ),
                   _GenderStep(
                     selected: _gender,
                     onSelected: (v) => setState(() => _gender = v),
@@ -174,19 +206,35 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
                   _HeightStep(
                     height: _height,
                     useCm: _useCm,
-                    onToggleUnit: () => setState(() => _useCm = !_useCm),
-                    onDecrement: () => setState(() => _height--),
-                    onIncrement: () => setState(() => _height++),
+                    onToggleUnit: () {
+                      setState(() {
+                        if (_useCm) {
+                          _height = (_height / 2.54).round();
+                        } else {
+                          _height = (_height * 2.54).round();
+                        }
+                        _useCm = !_useCm;
+                      });
+                    },
+                    onChanged: (v) => setState(() => _height = v),
                     onNext: _nextStep,
                   ),
                   _WeightStep(
                     weight: _weight,
                     useKg: _useKg,
-                    onToggleUnit: () => setState(() => _useKg = !_useKg),
-                    onDecrement: () {
-                      if (_weight > 1) setState(() => _weight--);
+                    onToggleUnit: () {
+                      setState(() {
+                        if (_useKg) {
+                          _weight = (_weight * 2.20462).round();
+                          _targetWeight = (_targetWeight * 2.20462).round();
+                        } else {
+                          _weight = (_weight / 2.20462).round();
+                          _targetWeight = (_targetWeight / 2.20462).round();
+                        }
+                        _useKg = !_useKg;
+                      });
                     },
-                    onIncrement: () => setState(() => _weight++),
+                    onChanged: (v) => setState(() => _weight = v),
                     onNext: _nextStep,
                   ),
                   _GoalStep(
@@ -203,6 +251,14 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
                     selected: _activity,
                     onSelected: (v) => setState(() => _activity = v),
                     onNext: _activity != null ? _nextStep : null,
+                  ),
+                  _TargetWeightStep(
+                    targetWeight: _targetWeight,
+                    currentWeight: _weight,
+                    goal: _goal,
+                    useKg: _useKg,
+                    onChanged: (v) => setState(() => _targetWeight = v),
+                    onNext: _nextStep,
                   ),
                   _PreferencesStep(
                     allergies: _allergies,
@@ -240,6 +296,13 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
                         }
                       });
                     },
+                    onNext: _nextStep,
+                  ),
+                  _AlmostDoneStep(
+                    sensitiveData: _sensitiveData,
+                    tos: _tos,
+                    onSensitiveDataChanged: (v) => setState(() => _sensitiveData = v ?? false),
+                    onTosChanged: (v) => setState(() => _tos = v ?? false),
                     onComplete: _isLoading ? null : _completeOnboarding,
                     isLoading: _isLoading,
                   ),
@@ -254,7 +317,265 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// STEP 1: GENDER
+// STEP 1: ACCOMPLISH
+// ─────────────────────────────────────────────────────────────────────────────
+class _AccomplishStep extends StatelessWidget {
+  const _AccomplishStep({
+    required this.selected,
+    required this.onToggle,
+    required this.onNext,
+  });
+
+  final List<String> selected;
+  final ValueChanged<String> onToggle;
+  final VoidCallback? onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    final options = [
+      ('🍎 Eat and live healthier', 'healthier'),
+      ('⚡ Boost my energy and mood', 'energy'),
+      ('💪 Stay motivated and consistent', 'motivated'),
+      ('🧘 Feel better about my body', 'body'),
+      ('🥗 Cook smarter with what I have', 'cook'),
+      ('❤️ Eat for my health condition', 'condition'),
+    ];
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("What would you like to accomplish?", style: AppTextStyles.headingLarge),
+          SizedBox(height: 8.h),
+          Text("Choose all that apply", style: AppTextStyles.bodyMedium),
+          SizedBox(height: 32.h),
+          ...options.map(
+            (o) => Padding(
+              padding: EdgeInsets.only(bottom: 12.h),
+              child: _MultiSelectCard(
+                label: o.$1,
+                selected: selected.contains(o.$2),
+                onTap: () => onToggle(o.$2),
+              ),
+            ),
+          ),
+          SizedBox(height: 24.h),
+          _ContinueButton(onPressed: onNext),
+          SizedBox(height: 16.h),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.05, end: 0);
+  }
+}
+
+class _MultiSelectCard extends StatelessWidget {
+  const _MultiSelectCard({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 18.h),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primaryLight : AppColors.borderLight,
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            if (selected)
+              Icon(Icons.check_circle, color: AppColors.primary, size: 24.r)
+            else
+              Icon(Icons.circle_outlined, color: AppColors.textMuted, size: 24.r),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STEP 2: NUTRITION APPS
+// ─────────────────────────────────────────────────────────────────────────────
+class _NutritionAppsStep extends StatelessWidget {
+  const _NutritionAppsStep({
+    required this.selected,
+    required this.onSelected,
+    required this.onNext,
+  });
+
+  final bool? selected;
+  final ValueChanged<bool> onSelected;
+  final VoidCallback? onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Have you tried other nutrition apps?", style: AppTextStyles.headingLarge),
+          SizedBox(height: 48.h),
+          _BinaryCard(
+            label: '👍 Yes - I have',
+            selected: selected == true,
+            onTap: () => onSelected(true),
+          ),
+          SizedBox(height: 16.h),
+          _BinaryCard(
+            label: '👎 No - first time',
+            selected: selected == false,
+            onTap: () => onSelected(false),
+          ),
+          const Spacer(),
+          _ContinueButton(onPressed: onNext),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.05, end: 0);
+  }
+}
+
+class _BinaryCard extends StatelessWidget {
+  const _BinaryCard({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.textPrimary : AppColors.borderLight,
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.w600,
+            color: selected ? AppColors.textWhite : AppColors.textPrimary,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STEP 3: MOTIVATION
+// ─────────────────────────────────────────────────────────────────────────────
+class _MotivationStep extends StatelessWidget {
+  const _MotivationStep({
+    required this.onNext,
+  });
+
+  final VoidCallback onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("VitaSense users reach their goals 2x faster", style: AppTextStyles.headingLarge),
+          SizedBox(height: 48.h),
+          Container(
+            padding: EdgeInsets.all(24.r),
+            decoration: BoxDecoration(
+              color: AppColors.borderLight,
+              borderRadius: BorderRadius.circular(24.r),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text("avg results", style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
+                    SizedBox(height: 8.h),
+                    Container(
+                      width: 60.w,
+                      height: 80.h,
+                      decoration: BoxDecoration(
+                        color: AppColors.borderMedium,
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(8.r)),
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text("Without", style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.w600)),
+                  ],
+                ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text("2X", style: AppTextStyles.headingMedium.copyWith(color: AppColors.primary)),
+                    SizedBox(height: 8.h),
+                    Container(
+                      width: 60.w,
+                      height: 160.h,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(8.r)),
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text("With VitaSense", style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 32.h),
+          Text(
+            "We track your pantry and personalize every meal to your health goals.",
+            style: AppTextStyles.bodyMedium,
+            textAlign: TextAlign.center,
+          ),
+          const Spacer(),
+          _ContinueButton(onPressed: onNext),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.05, end: 0);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STEP 4: GENDER
 // ─────────────────────────────────────────────────────────────────────────────
 class _GenderStep extends StatelessWidget {
   const _GenderStep({
@@ -336,7 +657,7 @@ class _GenderCard extends StatelessWidget {
         width: double.infinity,
         padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 18.h),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary : Colors.white,
+          color: selected ? AppColors.primary : AppColors.backgroundWhite,
           border: Border.all(
             color: selected ? AppColors.primary : AppColors.border,
           ),
@@ -346,7 +667,7 @@ class _GenderCard extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: selected ? Colors.white : AppColors.textSecondary,
+              color: selected ? AppColors.textWhite : AppColors.textSecondary,
               size: 24.r,
             ),
             SizedBox(width: 16.w),
@@ -355,12 +676,12 @@ class _GenderCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.w600,
-                color: selected ? Colors.white : AppColors.textPrimary,
+                color: selected ? AppColors.textWhite : AppColors.textPrimary,
               ),
             ),
             const Spacer(),
             if (selected)
-              Icon(Icons.check_circle, color: Colors.white, size: 20.r),
+              Icon(Icons.check_circle, color: AppColors.textWhite, size: 20.r),
           ],
         ),
       ),
@@ -475,25 +796,15 @@ class _HeightStep extends StatelessWidget {
     required this.height,
     required this.useCm,
     required this.onToggleUnit,
-    required this.onDecrement,
-    required this.onIncrement,
+    required this.onChanged,
     required this.onNext,
   });
 
-  final double height;
+  final int height;
   final bool useCm;
   final VoidCallback onToggleUnit;
-  final VoidCallback onDecrement;
-  final VoidCallback onIncrement;
+  final ValueChanged<int> onChanged;
   final VoidCallback onNext;
-
-  String get _displayHeight {
-    if (useCm) return height.toStringAsFixed(0);
-    final totalInches = height / 2.54;
-    final feet = (totalInches / 12).floor();
-    final inches = (totalInches % 12).round();
-    return "$feet'$inches\"";
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -507,35 +818,33 @@ class _HeightStep extends StatelessWidget {
           Center(child: _UnitToggleRow(useCm: useCm, onToggle: onToggleUnit)),
           SizedBox(height: 32.h),
           Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+            child: Column(
               children: [
-                _StepButton(icon: Icons.remove, onTap: onDecrement),
-                SizedBox(width: 32.w),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      _displayHeight,
-                      style: TextStyle(
-                        fontSize: 72.sp,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      useCm ? 'cm' : 'ft',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
+                Text(
+                  useCm ? '$height' : '${height ~/ 12}\'${height % 12}"',
+                  style: TextStyle(
+                    fontSize: 72.sp,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-                SizedBox(width: 32.w),
-                _StepButton(icon: Icons.add, onTap: onIncrement),
+                Text(
+                  useCm ? 'cm' : 'ft',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
               ],
             ),
+          ),
+          SizedBox(height: 48.h),
+          _RulerPicker(
+            key: ValueKey(useCm ? 'cm' : 'in'),
+            minValue: useCm ? 100 : 40,
+            maxValue: useCm ? 250 : 100,
+            initialValue: height,
+            onChanged: onChanged,
           ),
           const Spacer(),
           _ContinueButton(onPressed: onNext),
@@ -553,22 +862,15 @@ class _WeightStep extends StatelessWidget {
     required this.weight,
     required this.useKg,
     required this.onToggleUnit,
-    required this.onDecrement,
-    required this.onIncrement,
+    required this.onChanged,
     required this.onNext,
   });
 
-  final double weight;
+  final int weight;
   final bool useKg;
   final VoidCallback onToggleUnit;
-  final VoidCallback onDecrement;
-  final VoidCallback onIncrement;
+  final ValueChanged<int> onChanged;
   final VoidCallback onNext;
-
-  String get _displayWeight {
-    if (useKg) return weight.toStringAsFixed(0);
-    return (weight / 0.453592).toStringAsFixed(0);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -589,35 +891,33 @@ class _WeightStep extends StatelessWidget {
           ),
           SizedBox(height: 32.h),
           Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+            child: Column(
               children: [
-                _StepButton(icon: Icons.remove, onTap: onDecrement),
-                SizedBox(width: 32.w),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      _displayWeight,
-                      style: TextStyle(
-                        fontSize: 72.sp,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      useKg ? 'kg' : 'lbs',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
+                Text(
+                  '$weight',
+                  style: TextStyle(
+                    fontSize: 72.sp,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-                SizedBox(width: 32.w),
-                _StepButton(icon: Icons.add, onTap: onIncrement),
+                Text(
+                  useKg ? 'kg' : 'lbs',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
               ],
             ),
+          ),
+          SizedBox(height: 48.h),
+          _RulerPicker(
+            key: ValueKey(useKg ? 'kg' : 'lbs'),
+            minValue: useKg ? 30 : 66,
+            maxValue: useKg ? 200 : 440,
+            initialValue: weight,
+            onChanged: onChanged,
           ),
           const Spacer(),
           _ContinueButton(onPressed: onNext),
@@ -720,7 +1020,7 @@ class _GoalCard extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.all(16.r),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.backgroundWhite,
           border: Border.all(
             color: selected ? AppColors.primary : AppColors.border,
             width: selected ? 2 : 1,
@@ -867,7 +1167,7 @@ class _PaceCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected
               ? AppColors.primaryLight.withValues(alpha: 0.3)
-              : Colors.white,
+              : AppColors.backgroundWhite,
           border: Border.all(
             color: selected ? AppColors.primary : AppColors.border,
             width: selected ? 2 : 1,
@@ -1141,7 +1441,7 @@ class _SelectableChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primaryLight : Colors.white,
+          color: selected ? AppColors.primaryLight : AppColors.backgroundWhite,
           border: Border.all(
             color: selected ? AppColors.primary : AppColors.border,
           ),
@@ -1167,14 +1467,12 @@ class _HealthConditionsStep extends StatelessWidget {
   const _HealthConditionsStep({
     required this.selected,
     required this.onToggle,
-    required this.onComplete,
-    required this.isLoading,
+    required this.onNext,
   });
 
   final List<String> selected;
   final ValueChanged<String> onToggle;
-  final VoidCallback? onComplete;
-  final bool isLoading;
+  final VoidCallback? onNext;
 
   @override
   Widget build(BuildContext context) {
@@ -1215,7 +1513,7 @@ class _HealthConditionsStep extends StatelessWidget {
                   padding:
                       EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
                   decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primaryLight : Colors.white,
+                    color: isSelected ? AppColors.primaryLight : AppColors.backgroundWhite,
                     border: Border.all(
                       color:
                           isSelected ? AppColors.primary : AppColors.border,
@@ -1239,40 +1537,8 @@ class _HealthConditionsStep extends StatelessWidget {
             }).toList(),
           ),
 
-          SizedBox(height: 40.h),
-
-          SizedBox(
-            width: double.infinity,
-            height: 56.h,
-            child: FilledButton(
-              onPressed: onComplete,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.r),
-                ),
-              ),
-              child: isLoading
-                  ? SizedBox(
-                      width: 22.r,
-                      height: 22.r,
-                      child: const CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : Text(
-                      'Complete Setup',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-            ),
-          ),
-
-          SizedBox(height: 16.h),
+          const Spacer(),
+          _ContinueButton(onPressed: onNext),
         ],
       ),
     ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.05, end: 0);
@@ -1298,7 +1564,7 @@ class _ContinueButton extends StatelessWidget {
           backgroundColor: AppColors.primary,
           disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.4),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.r),
+            borderRadius: BorderRadius.circular(100.r),
           ),
         ),
         child: Text(
@@ -1306,7 +1572,7 @@ class _ContinueButton extends StatelessWidget {
           style: TextStyle(
             fontSize: 16.sp,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: AppColors.textWhite,
           ),
         ),
       ),
@@ -1314,28 +1580,7 @@ class _ContinueButton extends StatelessWidget {
   }
 }
 
-class _StepButton extends StatelessWidget {
-  const _StepButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 48.r,
-        height: 48.r,
-        decoration: const BoxDecoration(
-          color: AppColors.borderLight,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(icon, color: AppColors.textPrimary, size: 24.r),
-      ),
-    );
-  }
-}
+// removed _StepButton
 
 class _UnitToggleRow extends StatelessWidget {
   const _UnitToggleRow({
@@ -1384,7 +1629,7 @@ class _ToggleOption extends StatelessWidget {
       duration: const Duration(milliseconds: 200),
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: selected ? Colors.white : Colors.transparent,
+        color: selected ? AppColors.backgroundWhite : Colors.transparent,
         borderRadius: BorderRadius.circular(8.r),
         boxShadow: selected
             ? [
@@ -1403,6 +1648,362 @@ class _ToggleOption extends StatelessWidget {
           fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
           color: selected ? AppColors.textPrimary : AppColors.textMuted,
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EXTRA COMPONENTS (RULER, TARGET WEIGHT, ALMOST DONE)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _TargetWeightStep extends StatelessWidget {
+  const _TargetWeightStep({
+    required this.targetWeight,
+    required this.currentWeight,
+    required this.goal,
+    required this.useKg,
+    required this.onChanged,
+    required this.onNext,
+  });
+
+  final int targetWeight;
+  final int currentWeight;
+  final String? goal;
+  final bool useKg;
+  final ValueChanged<int> onChanged;
+  final VoidCallback onNext;
+
+  String get _label {
+    int diff = (targetWeight - currentWeight).abs();
+    String unit = useKg ? 'kg' : 'lbs';
+    if (goal == 'weight_loss') return 'Lose $diff $unit';
+    if (goal == 'weight_gain') return 'Gain $diff $unit';
+    return 'Maintain';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("What is your target weight?", style: AppTextStyles.headingLarge),
+          SizedBox(height: 48.h),
+          Center(
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight,
+                borderRadius: BorderRadius.circular(100.r),
+              ),
+              child: Text(
+                _label,
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: 24.h),
+          Center(
+            child: Column(
+              children: [
+                Text(
+                  '$targetWeight',
+                  style: TextStyle(
+                    fontSize: 72.sp,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  useKg ? 'kg' : 'lbs',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 48.h),
+          _RulerPicker(
+            key: ValueKey(useKg ? 'kg' : 'lbs'),
+            minValue: useKg ? 30 : 66,
+            maxValue: useKg ? 200 : 440,
+            initialValue: targetWeight,
+            onChanged: onChanged,
+          ),
+          const Spacer(),
+          _ContinueButton(onPressed: onNext),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.05, end: 0);
+  }
+}
+
+class _AlmostDoneStep extends StatelessWidget {
+  const _AlmostDoneStep({
+    required this.sensitiveData,
+    required this.tos,
+    required this.onSensitiveDataChanged,
+    required this.onTosChanged,
+    required this.onComplete,
+    required this.isLoading,
+  });
+
+  final bool sensitiveData;
+  final bool tos;
+  final ValueChanged<bool?> onSensitiveDataChanged;
+  final ValueChanged<bool?> onTosChanged;
+  final VoidCallback? onComplete;
+  final bool isLoading;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("A few last things", style: AppTextStyles.headingLarge),
+          SizedBox(height: 8.h),
+          Text("Almost done!", style: AppTextStyles.bodyMedium),
+          SizedBox(height: 32.h),
+          _CheckboxRow(
+            value: sensitiveData,
+            onChanged: onSensitiveDataChanged,
+            title: 'Sensitive Data Processing',
+            subtitle: 'VitaSense processes your health data for personalization.',
+          ),
+          SizedBox(height: 24.h),
+          _CheckboxRow(
+            value: tos,
+            onChanged: onTosChanged,
+            title: 'Terms of Service and Privacy Policy',
+            subtitle: 'I agree to the Terms of Service and Privacy Policy.',
+          ),
+          const Spacer(),
+          SizedBox(
+            width: double.infinity,
+            height: 56.h,
+            child: FilledButton(
+              onPressed: (sensitiveData && tos) ? onComplete : null,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.4),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(100.r),
+                ),
+              ),
+              child: isLoading
+                  ? SizedBox(
+                      width: 22.r,
+                      height: 22.r,
+                      child: const CircularProgressIndicator(
+                        color: AppColors.textWhite,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      'Accept & Continue',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textWhite,
+                      ),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.05, end: 0);
+  }
+}
+
+class _CheckboxRow extends StatelessWidget {
+  const _CheckboxRow({
+    required this.value,
+    required this.onChanged,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final bool value;
+  final ValueChanged<bool?> onChanged;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 24.w,
+          height: 24.h,
+          child: Checkbox(
+            value: value,
+            onChanged: onChanged,
+            activeColor: AppColors.primary,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.r)),
+          ),
+        ),
+        SizedBox(width: 12.w),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 13.sp,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RulerPicker extends StatefulWidget {
+  final int minValue;
+  final int maxValue;
+  final int initialValue;
+  final ValueChanged<int> onChanged;
+
+  const _RulerPicker({
+    super.key,
+    required this.minValue,
+    required this.maxValue,
+    required this.initialValue,
+    required this.onChanged,
+  });
+
+  @override
+  State<_RulerPicker> createState() => _RulerPickerState();
+}
+
+class _RulerPickerState extends State<_RulerPicker> {
+  late ScrollController _scrollController;
+  final double _itemWidth = 14.w;
+  late int _currentValue;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentValue = widget.initialValue;
+    if (_currentValue < widget.minValue) _currentValue = widget.minValue;
+    if (_currentValue > widget.maxValue) _currentValue = widget.maxValue;
+    
+    double initialOffset = (_currentValue - widget.minValue) * _itemWidth;
+    _scrollController = ScrollController(initialScrollOffset: initialOffset);
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    double offset = _scrollController.offset;
+    int newValue = widget.minValue + (offset / _itemWidth).round();
+    if (newValue < widget.minValue) newValue = widget.minValue;
+    if (newValue > widget.maxValue) newValue = widget.maxValue;
+    if (newValue != _currentValue) {
+      setState(() => _currentValue = newValue);
+      widget.onChanged(newValue);
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 80.h,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          double centerOffset = constraints.maxWidth / 2 - (_itemWidth / 2);
+          return NotificationListener<ScrollNotification>(
+            onNotification: (scrollNotification) {
+              if (scrollNotification is ScrollEndNotification) {
+                double offset = _scrollController.offset;
+                double targetOffset = (offset / _itemWidth).round() * _itemWidth;
+                Future.microtask(() {
+                  if (_scrollController.hasClients) {
+                    _scrollController.animateTo(
+                      targetOffset,
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOut,
+                    );
+                  }
+                });
+              }
+              return true;
+            },
+            child: ListView.builder(
+              controller: _scrollController,
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              itemCount: widget.maxValue - widget.minValue + 1,
+              padding: EdgeInsets.symmetric(horizontal: centerOffset),
+              itemBuilder: (context, index) {
+                int value = widget.minValue + index;
+                bool isFifth = value % 5 == 0;
+                bool isSelected = value == _currentValue;
+
+                double height = isFifth ? 40.h : 20.h;
+                
+                return SizedBox(
+                  width: _itemWidth,
+                  child: Stack(
+                    alignment: Alignment.bottomCenter,
+                    clipBehavior: Clip.none,
+                    children: [
+                      if (isFifth)
+                        Positioned(
+                          top: 0,
+                          child: Text(
+                            '$value',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      Container(
+                        width: isSelected ? 3.w : 2.w,
+                        height: height,
+                        decoration: BoxDecoration(
+                          color: isSelected ? AppColors.primary : AppColors.borderMedium,
+                          borderRadius: BorderRadius.circular(2.r),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          );
+        },
       ),
     );
   }

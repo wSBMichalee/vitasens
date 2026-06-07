@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
+import 'package:vitasense/core/widgets/app_header.dart';
 import 'package:vitasense/features/voice/bloc/voice_bloc.dart';
 import 'package:vitasense/features/voice/bloc/voice_event.dart';
 import 'package:vitasense/features/voice/bloc/voice_state.dart';
@@ -46,38 +47,16 @@ class _VoiceLogViewState extends State<_VoiceLogView> {
       },
       builder: (context, state) {
         return Scaffold(
-          backgroundColor: AppColors.backgroundDark,
+          backgroundColor: AppColors.background,
           body: SafeArea(
             child: Column(
               children: [
-                // ─── HEADER ──────────────────────────────────────────────────
-                Padding(
-                  padding: EdgeInsets.only(top: 16.h, left: 20.w, right: 20.w),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => context.pop(),
-                        child: Container(
-                          width: 36.r,
-                          height: 36.r,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(Icons.close, color: Colors.white, size: 20.r),
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        'Voice Log',
-                        style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: Colors.white),
-                      ),
-                      const Spacer(),
-                      SizedBox(width: 36.r), // Balans
-                    ],
-                  ),
+                // ── AppHeader: wariant modalny ───────────────────────────────
+                AppHeader(
+                  title: 'Dziennik Głosowy',
+                  variant: AppHeaderVariant.modal,
+                  onBack: () => context.pop(),
                 ),
-
                 // ─── MAIN CONTENT ────────────────────────────────────────────
                 Expanded(
                   child: _buildStateContent(context, state),
@@ -121,18 +100,18 @@ class _VoiceLogViewState extends State<_VoiceLogView> {
                 Container(
                   width: 120.r,
                   height: 120.r,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
+                  decoration: const BoxDecoration(
+                    color: AppColors.primaryLight,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.mic_outlined, color: Colors.white, size: 56.r),
+                  child: Icon(Icons.mic_outlined, color: AppColors.primary, size: 56.r),
                 ),
                 SizedBox(height: 32.h),
-                Text('Tap to start', style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.w600, color: Colors.white)),
+                Text('Tap to start', style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                 SizedBox(height: 8.h),
                 Text(
                   "Say what you ate, e.g.:\n'I had 2 scrambled eggs\nand toast for breakfast'",
-                  style: TextStyle(fontSize: 14.sp, color: Colors.white.withValues(alpha: 0.6)),
+                  style: TextStyle(fontSize: 14.sp, color: AppColors.textSecondary),
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 48.h),
@@ -221,13 +200,13 @@ class _VoiceLogViewState extends State<_VoiceLogView> {
                   ],
                 ),
                 SizedBox(height: 32.h),
-                Text('Listening...', style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.w600, color: Colors.white))
+                Text('Listening...', style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.w600, color: AppColors.textPrimary))
                     .animate(onPlay: (controller) => controller.repeat(reverse: true))
                     .fadeIn(duration: 500.ms)
                     .then()
                     .fadeOut(duration: 500.ms),
                 SizedBox(height: 8.h),
-                Text('Speak now', style: TextStyle(fontSize: 14.sp, color: Colors.white.withValues(alpha: 0.6))),
+                Text('Speak now', style: TextStyle(fontSize: 14.sp, color: AppColors.textSecondary)),
               ],
             ),
           ),
@@ -259,18 +238,18 @@ class _VoiceLogViewState extends State<_VoiceLogView> {
         children: [
           const CircularProgressIndicator(color: AppColors.primary, strokeWidth: 3),
           SizedBox(height: 24.h),
-          Text('Processing...', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w600, color: Colors.white)),
+          Text('Processing...', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
           SizedBox(height: 12.h),
           Container(
             margin: EdgeInsets.symmetric(horizontal: 20.w),
             padding: EdgeInsets.all(16.r),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.08),
+              color: AppColors.borderLight,
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: Text(
               state.transcribedText,
-              style: TextStyle(fontSize: 14.sp, color: Colors.white.withValues(alpha: 0.8), fontStyle: FontStyle.italic),
+              style: TextStyle(fontSize: 14.sp, color: AppColors.textPrimary, fontStyle: FontStyle.italic),
               textAlign: TextAlign.center,
             ),
           ),
@@ -293,17 +272,17 @@ class _VoiceLogViewState extends State<_VoiceLogView> {
                   margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
                   padding: EdgeInsets.all(16.r),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.08),
+                    color: AppColors.borderLight,
                     borderRadius: BorderRadius.circular(12.r),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.record_voice_over, color: Colors.white.withValues(alpha: 0.6), size: 16.r),
+                      Icon(Icons.record_voice_over, color: AppColors.textSecondary, size: 16.r),
                       SizedBox(width: 8.w),
                       Expanded(
                         child: Text(
                           state.transcribedText,
-                          style: TextStyle(fontSize: 13.sp, color: Colors.white.withValues(alpha: 0.7), fontStyle: FontStyle.italic),
+                          style: TextStyle(fontSize: 13.sp, color: AppColors.textPrimary, fontStyle: FontStyle.italic),
                         ),
                       ),
                     ],
@@ -315,8 +294,9 @@ class _VoiceLogViewState extends State<_VoiceLogView> {
                   margin: EdgeInsets.symmetric(horizontal: 20.w),
                   padding: EdgeInsets.all(20.r),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.backgroundWhite,
                     borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(color: AppColors.border),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -387,9 +367,9 @@ class _VoiceLogViewState extends State<_VoiceLogView> {
                 child: OutlinedButton(
                   onPressed: () => context.read<VoiceBloc>().add(const ClearVoice()),
                   style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                    side: const BorderSide(color: AppColors.border),
                   ),
-                  child: const Text('Try Again', style: TextStyle(color: Colors.white)),
+                  child: const Text('Try Again', style: TextStyle(color: AppColors.textPrimary)),
                 ),
               ),
             ],
@@ -417,11 +397,11 @@ class _VoiceLogViewState extends State<_VoiceLogView> {
               .animate()
               .scale(begin: const Offset(0, 0), end: const Offset(1, 1), curve: Curves.elasticOut, duration: 600.ms),
           SizedBox(height: 24.h),
-          Text('Logged! 🎉', style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.w700, color: Colors.white)),
+          Text('Logged! 🎉', style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
           SizedBox(height: 8.h),
           Text(
             "Your meal has been added to today's log",
-            style: TextStyle(fontSize: 14.sp, color: Colors.white.withValues(alpha: 0.6)),
+            style: TextStyle(fontSize: 14.sp, color: AppColors.textSecondary),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 32.h),
@@ -433,7 +413,7 @@ class _VoiceLogViewState extends State<_VoiceLogView> {
           SizedBox(height: 8.h),
           TextButton(
             onPressed: () => context.read<VoiceBloc>().add(const ClearVoice()),
-            child: Text('Log Another', style: TextStyle(color: Colors.white.withValues(alpha: 0.7))),
+            child: const Text('Log Another', style: TextStyle(color: AppColors.textPrimary)),
           ),
         ],
       ),
@@ -453,11 +433,11 @@ class _ExampleChip extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+        color: AppColors.borderLight,
+        border: Border.all(color: AppColors.border),
         borderRadius: BorderRadius.circular(12.r),
       ),
-      child: Text(label, style: TextStyle(fontSize: 13.sp, color: Colors.white.withValues(alpha: 0.8))),
+      child: Text(label, style: TextStyle(fontSize: 13.sp, color: AppColors.textPrimary)),
     );
   }
 }
@@ -515,7 +495,7 @@ class _MealTimeChip extends StatelessWidget {
           style: TextStyle(
             fontSize: 12.sp,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-            color: isSelected ? Colors.white : AppColors.textSecondary,
+            color: isSelected ? AppColors.textWhite : AppColors.textSecondary,
           ),
         ),
       ),

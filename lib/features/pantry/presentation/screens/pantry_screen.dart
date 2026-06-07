@@ -7,6 +7,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
+import 'package:vitasense/core/widgets/app_header.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_bloc.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_event.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_state.dart';
@@ -131,132 +132,86 @@ class _PantryViewState extends State<_PantryView> {
   // ─── Loaded ───────────────────────────────────────────────────────────────
   Widget _buildLoaded(BuildContext context, PantryLoaded state) {
     final filtered = _applyFilters(state);
-
-    return RefreshIndicator(
-      color: AppColors.primary,
-      onRefresh: () async =>
-          context.read<PantryBloc>().add(const RefreshPantry()),
-      child: CustomScrollView(
-        slivers: [
-          SliverPadding(
-            padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 0),
-            sliver: SliverToBoxAdapter(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(context, state),
-                  SizedBox(height: 14.h),
-                  _buildSearchBar(),
-                  SizedBox(height: 12.h),
-                  _buildFilterChips(context, state),
-                  SizedBox(height: 20.h),
-                  _buildPromoCard(context, state),
-                  SizedBox(height: 12.h),
-                  _buildQuickActions(context),
-                  if (state.expiringSoon.isNotEmpty) ...[
-                    SizedBox(height: 20.h),
-                    _buildExpiryBanner(state),
-                  ],
-                  SizedBox(height: 20.h),
-                  Text(
-                    _sectionTitle(state.selectedFilter),
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                      fontFamily: AppTextStyles.labelLarge.fontFamily,
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                ],
-              ),
-            ),
-          ),
-
-          // ─── Ingredient list / empty state ──────────────────────────────
-          if (filtered.isEmpty)
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: _buildEmptyState(context, state),
-            )
-          else
-            SliverPadding(
-              padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 40.h),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => Padding(
-                    padding: EdgeInsets.only(bottom: 10.h),
-                    child: _IngredientCard(ingredient: filtered[index]),
-                  ),
-                  childCount: filtered.length,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  // ─── Header ───────────────────────────────────────────────────────────────
-  Widget _buildHeader(BuildContext context, PantryLoaded state) {
     final count = state.ingredients.length;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Your pantry',
-                    style: TextStyle(
-                      fontSize: 30.sp,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                      fontFamily: AppTextStyles.headingLarge.fontFamily,
-                    ),
-                  ),
-                  SizedBox(height: 2.h),
-                  Text(
-                    '$count ingredient${count == 1 ? '' : 's'} available',
-                    style: TextStyle(
-                        fontSize: 13.sp, color: AppColors.textSecondary),
-                  ),
-                ],
-              ),
-            ),
-            GestureDetector(
-              onTap: () => context.push(AppRoutes.addIngredient),
-              child: Container(
-                width: 46.r,
-                height: 46.r,
-                decoration: BoxDecoration(
-                  color: AppColors.backgroundWhite,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Icon(Icons.add, color: AppColors.textPrimary, size: 22.r),
-              ),
+        // ── AppHeader: wariant main, przycisk + jako action ───────────────
+        AppHeader(
+          title: 'Spiżarnia',
+          subtitle: '$count składnik${count == 1 ? '' : 'ów'} dostępnych',
+          variant: AppHeaderVariant.main,
+          actions: [
+            AppHeaderIconButton(
+              icon: Icons.add,
+              onPressed: () => context.push(AppRoutes.addIngredient),
             ),
           ],
         ),
-        SizedBox(height: 6.h),
-        Text(
-          'AUTO-UPDATES WHEN YOU COOK',
-          style: TextStyle(
-            fontSize: 11.sp,
-            fontWeight: FontWeight.w700,
-            color: AppColors.secondary,
-            letterSpacing: 0.5,
+
+        // ── Scrollable body ───────────────────────────────────────────────
+        Expanded(
+          child: RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: () async =>
+                context.read<PantryBloc>().add(const RefreshPantry()),
+            child: CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 0),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSearchBar(),
+                        SizedBox(height: 12.h),
+                        _buildFilterChips(context, state),
+                        SizedBox(height: 20.h),
+                        _buildPromoCard(context, state),
+                        SizedBox(height: 12.h),
+                        _buildQuickActions(context),
+                        if (state.expiringSoon.isNotEmpty) ...[
+                          SizedBox(height: 20.h),
+                          _buildExpiryBanner(state),
+                        ],
+                        SizedBox(height: 20.h),
+                        Text(
+                          _sectionTitle(state.selectedFilter),
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                            fontFamily: AppTextStyles.labelLarge.fontFamily,
+                          ),
+                        ),
+                        SizedBox(height: 12.h),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // ─── Ingredient list / empty state ───────────────────────
+                if (filtered.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: _buildEmptyState(context, state),
+                  )
+                else
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 40.h),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) => Padding(
+                          padding: EdgeInsets.only(bottom: 10.h),
+                          child: _IngredientCard(ingredient: filtered[index]),
+                        ),
+                        childCount: filtered.length,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ],
@@ -472,7 +427,7 @@ class _PantryViewState extends State<_PantryView> {
                   shape: BoxShape.circle,
                 ),
                 child:
-                    Icon(Icons.schedule, color: Colors.white, size: 14.r),
+                    Icon(Icons.schedule, color: AppColors.textWhite, size: 14.r),
               ),
               SizedBox(width: 10.w),
               Expanded(
@@ -692,7 +647,7 @@ class _FilterChip extends StatelessWidget {
           style: TextStyle(
             fontSize: 11.sp,
             fontWeight: FontWeight.w700,
-            color: isSelected ? Colors.white : AppColors.textPrimary,
+            color: isSelected ? AppColors.textWhite : AppColors.textPrimary,
             letterSpacing: 0.5,
           ),
         ),

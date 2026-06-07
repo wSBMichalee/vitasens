@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
+import 'package:vitasense/core/widgets/app_header.dart';
 import 'package:vitasense/features/shopping/bloc/shopping_bloc.dart';
 import 'package:vitasense/features/shopping/bloc/shopping_event.dart';
 import 'package:vitasense/features/shopping/bloc/shopping_state.dart';
@@ -47,7 +48,7 @@ class _ShoppingListViewState extends State<_ShoppingListView> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.backgroundWhite,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
@@ -193,54 +194,25 @@ class _ShoppingListViewState extends State<_ShoppingListView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ─── HEADER ────────────────────────────────────────────────────────
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.arrow_back, color: AppColors.textPrimary, size: 24.r),
-                      onPressed: () => context.pop(),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                    SizedBox(width: 16.w),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Shopping List', style: AppTextStyles.headingLarge),
-                        BlocBuilder<ShoppingBloc, ShoppingState>(
-                          builder: (context, state) {
-                            if (state is ShoppingLoaded) {
-                              return Text(
-                                '${state.items.length} items to buy',
-                                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-                              );
-                            }
-                            return Text(
-                              'Loading...',
-                              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: () => _showAddItemSheet(context),
-                      child: Container(
-                        width: 44.r,
-                        height: 44.r,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(color: AppColors.border),
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                        child: Icon(Icons.add, color: AppColors.textPrimary, size: 22.r),
+              // ── AppHeader: wariant nested, + jako action ─────────────────────
+              BlocBuilder<ShoppingBloc, ShoppingState>(
+                builder: (context, state) {
+                  final subtitle = state is ShoppingLoaded
+                      ? '${state.items.length} produktów do kupienia'
+                      : 'Wczytywanie...';
+                  return AppHeader(
+                    title: 'Lista zakupów',
+                    subtitle: subtitle,
+                    variant: AppHeaderVariant.nested,
+                    onBack: () => context.pop(),
+                    actions: [
+                      AppHeaderIconButton(
+                        icon: Icons.add,
+                        onPressed: () => _showAddItemSheet(context),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  );
+                },
               ),
 
               // ─── QUICK ADD BAR ───────────────────────────────────────────────
@@ -256,7 +228,7 @@ class _ShoppingListViewState extends State<_ShoppingListView> {
                           hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 14.sp),
                           prefixIcon: Icon(Icons.add_shopping_cart, color: AppColors.textMuted, size: 20.r),
                           filled: true,
-                          fillColor: Colors.white,
+                          fillColor: AppColors.backgroundWhite,
                           contentPadding: EdgeInsets.symmetric(vertical: 12.h),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12.r),
@@ -416,7 +388,7 @@ class _ShoppingListViewState extends State<_ShoppingListView> {
             margin: EdgeInsets.only(bottom: 8.h),
             height: 60.h,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.backgroundWhite,
               borderRadius: BorderRadius.circular(12.r),
             ),
           );
@@ -505,13 +477,13 @@ class _ShoppingItemCard extends StatelessWidget {
         ),
         alignment: Alignment.centerRight,
         padding: EdgeInsets.only(right: 20.w),
-        child: Icon(Icons.delete, color: Colors.white, size: 24.r),
+        child: Icon(Icons.delete, color: AppColors.textWhite, size: 24.r),
       ),
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 4.h),
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.backgroundWhite,
           border: Border.all(color: AppColors.border),
           borderRadius: BorderRadius.circular(12.r),
         ),
@@ -580,7 +552,7 @@ class _PurchasedItemCard extends StatelessWidget {
         ),
         alignment: Alignment.centerRight,
         padding: EdgeInsets.only(right: 20.w),
-        child: Icon(Icons.delete, color: Colors.white, size: 24.r),
+        child: Icon(Icons.delete, color: AppColors.textWhite, size: 24.r),
       ),
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 4.h),
@@ -599,7 +571,7 @@ class _PurchasedItemCard extends StatelessWidget {
                 shape: BoxShape.circle,
                 color: AppColors.primary,
               ),
-              child: Icon(Icons.check, color: Colors.white, size: 16.r),
+              child: Icon(Icons.check, color: AppColors.textWhite, size: 16.r),
             ),
             SizedBox(width: 12.w),
             Expanded(

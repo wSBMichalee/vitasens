@@ -778,7 +778,7 @@ class _ProfileShimmer extends StatelessWidget {
           children: [
             Container(
               height: 200.h,
-              color: Colors.white,
+              color: AppColors.backgroundWhite,
             ),
             Padding(
               padding: EdgeInsets.all(16.r),
@@ -789,7 +789,7 @@ class _ProfileShimmer extends StatelessWidget {
                     margin: EdgeInsets.only(bottom: 16.h),
                     height: i == 0 ? 100.h : 140.h,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.backgroundWhite,
                       borderRadius: BorderRadius.circular(16.r),
                     ),
                   ),

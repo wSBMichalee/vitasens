@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
+import 'package:vitasense/core/widgets/app_header.dart';
 import 'package:vitasense/features/macros/bloc/macros_bloc.dart';
 import 'package:vitasense/features/macros/bloc/macros_event.dart';
 import 'package:vitasense/features/macros/bloc/macros_state.dart';
@@ -117,94 +118,83 @@ class _ProgressView extends StatelessWidget {
 
   // ─── Main content ─────────────────────────────────────────────────────────
   Widget _buildContent(BuildContext context, MacrosLoaded state) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 20.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ─── Header ─────────────────────────────────────────────────────
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Progress',
-                      style: TextStyle(
-                        fontSize: 32.sp,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                        fontFamily: AppTextStyles.headingLarge.fontFamily,
-                      ),
-                    ),
-                    Text('Stay consistent', style: AppTextStyles.bodyMedium),
-                  ],
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ── AppHeader: wariant main, streak pill jako action ──────────────
+        AppHeader(
+          title: 'Postęp',
+          subtitle: 'Bądź konsekwentny',
+          variant: AppHeaderVariant.main,
+          actions: [
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
+              decoration: BoxDecoration(
+                color: AppColors.warningLight,
+                borderRadius: BorderRadius.circular(24.r),
+                border: Border.all(color: AppColors.warningBorder),
               ),
-              // Streak pill badge
-              Container(
-                padding:
-                    EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
-                decoration: BoxDecoration(
-                  color: AppColors.warningLight,
-                  borderRadius: BorderRadius.circular(24.r),
-                  border: Border.all(color: AppColors.warningBorder),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('✨', style: TextStyle(fontSize: 14.sp)),
-                    SizedBox(width: 4.w),
-                    Text(
-                      '${state.streakDays}',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.warningDark,
-                        fontFamily: AppTextStyles.numberMedium.fontFamily,
-                      ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('✨', style: TextStyle(fontSize: 14.sp)),
+                  SizedBox(width: 4.w),
+                  Text(
+                    '${state.streakDays}',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.warningDark,
+                      fontFamily: AppTextStyles.numberMedium.fontFamily,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
+        ),
 
-          SizedBox(height: 20.h),
+        // ── Scrollable body ───────────────────────────────────────────────
+        Expanded(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 20.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ─── Weekly consistency ──────────────────────────────────
+                _WeeklyConsistencyCard(weekly: state.weekly),
 
-          // ─── Weekly consistency ──────────────────────────────────────────
-          _WeeklyConsistencyCard(weekly: state.weekly),
+                SizedBox(height: 20.h),
 
-          SizedBox(height: 20.h),
+                // ─── Today's summary header ──────────────────────────────
+                _TodaySummaryHeader(daily: state.daily),
 
-          // ─── Today's summary header ──────────────────────────────────────
-          _TodaySummaryHeader(daily: state.daily),
+                SizedBox(height: 12.h),
 
-          SizedBox(height: 12.h),
+                // ─── Macros list card ────────────────────────────────────
+                _MacrosListCard(daily: state.daily),
 
-          // ─── Macros list card ────────────────────────────────────────────
-          _MacrosListCard(daily: state.daily),
+                SizedBox(height: 20.h),
 
-          SizedBox(height: 20.h),
+                // ─── Recent meals ────────────────────────────────────────
+                Text(
+                  'OSTATNIE POSIŁKI',
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                _RecentMealsList(meals: state.meals),
 
-          // ─── Recent meals ────────────────────────────────────────────────
-          Text(
-            'RECENT MEALS',
-            style: TextStyle(
-              fontSize: 11.sp,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
-              letterSpacing: 0.8,
+                SizedBox(height: 16.h),
+              ],
             ),
           ),
-          SizedBox(height: 12.h),
-          _RecentMealsList(meals: state.meals),
-
-          SizedBox(height: 16.h),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -293,7 +283,7 @@ class _WeeklyConsistencyCard extends StatelessWidget {
                                 : Icons.remove,
                         size: 15.r,
                         color: isCompleted
-                            ? Colors.white
+                            ? AppColors.textWhite
                             : isMissed
                                 ? AppColors.error
                                 : AppColors.textMuted,

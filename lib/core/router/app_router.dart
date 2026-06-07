@@ -1,3 +1,5 @@
+import 'dart:ui';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -404,27 +406,33 @@ class ScaffoldWithBottomNav extends StatelessWidget {
 
   static const List<_NavItem> _tabs = [
     _NavItem(
-      label: 'HOME',
-      icon: Icons.home_outlined,
-      activeIcon: Icons.home,
+      label: 'Home',
+      icon: CupertinoIcons.house,
+      activeIcon: CupertinoIcons.house_fill,
       route: AppRoutes.home,
     ),
     _NavItem(
-      label: 'PANTRY',
-      icon: Icons.inventory_2_outlined,
-      activeIcon: Icons.inventory_2,
+      label: 'Pantry',
+      icon: CupertinoIcons.bag,
+      activeIcon: CupertinoIcons.bag_fill,
       route: AppRoutes.pantry,
     ),
     _NavItem(
-      label: 'AI MEALS',
-      icon: Icons.auto_awesome_outlined,
-      activeIcon: Icons.auto_awesome,
+      label: 'AI Meals',
+      icon: CupertinoIcons.sparkles,
+      activeIcon: CupertinoIcons.sparkles,
       route: AppRoutes.aiMeals,
     ),
     _NavItem(
-      label: 'PROFILE',
-      icon: Icons.person_outline,
-      activeIcon: Icons.person,
+      label: 'Progress',
+      icon: CupertinoIcons.chart_bar,
+      activeIcon: CupertinoIcons.chart_bar_fill,
+      route: AppRoutes.progress,
+    ),
+    _NavItem(
+      label: 'Profile',
+      icon: CupertinoIcons.person_circle,
+      activeIcon: CupertinoIcons.person_circle_fill,
       route: AppRoutes.profile,
     ),
   ];
@@ -442,33 +450,48 @@ class ScaffoldWithBottomNav extends StatelessWidget {
     final currentIndex = _currentIndex(context);
 
     return Scaffold(
+      extendBody: true,
       body: child,
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.bottomNavBg,
-          border: Border(top: BorderSide(color: AppColors.border, width: 1)),
-        ),
-        child: BottomNavigationBar(
-          currentIndex: currentIndex,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: AppColors.bottomNavBg,
-          selectedItemColor: AppColors.bottomNavSelected,
-          unselectedItemColor: AppColors.bottomNavUnselected,
-          elevation: 0,
-          selectedLabelStyle: AppTextStyles.caption.copyWith(
-            fontWeight: FontWeight.w500,
+      bottomNavigationBar: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.8),
+              border: Border(
+                top: BorderSide(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  width: 0.5,
+                ),
+              ),
+            ),
+            child: BottomNavigationBar(
+              currentIndex: currentIndex,
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: Colors.transparent,
+              selectedItemColor: AppColors.primary,
+              unselectedItemColor: AppColors.textMuted,
+              elevation: 0,
+              selectedFontSize: 10,
+              unselectedFontSize: 10,
+              showSelectedLabels: true,
+              showUnselectedLabels: true,
+              onTap: (index) => context.go(_tabs[index].route),
+              items: _tabs.map((tab) {
+                return BottomNavigationBarItem(
+                  icon: Padding(
+                    padding: const EdgeInsets.only(bottom: 2.0),
+                    child: Icon(tab.icon, size: 24),
+                  ),
+                  activeIcon: Padding(
+                    padding: const EdgeInsets.only(bottom: 2.0),
+                    child: Icon(tab.activeIcon, size: 24),
+                  ),
+                  label: tab.label,
+                );
+              }).toList(),
+            ),
           ),
-          unselectedLabelStyle: AppTextStyles.caption,
-          showSelectedLabels: true,
-          showUnselectedLabels: true,
-          onTap: (index) => context.go(_tabs[index].route),
-          items: _tabs.map((tab) {
-            return BottomNavigationBarItem(
-              icon: Icon(tab.icon),
-              activeIcon: Icon(tab.activeIcon),
-              label: tab.label,
-            );
-          }).toList(),
         ),
       ),
     );

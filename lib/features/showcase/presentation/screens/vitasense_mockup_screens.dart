@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
+import 'package:vitasense/core/widgets/app_header.dart';
 
 class MockupAiMealsScreen extends StatelessWidget {
   const MockupAiMealsScreen({super.key});
@@ -302,41 +303,43 @@ class MockupHomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      floatingActionButton: SizedBox(
-        width: 64.r,
-        height: 64.r,
-        child: FloatingActionButton(
-          backgroundColor: const Color(0xFF06192A),
-          elevation: 12,
-          onPressed: () => context.go(AppRoutes.aiMeals),
-          child: Icon(Icons.add, color: Colors.white, size: 40.r),
-        ),
+      floatingActionButton: _AddMealFab(
+        onPressed: () => context.go(AppRoutes.aiMeals),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(24.w, 28.h, 24.w, 24.h),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── HEADER — AppHeader wariant main ───────────────────────────
+            AppHeader(
+              title: 'Dzisiejszy postęp',
+              subtitle: 'Witaj, $userName',
+              variant: AppHeaderVariant.main,
+              actions: [
+                // Streak chip
+                GestureDetector(
+                  onTap: () {},
+                  child: Container(
+                    height: 40.r,
+                    padding: EdgeInsets.symmetric(horizontal: 12.w),
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundWhite,
+                      borderRadius: BorderRadius.circular(20.r),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          'Welcome back, $userName',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            color: AppColors.textSecondary,
-                          ),
+                        Icon(
+                          Icons.local_fire_department_rounded,
+                          color: const Color(0xFFFACC15),
+                          size: 18.r,
                         ),
-                        SizedBox(height: 5.h),
+                        SizedBox(width: 4.w),
                         Text(
-                          "Today's progress",
+                          '5',
                           style: TextStyle(
-                            fontSize: 27.sp,
-                            height: 1.05,
+                            fontSize: 15.sp,
                             fontWeight: FontWeight.w900,
                             color: AppColors.textPrimary,
                           ),
@@ -344,204 +347,289 @@ class MockupHomeScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Container(
-                    height: 48.h,
-                    padding: EdgeInsets.symmetric(horizontal: 15.w),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30.r),
-                      border: Border.all(color: AppColors.border),
-                      boxShadow: [
-                        BoxShadow(
-                          blurRadius: 10,
-                          color: Colors.black.withValues(alpha: 0.04),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.auto_awesome,
-                          color: const Color(0xFFFACC15),
-                          size: 22.r,
-                        ),
-                        SizedBox(width: 7.w),
-                        Text(
-                          '5',
-                          style: TextStyle(
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(width: 14.w),
-                  CircleAvatar(
-                    radius: 25.r,
-                    backgroundColor: AppColors.primary,
-                    child: Text(
-                      userName.isNotEmpty ? userName[0].toUpperCase() : '?',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 36.h),
-              _ProgressCard(),
-              SizedBox(height: 32.h),
-              Container(
-                padding: EdgeInsets.all(20.r),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEFF7FF),
-                  borderRadius: BorderRadius.circular(25.r),
-                  border: Border.all(color: const Color(0xFFBFDBFE)),
                 ),
+                SizedBox(width: 8.w),
+                // Avatar
+                CircleAvatar(
+                  radius: 20.r,
+                  backgroundColor: AppColors.primary,
+                  child: Text(
+                    userName.isNotEmpty ? userName[0].toUpperCase() : '?',
+                    style: TextStyle(
+                      color: AppColors.textWhite,
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            // ── SCROLLABLE BODY ──────────────────────────────────────────
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(24.w, 24.h, 24.w, 100.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 44.r,
-                          height: 44.r,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(14.r),
-                          ),
-                          child: Icon(
-                            Icons.auto_awesome_outlined,
-                            color: AppColors.secondary,
-                            size: 25.r,
-                          ),
-                        ),
-                        SizedBox(width: 16.w),
-                        Expanded(
-                          child: Column(
+                    // ── PROGRESS CARD (kalorie + makra) ───────────────────────
+                    const _ProgressCard(
+                      kcalConsumed: 1080,
+                      kcalGoal: 2500,
+                      proteinConsumed: 42,
+                      proteinGoal: 120,
+                      carbsConsumed: 110,
+                      carbsGoal: 180,
+                      fatConsumed: 35,
+                      fatGoal: 65,
+                    ),
+
+                    SizedBox(height: 24.h),
+
+                    // ── AI INSIGHT CARD ─────────────────────────────────────────
+                    Container(
+                      padding: EdgeInsets.all(20.r),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondaryLight,
+                        borderRadius: BorderRadius.circular(22.r),
+                        border: Border.all(color: const Color(0xFFBFDBFE)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Low protein today',
-                                style: TextStyle(
-                                  fontSize: 19.sp,
-                                  fontWeight: FontWeight.w900,
-                                  color: AppColors.textPrimary,
+                              Container(
+                                width: 44.r,
+                                height: 44.r,
+                                decoration: BoxDecoration(
+                                  color: AppColors.backgroundWhite,
+                                  borderRadius: BorderRadius.circular(12.r),
+                                ),
+                                child: Icon(
+                                  Icons.auto_awesome_outlined,
+                                  color: AppColors.secondary,
+                                  size: 22.r,
                                 ),
                               ),
-                              SizedBox(height: 10.h),
-                              Text(
-                                'Hit your goals by adding high-protein options to your meals.',
-                                style: TextStyle(
-                                  height: 1.55,
-                                  fontSize: 15.5.sp,
-                                  color: AppColors.textSecondary,
+                              SizedBox(width: 14.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Niskie białko dziś',
+                                      style: TextStyle(
+                                        fontSize: 17.sp,
+                                        fontWeight: FontWeight.w900,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                    SizedBox(height: 6.h),
+                                    Text(
+                                      'Dodaj posiłek wysokobiałkowy, by osiągnąć cel dnia.',
+                                      style: TextStyle(
+                                        height: 1.5,
+                                        fontSize: 14.sp,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
+                          SizedBox(height: 16.h),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50.h,
+                            child: FilledButton(
+                              onPressed: () => context.go(AppRoutes.aiMeals),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.secondary,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12.r),
+                                ),
+                              ),
+                              child: Text(
+                                'DODAJ WYSOKO-BIAŁKOWY POSIŁEK',
+                                style: TextStyle(
+                                  color: AppColors.textWhite,
+                                  fontSize: 13.sp,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.4,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: 20.h),
+
+                    // ── INGREDIENTS HINT ─────────────────────────────────────────
+                    Text.rich(
+                      TextSpan(
+                        text: 'Z TWOICH SKŁADNIKÓW: ',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.4,
+                          height: 1.5,
+                        ),
+                        children: const [
+                          TextSpan(
+                            text: 'KURCZAK, JAJKA, SZPINAK',
+                            style: TextStyle(color: AppColors.textPrimary),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: 36.h),
+
+                    // ── TODAY'S MEALS ────────────────────────────────────────────
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Dzisiejsze posiłki',
+                            style: TextStyle(
+                              fontSize: 22.sp,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {},
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8.w,
+                              vertical: 10.h,
+                            ),
+                            child: Text(
+                              'EDYTUJ',
+                              style: TextStyle(
+                                color: AppColors.secondary,
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.6,
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 22.h),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50.h,
-                      child: FilledButton(
-                        onPressed: () => context.go(AppRoutes.aiMeals),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.secondary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(13.r),
-                          ),
+                    SizedBox(height: 16.h),
+                    Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 24.h),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.restaurant_menu_outlined,
+                              color: AppColors.textMuted,
+                              size: 44.r,
+                            ),
+                            SizedBox(height: 12.h),
+                            Text(
+                              'Brak posiłków dzisiaj',
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                height: 1.5,
+                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            SizedBox(height: 4.h),
+                            Text(
+                              'Dotknij + aby dodać posiłek',
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                height: 1.5,
+                                color: AppColors.textMuted,
+                              ),
+                            ),
+                          ],
                         ),
-                        child: Text(
-                          'ADD HIGH-PROTEIN MEAL',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14.5.sp,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.9,
-                          ),
-                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: 22.h),
-              Text.rich(
-                TextSpan(
-                  text: 'FROM YOUR INGREDIENTS: ',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13.5.sp,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.6,
-                  ),
-                  children: const [
-                    TextSpan(
-                      text: 'CHICKEN, EGGS, SPINACH',
-                      style: TextStyle(color: AppColors.textPrimary),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 48.h),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      "Today's meals",
-                      style: TextStyle(
-                        fontSize: 25.sp,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    'EDIT',
-                    style: TextStyle(
-                      color: AppColors.secondary,
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 20.h),
-              Center(
-                child: Column(
-                  children: [
-                    Icon(Icons.no_meals, color: AppColors.textMuted, size: 48.r),
-                    SizedBox(height: 12.h),
-                    Text(
-                      'No meals logged today',
-                      style: TextStyle(
-                        fontSize: 15.sp,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      'Tap + to add a meal',
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                  ],
-                ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// FAB z visual feedbackiem (animowany scale przy press)
+class _AddMealFab extends StatefulWidget {
+  const _AddMealFab({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  State<_AddMealFab> createState() => _AddMealFabState();
+}
+
+class _AddMealFabState extends State<_AddMealFab>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+      lowerBound: 0,
+      upperBound: 0.08,
+    );
+    _scale = Tween<double>(begin: 1, end: 0.92).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _ctrl.forward(),
+      onTapUp: (_) {
+        _ctrl.reverse();
+        widget.onPressed();
+      },
+      onTapCancel: () => _ctrl.reverse(),
+      child: ScaleTransition(
+        scale: _scale,
+        child: Container(
+          width: 64.r,
+          height: 64.r,
+          decoration: BoxDecoration(
+            color: AppColors.backgroundDark,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+                color: AppColors.backgroundDark.withValues(alpha: 0.40),
               ),
             ],
           ),
+          child: Icon(Icons.add, color: AppColors.textWhite, size: 32.r),
         ),
       ),
     );
@@ -987,14 +1075,39 @@ class _ResultsAnalysisScreenState extends State<ResultsAnalysisScreen>
   }
 }
 
+/// Karta postępu: duże kalorie na górze, makra jako poziomy rząd 3 kolumn.
+/// Nie ma hardkodowanych danych produkcyjnych — wartości są parametrami.
 class _ProgressCard extends StatelessWidget {
+  const _ProgressCard({
+    this.kcalConsumed = 1080,
+    this.kcalGoal = 2500,
+    this.proteinConsumed = 42,
+    this.proteinGoal = 120,
+    this.carbsConsumed = 110,
+    this.carbsGoal = 180,
+    this.fatConsumed = 35,
+    this.fatGoal = 65,
+  });
+
+  final int kcalConsumed;
+  final int kcalGoal;
+  final int proteinConsumed;
+  final int proteinGoal;
+  final int carbsConsumed;
+  final int carbsGoal;
+  final int fatConsumed;
+  final int fatGoal;
+
   @override
   Widget build(BuildContext context) {
+    final double kcalProgress =
+        (kcalConsumed / kcalGoal).clamp(0.0, 1.0);
+
     return Container(
-      padding: EdgeInsets.all(26.r),
+      padding: EdgeInsets.fromLTRB(22.w, 24.h, 22.w, 24.h),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(26.r),
+        color: AppColors.backgroundWhite,
+        borderRadius: BorderRadius.circular(24.r),
         border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
@@ -1004,75 +1117,115 @@ class _ProgressCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 136.r,
-            height: 136.r,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                SizedBox(
-                  width: 136.r,
-                  height: 136.r,
-                  child: CircularProgressIndicator(
-                    value: 0.82,
-                    strokeWidth: 11.r,
-                    color: AppColors.primary,
-                    backgroundColor: AppColors.borderLight,
-                    strokeCap: StrokeCap.round,
-                  ),
-                ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '1,420',
-                      style: TextStyle(
-                        fontSize: 29.sp,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.textPrimary,
-                      ),
+          // ── KALORIE — hierarchia priorytet 1 ──────────────────────────
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$kcalConsumed',
+                    style: TextStyle(
+                      fontSize: 48.sp,
+                      height: 1.0,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.textPrimary,
                     ),
-                    SizedBox(height: 10.h),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    'z $kcalGoal kcal celu',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      height: 1.5,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              // Mini kołowy wskaźnik kalorii
+              SizedBox(
+                width: 64.r,
+                height: 64.r,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: kcalProgress,
+                      strokeWidth: 7.r,
+                      color: AppColors.primary,
+                      backgroundColor: AppColors.borderLight,
+                      strokeCap: StrokeCap.round,
+                    ),
                     Text(
-                      'KCAL LEFT',
+                      '${(kcalProgress * 100).round()}%',
                       style: TextStyle(
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 2.5,
-                        color: AppColors.textSecondary,
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primary,
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          SizedBox(width: 28.w),
-          const Expanded(
-            child: Column(
+
+          SizedBox(height: 20.h),
+
+          // ── LINIA PODZIAŁU ──────────────────────────────────────────────
+          const Divider(
+            color: AppColors.borderLight,
+            thickness: 1,
+            height: 1,
+          ),
+
+          SizedBox(height: 20.h),
+
+          // ── MAKRA — poziomy rząd 3 kolumn (bez overflow) ───────────────
+          IntrinsicHeight(
+            child: Row(
               children: [
-                _MacroLine(
-                  label: 'PROTEIN',
-                  value: '42/120G',
-                  status: 'LOW',
-                  progress: 0.35,
-                  color: AppColors.secondary,
+                Expanded(
+                  child: _MacroColumn(
+                    label: 'BIAŁKO',
+                    consumed: proteinConsumed,
+                    goal: proteinGoal,
+                    color: AppColors.proteinColor,
+                    isLow: proteinConsumed / proteinGoal < 0.5,
+                  ),
                 ),
-                SizedBox(height: 27),
-                _MacroLine(
-                  label: 'CARBS',
-                  value: '110/180G',
-                  progress: 0.61,
-                  color: AppColors.primary,
+                const VerticalDivider(
+                  color: AppColors.borderLight,
+                  thickness: 1,
+                  width: 1,
                 ),
-                SizedBox(height: 27),
-                _MacroLine(
-                  label: 'FAT',
-                  value: '35/65G',
-                  progress: 0.54,
-                  color: Color(0xFFF59E0B),
+                Expanded(
+                  child: _MacroColumn(
+                    label: 'WĘGLE',
+                    consumed: carbsConsumed,
+                    goal: carbsGoal,
+                    color: AppColors.carbsColor,
+                  ),
+                ),
+                const VerticalDivider(
+                  color: AppColors.borderLight,
+                  thickness: 1,
+                  width: 1,
+                ),
+                Expanded(
+                  child: _MacroColumn(
+                    label: 'TŁUSZCZE',
+                    consumed: fatConsumed,
+                    goal: fatGoal,
+                    color: AppColors.fatColor,
+                  ),
                 ),
               ],
             ),
@@ -1083,67 +1236,92 @@ class _ProgressCard extends StatelessWidget {
   }
 }
 
-class _MacroLine extends StatelessWidget {
-  const _MacroLine({
+/// Kolumna makroskładnika — label + wartość + progress bar.
+/// Używana w poziomym rzędzie 3 kolumn → brak overflow.
+class _MacroColumn extends StatelessWidget {
+  const _MacroColumn({
     required this.label,
-    required this.value,
-    required this.progress,
+    required this.consumed,
+    required this.goal,
     required this.color,
-    this.status,
+    this.isLow = false,
   });
 
   final String label;
-  final String value;
-  final String? status;
-  final double progress;
+  final int consumed;
+  final int goal;
   final Color color;
+  final bool isLow;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
+    final double progress = (consumed / goal).clamp(0.0, 1.0);
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 12.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Etykieta + status LOW
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
                 label,
                 style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.3,
+                  fontSize: 11.sp,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textSecondary,
+                  letterSpacing: 0.8,
                 ),
               ),
-            ),
-            Text(
-              value,
-              style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w900),
-            ),
-            if (status != null) ...[
-              SizedBox(width: 8.w),
-              Text(
-                status!,
-                style: TextStyle(
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.error,
-                  letterSpacing: 1.2,
+              if (isLow) ...[  
+                SizedBox(width: 4.w),
+                Text(
+                  '↓',
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.error,
+                  ),
                 ),
-              ),
+              ],
             ],
-          ],
-        ),
-        SizedBox(height: 12.h),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4.r),
-          child: LinearProgressIndicator(
-            value: progress,
-            minHeight: 8.h,
-            color: color,
-            backgroundColor: AppColors.borderLight,
           ),
-        ),
-      ],
+          SizedBox(height: 6.h),
+          // Wartość
+          Text(
+            '${consumed}g',
+            style: TextStyle(
+              fontSize: 20.sp,
+              height: 1.1,
+              fontWeight: FontWeight.w900,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          SizedBox(height: 2.h),
+          Text(
+            'z ${goal}g',
+            style: TextStyle(
+              fontSize: 12.sp,
+              height: 1.5,
+              color: AppColors.textMuted,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: 10.h),
+          // Progress bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4.r),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 6.h,
+              color: color,
+              backgroundColor: AppColors.borderLight,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

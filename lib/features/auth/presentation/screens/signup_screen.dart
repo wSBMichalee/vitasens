@@ -8,6 +8,7 @@ import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/features/auth/bloc/auth_bloc.dart';
 import 'package:vitasense/features/auth/bloc/auth_event.dart';
 import 'package:vitasense/features/auth/bloc/auth_state.dart';
+import 'package:vitasense/features/auth/presentation/screens/login_screen.dart'; // import AnimatedBackground
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -22,36 +23,9 @@ class _SignupScreenState extends State<SignupScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  final _fullNameFocus = FocusNode();
-  final _emailFocus = FocusNode();
-  final _passwordFocus = FocusNode();
-  final _confirmFocus = FocusNode();
-
-  bool _fullNameFocused = false;
-  bool _emailFocused = false;
-  bool _passwordFocused = false;
-  bool _confirmFocused = false;
-
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   bool _agreedToTerms = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _fullNameFocus.addListener(
-      () => setState(() => _fullNameFocused = _fullNameFocus.hasFocus),
-    );
-    _emailFocus.addListener(
-      () => setState(() => _emailFocused = _emailFocus.hasFocus),
-    );
-    _passwordFocus.addListener(
-      () => setState(() => _passwordFocused = _passwordFocus.hasFocus),
-    );
-    _confirmFocus.addListener(
-      () => setState(() => _confirmFocused = _confirmFocus.hasFocus),
-    );
-  }
 
   @override
   void dispose() {
@@ -59,10 +33,6 @@ class _SignupScreenState extends State<SignupScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
-    _fullNameFocus.dispose();
-    _emailFocus.dispose();
-    _passwordFocus.dispose();
-    _confirmFocus.dispose();
     super.dispose();
   }
 
@@ -72,7 +42,7 @@ class _SignupScreenState extends State<SignupScreen> {
         content: Text(
           message,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: AppColors.textWhite),
         ),
         backgroundColor: success ? AppColors.success : AppColors.error,
         behavior: SnackBarBehavior.floating,
@@ -113,467 +83,429 @@ class _SignupScreenState extends State<SignupScreen> {
         }
       },
       child: Scaffold(
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF0A1628),
-                Color(0xFF0D2137),
-                Color(0xFF0A2E1A),
-              ],
-              stops: [0.0, 0.5, 1.0],
-            ),
-          ),
-          child: SafeArea(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(vertical: 24.h),
-              child: Column(
-                children: [
-                  // ─── LOGO SECTION ───────────────────────────────────────────
-                  SizedBox(height: 24.h),
-                  Column(
+        backgroundColor: AppColors.background,
+        body: Stack(
+          children: [
+            const AnimatedBackground(),
+            SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      // LOGO & TITLE
                       Container(
                         width: 72.r,
                         height: 72.r,
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: const LinearGradient(
-                            colors: [AppColors.primary, AppColors.primaryDark],
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.4),
-                              blurRadius: 24,
-                              spreadRadius: 4,
-                            ),
-                          ],
+                          color: AppColors.primary,
                         ),
                         child: Icon(
                           Icons.restaurant_menu,
-                          color: Colors.white,
+                          color: AppColors.textWhite,
                           size: 36.r,
                         ),
-                      ),
+                      ).animate().scale(duration: 500.ms, curve: Curves.easeOutBack),
                       SizedBox(height: 16.h),
                       Text(
                         'VitaSense',
                         style: TextStyle(
                           fontSize: 28.sp,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
                           letterSpacing: -0.5,
                         ),
-                      ),
+                      ).animate().fadeIn(delay: 200.ms),
                       SizedBox(height: 4.h),
                       Text(
                         'Start your free 3-day trial',
                         style: TextStyle(
                           fontSize: 14.sp,
-                          color: Colors.white.withValues(alpha: 0.6),
+                          color: AppColors.textSecondary,
                         ),
-                      ),
-                    ],
-                  )
-                      .animate()
-                      .scale(
-                        begin: const Offset(0.5, 0.5),
-                        end: const Offset(1, 1),
-                        curve: Curves.elasticOut,
-                        duration: 700.ms,
-                      )
-                      .fadeIn(duration: 400.ms),
-
-                  SizedBox(height: 32.h),
-
-                  // ─── GLASS CARD ─────────────────────────────────────────────
-                  Container(
-                    margin: EdgeInsets.symmetric(horizontal: 24.w),
-                    padding: EdgeInsets.all(24.r),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(24.r),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        width: 1,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 32,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Back button
-                        GestureDetector(
-                          onTap: () => context.pop(),
-                          child: Container(
-                            width: 36.r,
-                            height: 36.r,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(10.r),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.15),
-                              ),
+                      ).animate().fadeIn(delay: 300.ms),
+                      
+                      SizedBox(height: 32.h),
+                      
+                      // FORM CARD
+                      Container(
+                        padding: EdgeInsets.all(24.r),
+                        decoration: BoxDecoration(
+                          color: AppColors.backgroundWhite,
+                          borderRadius: BorderRadius.circular(24.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 24,
+                              offset: const Offset(0, 8),
                             ),
-                            child: Icon(
-                              Icons.arrow_back_ios_new,
-                              color: Colors.white,
-                              size: 16.r,
-                            ),
-                          ),
+                          ],
                         ),
-
-                        SizedBox(height: 20.h),
-
-                        Text(
-                          'Create account',
-                          style: TextStyle(
-                            fontSize: 22.sp,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          'Join thousands of smart cooks',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            color: Colors.white.withValues(alpha: 0.6),
-                          ),
-                        ),
-                        SizedBox(height: 24.h),
-
-                        // FULL NAME
-                        _GlassTextField(
-                          controller: _fullNameController,
-                          focusNode: _fullNameFocus,
-                          isFocused: _fullNameFocused,
-                          hintText: 'Full name',
-                          prefixIcon: Icons.person_outline,
-                          keyboardType: TextInputType.name,
-                        ),
-
-                        SizedBox(height: 12.h),
-
-                        // EMAIL
-                        _GlassTextField(
-                          controller: _emailController,
-                          focusNode: _emailFocus,
-                          isFocused: _emailFocused,
-                          hintText: 'Email address',
-                          prefixIcon: Icons.email_outlined,
-                          keyboardType: TextInputType.emailAddress,
-                        ),
-
-                        SizedBox(height: 12.h),
-
-                        // PASSWORD
-                        _GlassTextField(
-                          controller: _passwordController,
-                          focusNode: _passwordFocus,
-                          isFocused: _passwordFocused,
-                          hintText: 'Password',
-                          prefixIcon: Icons.lock_outlined,
-                          obscureText: _obscurePassword,
-                          suffixIcon: GestureDetector(
-                            onTap: () => setState(
-                              () => _obscurePassword = !_obscurePassword,
-                            ),
-                            child: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
-                              color: Colors.white.withValues(alpha: 0.5),
-                              size: 20.r,
-                            ),
-                          ),
-                        ),
-
-                        SizedBox(height: 12.h),
-
-                        // CONFIRM PASSWORD
-                        _GlassTextField(
-                          controller: _confirmPasswordController,
-                          focusNode: _confirmFocus,
-                          isFocused: _confirmFocused,
-                          hintText: 'Confirm password',
-                          prefixIcon: Icons.lock_outlined,
-                          obscureText: _obscureConfirm,
-                          suffixIcon: GestureDetector(
-                            onTap: () => setState(
-                              () => _obscureConfirm = !_obscureConfirm,
-                            ),
-                            child: Icon(
-                              _obscureConfirm
-                                  ? Icons.visibility_outlined
-                                  : Icons.visibility_off_outlined,
-                              color: Colors.white.withValues(alpha: 0.5),
-                              size: 20.r,
-                            ),
-                          ),
-                        ),
-
-                        SizedBox(height: 20.h),
-
-                        // TERMS CHECKBOX
-                        GestureDetector(
-                          onTap: () => setState(
-                            () => _agreedToTerms = !_agreedToTerms,
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
-                                width: 20.r,
-                                height: 20.r,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Back Button
+                            GestureDetector(
+                              onTap: () => context.pop(),
+                              child: Container(
+                                width: 36.r,
+                                height: 36.r,
                                 decoration: BoxDecoration(
-                                  color: _agreedToTerms
-                                      ? AppColors.primary
-                                      : Colors.white.withValues(alpha: 0.08),
-                                  border: Border.all(
-                                    color: _agreedToTerms
-                                        ? AppColors.primary
-                                        : Colors.white.withValues(alpha: 0.3),
-                                  ),
-                                  borderRadius: BorderRadius.circular(6.r),
+                                  color: const Color(0xFFF3F4F6),
+                                  borderRadius: BorderRadius.circular(10.r),
                                 ),
-                                child: _agreedToTerms
-                                    ? Icon(
-                                        Icons.check,
-                                        color: Colors.white,
-                                        size: 14.r,
-                                      )
-                                    : null,
+                                child: Icon(
+                                  Icons.arrow_back_ios_new,
+                                  color: AppColors.textPrimary,
+                                  size: 16.r,
+                                ),
                               ),
-                              SizedBox(width: 12.w),
-                              Expanded(
-                                child: RichText(
-                                  text: TextSpan(
+                            ),
+                            SizedBox(height: 20.h),
+                            Text(
+                              'Create account',
+                              style: TextStyle(
+                                fontSize: 24.sp,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            SizedBox(height: 4.h),
+                            Text(
+                              'Join thousands of smart cooks',
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            SizedBox(height: 24.h),
+                            
+                            // FULL NAME
+                            _buildTextField(
+                              controller: _fullNameController,
+                              hintText: 'Full name',
+                              icon: Icons.person_outline,
+                              keyboardType: TextInputType.name,
+                            ),
+                            SizedBox(height: 12.h),
+                            
+                            // EMAIL
+                            _buildTextField(
+                              controller: _emailController,
+                              hintText: 'Email address',
+                              icon: Icons.email_outlined,
+                              keyboardType: TextInputType.emailAddress,
+                            ),
+                            SizedBox(height: 12.h),
+                            
+                            // PASSWORD
+                            _buildTextField(
+                              controller: _passwordController,
+                              hintText: 'Password',
+                              icon: Icons.lock_outlined,
+                              obscureText: _obscurePassword,
+                              suffixIcon: GestureDetector(
+                                onTap: () => setState(() => _obscurePassword = !_obscurePassword),
+                                child: Icon(
+                                  _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                  color: AppColors.textSecondary,
+                                  size: 20.r,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 12.h),
+                            
+                            // CONFIRM PASSWORD
+                            _buildTextField(
+                              controller: _confirmPasswordController,
+                              hintText: 'Confirm password',
+                              icon: Icons.lock_outlined,
+                              obscureText: _obscureConfirm,
+                              suffixIcon: GestureDetector(
+                                onTap: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                                child: Icon(
+                                  _obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                                  color: AppColors.textSecondary,
+                                  size: 20.r,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 20.h),
+                            
+                            // TERMS CHECKBOX
+                            GestureDetector(
+                              onTap: () => setState(() => _agreedToTerms = !_agreedToTerms),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    width: 20.r,
+                                    height: 20.r,
+                                    decoration: BoxDecoration(
+                                      color: _agreedToTerms ? AppColors.primary : const Color(0xFFF3F4F6),
+                                      border: Border.all(
+                                        color: _agreedToTerms ? AppColors.primary : AppColors.borderMedium,
+                                      ),
+                                      borderRadius: BorderRadius.circular(6.r),
+                                    ),
+                                    child: _agreedToTerms
+                                        ? Icon(Icons.check, color: AppColors.textWhite, size: 14.r)
+                                        : null,
+                                  ),
+                                  SizedBox(width: 12.w),
+                                  Expanded(
+                                    child: RichText(
+                                      text: TextSpan(
+                                        style: TextStyle(
+                                          fontSize: 13.sp,
+                                          color: AppColors.textSecondary,
+                                          height: 1.4,
+                                        ),
+                                        children: const [
+                                          TextSpan(text: 'I agree to '),
+                                          TextSpan(
+                                            text: 'Terms of Service',
+                                            style: TextStyle(
+                                              color: AppColors.primary,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          TextSpan(text: ' and '),
+                                          TextSpan(
+                                            text: 'Privacy Policy',
+                                            style: TextStyle(
+                                              color: AppColors.primary,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: 28.h),
+                            
+                            // CREATE ACCOUNT BUTTON
+                            BlocBuilder<AuthBloc, AuthState>(
+                              builder: (context, state) {
+                                final isLoading = state is AuthLoading;
+                                final isEnabled = _agreedToTerms && !isLoading;
+                                return SizedBox(
+                                  width: double.infinity,
+                                  height: 56.h,
+                                  child: FilledButton(
+                                    onPressed: isEnabled ? _signUp : null,
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: AppColors.primary,
+                                      disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(100.r),
+                                      ),
+                                    ),
+                                    child: isLoading
+                                        ? SizedBox(
+                                            width: 24.r,
+                                            height: 24.r,
+                                            child: const CircularProgressIndicator(
+                                              color: AppColors.textWhite,
+                                              strokeWidth: 2.5,
+                                            ),
+                                          )
+                                        : Text(
+                                            'Create Account',
+                                            style: TextStyle(
+                                              fontSize: 16.sp,
+                                              fontWeight: FontWeight.w700,
+                                              color: AppColors.textWhite,
+                                            ),
+                                          ),
+                                  ),
+                                );
+                              },
+                            ),
+                            SizedBox(height: 16.h),
+                            
+                            // BADGE
+                            Center(
+                              child: Text(
+                                '🔒 3-day free trial · Cancel anytime',
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 24.h),
+                            
+                            // SEPARATOR
+                            Row(
+                              children: [
+                                Expanded(child: Container(height: 1, color: AppColors.borderLight)),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                                  child: Text(
+                                    'or continue with',
                                     style: TextStyle(
                                       fontSize: 13.sp,
-                                      color:
-                                          Colors.white.withValues(alpha: 0.6),
-                                      height: 1.4,
+                                      color: AppColors.textSecondary,
                                     ),
-                                    children: [
-                                      const TextSpan(text: 'I agree to '),
-                                      TextSpan(
-                                        text: 'Terms of Service',
-                                        style: TextStyle(
-                                          color: AppColors.primary,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 13.sp,
-                                        ),
-                                      ),
-                                      const TextSpan(text: ' and '),
-                                      TextSpan(
-                                        text: 'Privacy Policy',
-                                        style: TextStyle(
-                                          color: AppColors.primary,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 13.sp,
-                                        ),
-                                      ),
-                                    ],
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
+                                Expanded(child: Container(height: 1, color: AppColors.borderLight)),
+                              ],
+                            ),
+                            SizedBox(height: 24.h),
+                            
+                            // SOCIAL BUTTONS
+                            _buildSocialButton(
+                              label: 'Continue with Apple',
+                              iconWidget: Icon(Icons.apple, color: AppColors.textWhite, size: 24.r),
+                              backgroundColor: Colors.black,
+                              textColor: AppColors.textWhite,
+                              onTap: () => context.read<AuthBloc>().add(const SignInWithAppleRequested()),
+                            ),
+                            SizedBox(height: 12.h),
+                            
+                            _buildSocialButton(
+                              label: 'Continue with Google',
+                              iconWidget: _buildGoogleIcon(),
+                              backgroundColor: AppColors.backgroundWhite,
+                              textColor: AppColors.textPrimary,
+                              borderColor: AppColors.borderMedium,
+                              onTap: () => context.read<AuthBloc>().add(const SignInWithGoogleRequested()),
+                            ),
+                          ],
                         ),
-
-                        SizedBox(height: 28.h),
-
-                        // CREATE ACCOUNT BUTTON
-                        BlocBuilder<AuthBloc, AuthState>(
-                          builder: (context, state) {
-                            final isLoading = state is AuthLoading;
-                            final isEnabled = _agreedToTerms && !isLoading;
-                            return GestureDetector(
-                              onTap: isEnabled ? _signUp : null,
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
-                                height: 52.h,
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: isEnabled
-                                        ? [
-                                            AppColors.primary,
-                                            AppColors.primaryDark,
-                                          ]
-                                        : [
-                                            AppColors.primary
-                                                .withValues(alpha: 0.4),
-                                            AppColors.primaryDark
-                                                .withValues(alpha: 0.4),
-                                          ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(14.r),
-                                  boxShadow: isEnabled
-                                      ? [
-                                          BoxShadow(
-                                            color: AppColors.primary
-                                                .withValues(alpha: 0.4),
-                                            blurRadius: 16,
-                                            offset: const Offset(0, 4),
-                                          ),
-                                        ]
-                                      : [],
-                                ),
-                                child: Center(
-                                  child: isLoading
-                                      ? SizedBox(
-                                          width: 22.r,
-                                          height: 22.r,
-                                          child:
-                                              const CircularProgressIndicator(
-                                            color: Colors.white,
-                                            strokeWidth: 2,
-                                          ),
-                                        )
-                                      : Text(
-                                          'Create Account',
-                                          style: TextStyle(
-                                            fontSize: 16.sp,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-
-                        SizedBox(height: 12.h),
-
-                        // BADGE
-                        Center(
-                          child: Text(
-                            '🔒  3-day free trial · Cancel anytime',
+                      ).animate().slideY(begin: 0.1, end: 0, duration: 500.ms, curve: Curves.easeOutQuad).fadeIn(),
+                      
+                      SizedBox(height: 32.h),
+                      
+                      // SIGN IN LINK
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Already have an account? ',
                             style: TextStyle(
-                              fontSize: 12.sp,
-                              color: Colors.white.withValues(alpha: 0.45),
+                              fontSize: 14.sp,
+                              color: AppColors.textSecondary,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  )
-                      .animate(delay: 200.ms)
-                      .fadeIn(duration: 500.ms)
-                      .slideY(
-                        begin: 0.1,
-                        end: 0,
-                        curve: Curves.easeOutCubic,
-                      ),
-
-                  SizedBox(height: 28.h),
-
-                  // SIGN IN LINK
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Already have an account? ',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          color: Colors.white.withValues(alpha: 0.6),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () => context.pop(),
-                        child: Text(
-                          'Sign in',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600,
+                          GestureDetector(
+                            onTap: () => context.pop(),
+                            child: Text(
+                              'Sign in',
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
+                        ],
+                      ).animate(delay: 400.ms).fadeIn(),
                     ],
-                  ).animate(delay: 400.ms).fadeIn(),
-
-                  SizedBox(height: 24.h),
-                ],
+                  ),
+                ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
-}
 
-// ─── GLASS TEXT FIELD ──────────────────────────────────────────────────────────
-class _GlassTextField extends StatelessWidget {
-  const _GlassTextField({
-    required this.controller,
-    required this.focusNode,
-    required this.isFocused,
-    required this.hintText,
-    required this.prefixIcon,
-    this.obscureText = false,
-    this.keyboardType,
-    this.suffixIcon,
-  });
-
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final bool isFocused;
-  final String hintText;
-  final IconData prefixIcon;
-  final bool obscureText;
-  final TextInputType? keyboardType;
-  final Widget? suffixIcon;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hintText,
+    required IconData icon,
+    bool obscureText = false,
+    TextInputType? keyboardType,
+    Widget? suffixIcon,
+  }) {
+    return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(
-          color: isFocused
-              ? AppColors.primary
-              : Colors.white.withValues(alpha: 0.15),
-          width: isFocused ? 1.5 : 1,
-        ),
+        color: const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(16.r),
       ),
       child: TextField(
         controller: controller,
-        focusNode: focusNode,
         obscureText: obscureText,
         keyboardType: keyboardType,
-        style: TextStyle(color: Colors.white, fontSize: 15.sp),
+        style: TextStyle(fontSize: 15.sp, color: AppColors.textPrimary),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: TextStyle(
-            color: Colors.white.withValues(alpha: 0.4),
-            fontSize: 15.sp,
-          ),
-          prefixIcon: Icon(
-            prefixIcon,
-            color: Colors.white.withValues(alpha: 0.5),
-            size: 20.r,
-          ),
+          hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 15.sp),
+          prefixIcon: Icon(icon, color: AppColors.textSecondary, size: 22.r),
           suffixIcon: suffixIcon,
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: 16.w,
-            vertical: 16.h,
+          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSocialButton({
+    required String label,
+    required Widget iconWidget,
+    required Color backgroundColor,
+    required Color textColor,
+    Color? borderColor,
+    required VoidCallback onTap,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 56.h,
+      child: FilledButton(
+        onPressed: onTap,
+        style: FilledButton.styleFrom(
+          backgroundColor: backgroundColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(100.r),
+            side: borderColor != null ? BorderSide(color: borderColor) : BorderSide.none,
+          ),
+          elevation: 0,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            iconWidget,
+            SizedBox(width: 12.w),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 15.sp,
+                fontWeight: FontWeight.w600,
+                color: textColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGoogleIcon() {
+    return Container(
+      width: 24.r,
+      height: 24.r,
+      decoration: const BoxDecoration(
+        color: AppColors.backgroundWhite,
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          'G',
+          style: TextStyle(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.w900,
+            color: Colors.blue,
           ),
         ),
       ),

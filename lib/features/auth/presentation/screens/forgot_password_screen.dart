@@ -51,7 +51,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               content: const Text(
                 'Reset link sent! Check your inbox.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: AppColors.textWhite),
               ),
               backgroundColor: AppColors.success,
               behavior: SnackBarBehavior.floating,
@@ -68,7 +68,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               content: Text(
                 state.message,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: AppColors.textWhite),
               ),
               backgroundColor: AppColors.error,
               behavior: SnackBarBehavior.floating,
@@ -120,7 +120,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                     child: Icon(
                       Icons.lock_reset_rounded,
-                      color: Colors.white,
+                      color: AppColors.textWhite,
                       size: 36.r,
                     ),
                   )
@@ -140,15 +140,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     margin: EdgeInsets.symmetric(horizontal: 24.w),
                     padding: EdgeInsets.all(24.r),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
+                      color: AppColors.backgroundWhite.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(24.r),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.15),
+                        color: AppColors.backgroundWhite.withValues(alpha: 0.15),
                         width: 1,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
+                          color: AppColors.textPrimary.withValues(alpha: 0.3),
                           blurRadius: 32,
                           offset: const Offset(0, 8),
                         ),
@@ -164,15 +164,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             width: 36.r,
                             height: 36.r,
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.1),
+                              color: AppColors.backgroundWhite.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(10.r),
                               border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.15),
+                                color: AppColors.backgroundWhite.withValues(alpha: 0.15),
                               ),
                             ),
                             child: Icon(
                               Icons.arrow_back_ios_new,
-                              color: Colors.white,
+                              color: AppColors.textWhite,
                               size: 16.r,
                             ),
                           ),
@@ -185,7 +185,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           style: TextStyle(
                             fontSize: 22.sp,
                             fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                            color: AppColors.textWhite,
                           ),
                         ),
                         SizedBox(height: 8.h),
@@ -193,7 +193,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           "No worries! Enter your email and we'll\nsend you a reset link.",
                           style: TextStyle(
                             fontSize: 14.sp,
-                            color: Colors.white.withValues(alpha: 0.6),
+                            color: AppColors.textWhite.withValues(alpha: 0.6),
                             height: 1.5,
                           ),
                         ),
@@ -204,12 +204,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.08),
+                            color: AppColors.backgroundWhite.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(14.r),
                             border: Border.all(
                               color: _emailFocused
                                   ? AppColors.primary
-                                  : Colors.white.withValues(alpha: 0.15),
+                                  : AppColors.backgroundWhite.withValues(alpha: 0.15),
                               width: _emailFocused ? 1.5 : 1,
                             ),
                           ),
@@ -218,16 +218,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             focusNode: _emailFocus,
                             keyboardType: TextInputType.emailAddress,
                             style:
-                                TextStyle(color: Colors.white, fontSize: 15.sp),
+                                TextStyle(color: AppColors.textWhite, fontSize: 15.sp),
                             decoration: InputDecoration(
                               hintText: 'Email address',
                               hintStyle: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.4),
+                                color: AppColors.textWhite.withValues(alpha: 0.4),
                                 fontSize: 15.sp,
                               ),
                               prefixIcon: Icon(
                                 Icons.email_outlined,
-                                color: Colors.white.withValues(alpha: 0.5),
+                                color: AppColors.textWhite.withValues(alpha: 0.5),
                                 size: 20.r,
                               ),
                               border: InputBorder.none,
@@ -274,7 +274,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                           height: 22.r,
                                           child:
                                               const CircularProgressIndicator(
-                                            color: Colors.white,
+                                            color: AppColors.textWhite,
                                             strokeWidth: 2,
                                           ),
                                         )
@@ -283,7 +283,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                           style: TextStyle(
                                             fontSize: 16.sp,
                                             fontWeight: FontWeight.w600,
-                                            color: Colors.white,
+                                            color: AppColors.textWhite,
                                           ),
                                         ),
                                 ),
@@ -304,14 +304,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 Icon(
                                   Icons.arrow_back,
                                   size: 16.r,
-                                  color: Colors.white.withValues(alpha: 0.5),
+                                  color: AppColors.textWhite.withValues(alpha: 0.5),
                                 ),
                                 SizedBox(width: 6.w),
                                 Text(
                                   'Back to Sign In',
                                   style: TextStyle(
                                     fontSize: 14.sp,
-                                    color: Colors.white.withValues(alpha: 0.6),
+                                    color: AppColors.textWhite.withValues(alpha: 0.6),
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),

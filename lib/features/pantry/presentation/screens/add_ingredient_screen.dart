@@ -5,7 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
-import 'package:vitasense/core/theme/app_text_styles.dart';
+import 'package:vitasense/core/widgets/app_header.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_bloc.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_event.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_state.dart';
@@ -185,29 +185,10 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // ─── Header ─────────────────────────────────────────
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Add ingredient',
-                          style: TextStyle(
-                            fontSize: 24.sp,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                            fontFamily: AppTextStyles.headingLarge.fontFamily,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () => context.pop(),
-                          child: Text(
-                            'Cancel',
-                            style: TextStyle(
-                              fontSize: 15.sp,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ),
-                      ],
+                    AppHeader(
+                      title: 'Dodaj składnik',
+                      variant: AppHeaderVariant.modal,
+                      onBack: () => context.pop(),
                     ),
                     SizedBox(height: 24.h),
 
@@ -495,7 +476,7 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
                                 width: 22.r,
                                 height: 22.r,
                                 child: const CircularProgressIndicator(
-                                  color: Colors.white,
+                                  color: AppColors.textWhite,
                                   strokeWidth: 2,
                                 ),
                               )
@@ -504,7 +485,7 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
                                 style: TextStyle(
                                   fontSize: 16.sp,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.white,
+                                  color: AppColors.textWhite,
                                 ),
                               ),
                       ),

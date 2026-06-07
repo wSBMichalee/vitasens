@@ -76,27 +76,33 @@ serve(async (req: Request) => {
           fromCache = true;
         } else {
           // Cache MISS — pobieramy ze Spoonacular i zapisujemy
-          const sr = await spoon.findByIngredients(data.pantryIngredients);
+          const sr = await spoon.findByIngredients(ingredientNames);
           const matches = IngredientMatcher
             .sortByBestMatch(IngredientMatcher.filterByMinMatch(IngredientMatcher.buildMatchResults(sr)))
             .slice(0, 10);
           const details = await spoon.getRecipesBulk(matches.map(m => m.recipeId));
 
-          upserted = await RecipeRepository.upsertMany(details.map(d => {
+          const mappedForUpsert = details.map(d => {
             const s = sr.find(x => x.id === d.id)!;
             // Makra z Spoonacular — bez AI (OPTYMALIZACJA 3)
             const nut = (n: string) => d.nutrition?.nutrients.find((x: { name: string; amount: number }) => x.name === n)?.amount || 0;
             return {
-              title: d.title, source: 'spoonacular', sourceId: d.id.toString(),
+              title: d.title, source: 'spoonacular' as const, sourceId: d.id.toString(),
               ingredients: [...s.usedIngredients, ...s.missedIngredients].map(i => ({ name: i.name, amount: i.amount, unit: i.unit })),
               proteinG: Math.round(nut('Protein') * 10) / 10,
               carbsG: Math.round(nut('Carbohydrates') * 10) / 10,
               fatG: Math.round(nut('Fat') * 10) / 10,
               calories: Math.round(nut('Calories')),
               cookTimeMinutes: d.readyInMinutes, servings: d.servings, imageUrl: d.image,
-              matchPercent: matches.find(m => m.recipeId === d.id)?.matchPercent
             };
-          }));
+          });
+
+          const savedRecipes = await RecipeRepository.upsertMany(mappedForUpsert);
+          
+          upserted = savedRecipes.map(r => {
+            const match = matches.find(m => m.recipeId.toString() === r.sourceId);
+            return { ...r, matchPercent: match?.matchPercent || 0 };
+          });
 
           // Zapisz do cache (7 dni TTL)
           await saveRecipesToCache(cacheKey, upserted);

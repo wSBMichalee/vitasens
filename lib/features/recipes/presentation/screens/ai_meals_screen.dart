@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
+import 'package:vitasense/core/widgets/app_header.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_bloc.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_event.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_state.dart';
@@ -54,44 +55,28 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 0),
-              child: Row(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('AI Meals', style: AppTextStyles.headingLarge),
-                      Text(
-                        'Based on your pantry',
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          color: AppColors.textSecondary,
+            // ── AppHeader: wariant main, spinner jako action podczas ładowania ────
+            BlocBuilder<RecipesBloc, RecipesState>(
+              builder: (context, state) {
+                final isLoading = state is RecipesLoading;
+                return AppHeader(
+                  title: 'AI Posiłki',
+                  subtitle: 'Na podstawie twojej spiżarni',
+                  variant: AppHeaderVariant.main,
+                  actions: [
+                    if (isLoading)
+                      SizedBox(
+                        width: 20.r,
+                        height: 20.r,
+                        child: const CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primary,
                         ),
                       ),
-                    ],
-                  ),
-                  const Spacer(),
-                  BlocBuilder<RecipesBloc, RecipesState>(
-                    builder: (context, state) {
-                      if (state is RecipesLoading) {
-                        return SizedBox(
-                          width: 20.r,
-                          height: 20.r,
-                          child: const CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.primary,
-                          ),
-                        );
-                      }
-                      return const SizedBox.shrink();
-                    },
-                  ),
-                ],
-              ),
+                  ],
+                );
+              },
             ),
-
-            SizedBox(height: 12.h),
 
             SizedBox(
               height: 36.h,

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
+import 'package:vitasense/core/widgets/app_header.dart';
 import 'package:vitasense/features/subscription/bloc/subscription_bloc.dart';
 import 'package:vitasense/features/subscription/bloc/subscription_event.dart';
 import 'package:vitasense/features/subscription/bloc/subscription_state.dart';
@@ -48,36 +49,36 @@ class _SettingsView extends StatelessWidget {
       },
       child: Scaffold(
         backgroundColor: AppColors.background,
-        appBar: AppBar(
-          backgroundColor: AppColors.background,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: AppColors.textPrimary, size: 24.r),
-            onPressed: () => context.pop(),
-          ),
-          title: Text(
-            'Settings',
-            style: TextStyle(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          centerTitle: true,
-        ),
-        body: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+        body: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _SubscriptionCardSection(),
-              SizedBox(height: 24.h),
-              const _PlanDetailsSection(),
-              SizedBox(height: 24.h),
-              const _AccountSettingsSection(),
-              SizedBox(height: 24.h),
-              const _DangerZoneSection(),
-              SizedBox(height: 48.h),
+              // ── AppHeader: wariant nested (push navigation, back po lewej) ────
+              AppHeader(
+                title: 'Ustawienia',
+                variant: AppHeaderVariant.nested,
+                onBack: () => context.pop(),
+              ),
+
+              // ── Scrollable body ─────────────────────────────────────────────────
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const _SubscriptionCardSection(),
+                      SizedBox(height: 24.h),
+                      const _PlanDetailsSection(),
+                      SizedBox(height: 24.h),
+                      const _AccountSettingsSection(),
+                      SizedBox(height: 24.h),
+                      const _DangerZoneSection(),
+                      SizedBox(height: 48.h),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -102,7 +103,7 @@ class _SubscriptionCardSection extends StatelessWidget {
             child: Container(
               height: 120.h,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.backgroundWhite,
                 borderRadius: BorderRadius.circular(16.r),
               ),
             ),
@@ -460,7 +461,7 @@ class _DangerZoneSection extends StatelessWidget {
                 width: double.infinity,
                 padding: EdgeInsets.all(16.r),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.backgroundWhite,
                   borderRadius: BorderRadius.circular(16.r),
                   border: Border.all(color: AppColors.border),
                 ),
@@ -522,7 +523,7 @@ class _BaseCard extends StatelessWidget {
           width: double.infinity,
           padding: EdgeInsets.all(16.r),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.backgroundWhite,
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(color: AppColors.border),
           ),

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
+import 'package:vitasense/core/widgets/app_header.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_bloc.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_event.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_state.dart';
@@ -178,31 +179,35 @@ class _CreateRecipeViewState extends State<_CreateRecipeView> with SingleTickerP
       },
       child: Scaffold(
         backgroundColor: AppColors.background,
-        appBar: AppBar(
-          backgroundColor: AppColors.background,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: AppColors.textPrimary, size: 24.r),
-            onPressed: () => context.pop(),
-          ),
-          title: Text('Manage Recipes', style: AppTextStyles.headingMedium),
-          bottom: TabBar(
-            controller: _tabController,
-            labelColor: AppColors.primary,
-            unselectedLabelColor: AppColors.textSecondary,
-            indicatorColor: AppColors.primary,
-            tabs: const [
-              Tab(text: 'My Recipes'),
-              Tab(text: 'Create New'),
+        body: SafeArea(
+          child: Column(
+            children: [
+              AppHeader(
+                title: 'Zarządzaj Przepisami',
+                variant: AppHeaderVariant.nested,
+                onBack: () => context.pop(),
+              ),
+              TabBar(
+                controller: _tabController,
+                labelColor: AppColors.primary,
+                unselectedLabelColor: AppColors.textSecondary,
+                indicatorColor: AppColors.primary,
+                tabs: const [
+                  Tab(text: 'Moje przepisy'),
+                  Tab(text: 'Utwórz nowy'),
+                ],
+              ),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildMyRecipesTab(),
+                    _buildCreateNewTab(),
+                  ],
+                ),
+              ),
             ],
           ),
-        ),
-        body: TabBarView(
-          controller: _tabController,
-          children: [
-            _buildMyRecipesTab(),
-            _buildCreateNewTab(),
-          ],
         ),
       ),
     );
@@ -280,7 +285,7 @@ class _CreateRecipeViewState extends State<_CreateRecipeView> with SingleTickerP
         itemBuilder: (_, __) => Container(
           height: 100.h,
           margin: EdgeInsets.only(bottom: 12.h),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16.r)),
+          decoration: BoxDecoration(color: AppColors.backgroundWhite, borderRadius: BorderRadius.circular(16.r)),
         ),
       ),
     );
@@ -338,7 +343,7 @@ class _CreateRecipeViewState extends State<_CreateRecipeView> with SingleTickerP
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12.r),
               border: Border.all(color: AppColors.border),
-              color: Colors.white,
+              color: AppColors.backgroundWhite,
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
@@ -502,7 +507,7 @@ class _CreateRecipeViewState extends State<_CreateRecipeView> with SingleTickerP
                     child: SizedBox(
                       width: 20.r,
                       height: 20.r,
-                      child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      child: const CircularProgressIndicator(color: AppColors.textWhite, strokeWidth: 2),
                     ),
                   ),
                 );
@@ -544,7 +549,7 @@ class _CreateRecipeViewState extends State<_CreateRecipeView> with SingleTickerP
         hintText: hint + (isRequired ? ' *' : ''),
         hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 14.sp),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: AppColors.backgroundWhite,
         contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
@@ -575,7 +580,7 @@ class _MyRecipeCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.backgroundWhite,
         border: Border.all(color: AppColors.border),
         borderRadius: BorderRadius.circular(16.r),
       ),

@@ -7,6 +7,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
+import 'package:vitasense/core/widgets/app_header.dart';
 import 'package:vitasense/features/browse/bloc/browse_bloc.dart';
 import 'package:vitasense/features/browse/bloc/browse_event.dart';
 import 'package:vitasense/features/browse/bloc/browse_state.dart';
@@ -56,7 +57,7 @@ class _BrowseViewState extends State<_BrowseView> {
   void _showFiltersSheet(BuildContext context, BrowseLoaded state) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.backgroundWhite,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
@@ -136,59 +137,45 @@ class _BrowseViewState extends State<_BrowseView> {
 
                 return Column(
                   children: [
-                    // ─── HEADER ────────────────────────────────────────────────────────
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-                      child: Row(
-                        children: [
-                          IconButton(
-                            icon: Icon(Icons.arrow_back, color: AppColors.textPrimary, size: 24.r),
-                            onPressed: () => context.pop(),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                          ),
-                          SizedBox(width: 16.w),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Browse Recipes', style: AppTextStyles.headingLarge),
-                              Text('Discover new meals', style: AppTextStyles.bodyMedium),
-                            ],
-                          ),
-                          const Spacer(),
-                          GestureDetector(
-                            onTap: () => _showFiltersSheet(context, state),
-                            child: Container(
-                              width: 44.r,
-                              height: 44.r,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                border: Border.all(color: AppColors.border),
-                                borderRadius: BorderRadius.circular(12.r),
-                              ),
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  Icon(Icons.tune, color: AppColors.textPrimary, size: 22.r),
-                                  if (hasActiveFilters)
-                                    Positioned(
-                                      top: 10.h,
-                                      right: 10.w,
-                                      child: Container(
-                                        width: 8.r,
-                                        height: 8.r,
-                                        decoration: const BoxDecoration(
-                                          color: AppColors.error,
-                                          shape: BoxShape.circle,
-                                        ),
+                    // ── AppHeader: wariant nested, filtry jako action ──────────────────
+                    AppHeader(
+                      title: 'Przeglądaj',
+                      subtitle: 'Odkrywaj nowe przepisy',
+                      variant: AppHeaderVariant.nested,
+                      onBack: () => context.pop(),
+                      actions: [
+                        GestureDetector(
+                          onTap: () => _showFiltersSheet(context, state),
+                          child: Container(
+                            width: 44.r,
+                            height: 44.r,
+                            decoration: BoxDecoration(
+                              color: AppColors.backgroundWhite,
+                              border: Border.all(color: AppColors.border),
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Icon(Icons.tune, color: AppColors.textPrimary, size: 22.r),
+                                if (hasActiveFilters)
+                                  Positioned(
+                                    top: 10.h,
+                                    right: 10.w,
+                                    child: Container(
+                                      width: 8.r,
+                                      height: 8.r,
+                                      decoration: const BoxDecoration(
+                                        color: AppColors.error,
+                                        shape: BoxShape.circle,
                                       ),
                                     ),
-                                ],
-                              ),
+                                  ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
 
                     // ─── SEARCH BAR ────────────────────────────────────────────────────
@@ -211,7 +198,7 @@ class _BrowseViewState extends State<_BrowseView> {
                                 )
                               : null,
                           filled: true,
-                          fillColor: Colors.white,
+                          fillColor: AppColors.backgroundWhite,
                           contentPadding: EdgeInsets.symmetric(vertical: 12.h),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12.r),
@@ -385,7 +372,7 @@ class _BrowseViewState extends State<_BrowseView> {
       highlightColor: AppColors.border,
       child: Column(
         children: [
-          Container(height: 60.h, margin: EdgeInsets.all(20.w), color: Colors.white),
+          Container(height: 60.h, margin: EdgeInsets.all(20.w), color: AppColors.backgroundWhite),
           Expanded(
             child: GridView.builder(
               padding: EdgeInsets.all(20.w),
@@ -398,7 +385,7 @@ class _BrowseViewState extends State<_BrowseView> {
               itemCount: 6,
               itemBuilder: (_, __) => Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.backgroundWhite,
                   borderRadius: BorderRadius.circular(16.r),
                 ),
               ),
@@ -425,7 +412,7 @@ class _CuisineChip extends StatelessWidget {
         margin: EdgeInsets.only(right: 8.w),
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.textPrimary : Colors.white,
+          color: isSelected ? AppColors.textPrimary : AppColors.backgroundWhite,
           border: isSelected ? null : Border.all(color: AppColors.border),
           borderRadius: BorderRadius.circular(20.r),
         ),
@@ -434,7 +421,7 @@ class _CuisineChip extends StatelessWidget {
           style: TextStyle(
             fontSize: 12.sp,
             fontWeight: FontWeight.w600,
-            color: isSelected ? Colors.white : AppColors.textSecondary,
+            color: isSelected ? AppColors.textWhite : AppColors.textSecondary,
           ),
         ),
       ),
@@ -531,7 +518,7 @@ class _FeaturedCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                      color: AppColors.textWhite,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -539,18 +526,18 @@ class _FeaturedCard extends StatelessWidget {
                   SizedBox(height: 6.h),
                   Row(
                     children: [
-                      Icon(Icons.timer_outlined, color: Colors.white, size: 12.r),
+                      Icon(Icons.timer_outlined, color: AppColors.textWhite, size: 12.r),
                       SizedBox(width: 4.w),
                       Text(
                         cookTime,
-                        style: TextStyle(fontSize: 11.sp, color: Colors.white),
+                        style: TextStyle(fontSize: 11.sp, color: AppColors.textWhite),
                       ),
                       SizedBox(width: 8.w),
-                      Icon(Icons.local_fire_department_outlined, color: Colors.white, size: 12.r),
+                      Icon(Icons.local_fire_department_outlined, color: AppColors.textWhite, size: 12.r),
                       SizedBox(width: 4.w),
                       Text(
                         calories,
-                        style: TextStyle(fontSize: 11.sp, color: Colors.white),
+                        style: TextStyle(fontSize: 11.sp, color: AppColors.textWhite),
                       ),
                     ],
                   ),
@@ -581,7 +568,7 @@ class _RecipeGridCard extends StatelessWidget {
       onTap: () => context.push(AppRoutes.recipeDetails.replaceFirst(':id', recipe['id'] ?? 'none'), extra: recipe),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.backgroundWhite,
           border: Border.all(color: AppColors.border),
           borderRadius: BorderRadius.circular(16.r),
         ),

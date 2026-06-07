@@ -7,6 +7,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
+import 'package:vitasense/core/widgets/app_header.dart';
 import 'package:vitasense/features/auth/bloc/auth_bloc.dart';
 import 'package:vitasense/features/auth/bloc/auth_state.dart';
 import 'package:vitasense/features/family/bloc/family_bloc.dart';
@@ -112,32 +113,23 @@ class _FamilyView extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // ─── HEADER ────────────────────────────────────────────────────────
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.arrow_back, color: AppColors.textPrimary, size: 24.r),
-                    onPressed: () => context.pop(),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
+            // ── AppHeader: wariant nested ─────────────────────────────────────
+            AppHeader(
+              title: 'Plan Rodzinny',
+              variant: AppHeaderVariant.nested,
+              onBack: () => context.pop(),
+              actions: [
+                Container(
+                  width: 44.r,
+                  height: 44.r,
+                  decoration: BoxDecoration(
+                    color: AppColors.backgroundWhite,
+                    border: Border.all(color: AppColors.border),
+                    borderRadius: BorderRadius.circular(12.r),
                   ),
-                  SizedBox(width: 16.w),
-                  Text('Family Plan', style: AppTextStyles.headingLarge),
-                  const Spacer(),
-                  Container(
-                    width: 44.r,
-                    height: 44.r,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: AppColors.border),
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    child: Icon(Icons.people, color: AppColors.textPrimary, size: 22.r),
-                  ),
-                ],
-              ),
+                  child: Icon(Icons.people, color: AppColors.textPrimary, size: 22.r),
+                ),
+              ],
             ),
             
             Expanded(
@@ -185,8 +177,8 @@ class _FamilyView extends StatelessWidget {
       highlightColor: AppColors.border,
       child: Column(
         children: [
-          Container(height: 120.h, margin: EdgeInsets.all(20.w), color: Colors.white),
-          Container(height: 80.h, margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h), color: Colors.white),
+          Container(height: 120.h, margin: EdgeInsets.all(20.w), color: AppColors.backgroundWhite),
+          Container(height: 80.h, margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h), color: AppColors.backgroundWhite),
         ],
       ),
     );
@@ -338,7 +330,7 @@ class _FamilyView extends StatelessWidget {
                         children: [
                           Text(
                             family.name,
-                            style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.w700, color: Colors.white),
+                            style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.w700, color: AppColors.textWhite),
                           ),
                           Text(
                             '${family.memberCount}/${family.maxMembers} members',
@@ -354,7 +346,7 @@ class _FamilyView extends StatelessWidget {
                         color: Colors.white.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.people, color: Colors.white, size: 20.r),
+                      child: Icon(Icons.people, color: AppColors.textWhite, size: 20.r),
                     ),
                   ],
                 ),
@@ -383,7 +375,7 @@ class _FamilyView extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 24.sp,
                               fontWeight: FontWeight.w700,
-                              color: Colors.white,
+                              color: AppColors.textWhite,
                               letterSpacing: 4,
                             ),
                           ),
@@ -399,7 +391,7 @@ class _FamilyView extends StatelessWidget {
                             color: Colors.white.withValues(alpha: 0.2),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.copy, color: Colors.white, size: 18.r),
+                          child: Icon(Icons.copy, color: AppColors.textWhite, size: 18.r),
                         ),
                       ),
                     ],
@@ -425,7 +417,7 @@ class _FamilyView extends StatelessWidget {
             child: Container(
               padding: EdgeInsets.all(16.r),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.backgroundWhite,
                 border: Border.all(color: AppColors.border),
                 borderRadius: BorderRadius.circular(16.r),
               ),
@@ -508,7 +500,7 @@ class _MemberCard extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       margin: EdgeInsets.only(bottom: 8.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.backgroundWhite,
         border: Border.all(color: AppColors.border),
         borderRadius: BorderRadius.circular(12.r),
       ),

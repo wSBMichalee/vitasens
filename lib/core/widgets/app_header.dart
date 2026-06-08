@@ -41,7 +41,12 @@ class AppHeader extends StatelessWidget {
     this.actions,
     this.variant = AppHeaderVariant.main,
     this.showDivider = true,
+    this.backgroundColor,
+    this.textColor,
   });
+
+  final Color? backgroundColor;
+  final Color? textColor;
 
   /// Tytuł nagłówka — wymagany.
   final String title;
@@ -73,23 +78,28 @@ class AppHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: 20.w,
-            vertical: 16.h,
+    return Container(
+      color: backgroundColor ?? AppColors.backgroundWhite,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: 20.w,
+              vertical: 16.h,
+            ),
+            child: _buildContent(context),
           ),
-          child: _buildContent(context),
-        ),
-        if (showDivider)
-          const Divider(
-            color: AppColors.borderLight,
-            thickness: 1,
-            height: 1,
-          ),
-      ],
+          if (showDivider)
+            Divider(
+              color: backgroundColor != null
+                  ? backgroundColor!.withValues(alpha: 0.3)
+                  : AppColors.borderLight,
+              thickness: 1,
+              height: 1,
+            ),
+        ],
+      ),
     );
   }
 
@@ -102,6 +112,7 @@ class AppHeader extends StatelessWidget {
           showBack: _shouldShowBack,
           onBack: onBack,
           actions: actions,
+          textColor: textColor,
         );
       case AppHeaderVariant.nested:
         return _NestedHeader(
@@ -109,12 +120,14 @@ class AppHeader extends StatelessWidget {
           subtitle: subtitle,
           onBack: onBack,
           actions: actions,
+          textColor: textColor,
         );
       case AppHeaderVariant.modal:
         return _ModalHeader(
           title: title,
           subtitle: subtitle,
           actions: actions,
+          textColor: textColor,
         );
     }
   }
@@ -129,6 +142,7 @@ class _MainHeader extends StatelessWidget {
     this.showBack = false,
     this.onBack,
     this.actions,
+    this.textColor,
   });
 
   final String title;
@@ -136,14 +150,18 @@ class _MainHeader extends StatelessWidget {
   final bool showBack;
   final VoidCallback? onBack;
   final List<Widget>? actions;
+  final Color? textColor;
 
   @override
   Widget build(BuildContext context) {
+    final iconColor = textColor != null ? textColor : AppColors.textPrimary;
+    final bgColor = textColor != null ? textColor!.withValues(alpha: 0.2) : AppColors.borderLight;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         if (showBack) ...[
-          _BackButton(onBack: onBack),
+          _BackButton(onBack: onBack, iconColor: iconColor, bgColor: bgColor),
           SizedBox(width: 12.w),
         ],
         Expanded(
@@ -157,7 +175,7 @@ class _MainHeader extends StatelessWidget {
                   fontSize: 26.sp,
                   height: 1.2,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: textColor ?? AppColors.textPrimary,
                 ),
               ),
               if (subtitle != null) ...[
@@ -167,7 +185,7 @@ class _MainHeader extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13.sp,
                     height: 1.5,
-                    color: AppColors.textSecondary,
+                    color: textColor?.withValues(alpha: 0.8) ?? AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -191,21 +209,25 @@ class _NestedHeader extends StatelessWidget {
     this.subtitle,
     this.onBack,
     this.actions,
+    this.textColor,
   });
 
   final String title;
   final String? subtitle;
   final VoidCallback? onBack;
   final List<Widget>? actions;
+  final Color? textColor;
 
   @override
   Widget build(BuildContext context) {
     final bool hasActions = actions != null && actions!.isNotEmpty;
+    final iconColor = textColor != null ? textColor : AppColors.textPrimary;
+    final bgColor = textColor != null ? textColor!.withValues(alpha: 0.2) : AppColors.borderLight;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        _BackButton(onBack: onBack),
+        _BackButton(onBack: onBack, iconColor: iconColor, bgColor: bgColor),
         SizedBox(width: 8.w),
         Expanded(
           child: Column(
@@ -218,7 +240,7 @@ class _NestedHeader extends StatelessWidget {
                   fontSize: 26.sp,
                   height: 1.2,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: textColor ?? AppColors.textPrimary,
                 ),
               ),
               if (subtitle != null) ...[
@@ -228,7 +250,7 @@ class _NestedHeader extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13.sp,
                     height: 1.5,
-                    color: AppColors.textSecondary,
+                    color: textColor?.withValues(alpha: 0.8) ?? AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -251,14 +273,19 @@ class _ModalHeader extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.actions,
+    this.textColor,
   });
 
   final String title;
   final String? subtitle;
   final List<Widget>? actions;
+  final Color? textColor;
 
   @override
   Widget build(BuildContext context) {
+    final iconColor = textColor != null ? textColor : AppColors.textPrimary;
+    final bgColor = textColor != null ? textColor!.withValues(alpha: 0.2) : AppColors.borderLight;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -273,7 +300,7 @@ class _ModalHeader extends StatelessWidget {
                   fontSize: 26.sp,
                   height: 1.2,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: textColor ?? AppColors.textPrimary,
                 ),
               ),
               if (subtitle != null) ...[
@@ -283,7 +310,7 @@ class _ModalHeader extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13.sp,
                     height: 1.5,
-                    color: AppColors.textSecondary,
+                    color: textColor?.withValues(alpha: 0.8) ?? AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -295,7 +322,7 @@ class _ModalHeader extends StatelessWidget {
           ...actions!,
         ] else ...[
           SizedBox(width: 8.w),
-          const _CloseButton(),
+          _CloseButton(iconColor: iconColor, bgColor: bgColor),
         ],
       ],
     );
@@ -307,9 +334,11 @@ class _ModalHeader extends StatelessWidget {
 /// Przycisk back — kółko 40×40 z ikoną strzałki.
 /// Touch target spełnia wymóg min 44×44 przez GestureDetector padding.
 class _BackButton extends StatelessWidget {
-  const _BackButton({this.onBack});
+  const _BackButton({this.onBack, this.iconColor, this.bgColor});
 
   final VoidCallback? onBack;
+  final Color? iconColor;
+  final Color? bgColor;
 
   @override
   Widget build(BuildContext context) {
@@ -322,13 +351,13 @@ class _BackButton extends StatelessWidget {
         child: Container(
           width: 40.r,
           height: 40.r,
-          decoration: const BoxDecoration(
-            color: AppColors.borderLight,
+          decoration: BoxDecoration(
+            color: bgColor ?? AppColors.borderLight,
             shape: BoxShape.circle,
           ),
           child: Icon(
             Icons.arrow_back_ios_new,
-            color: AppColors.textPrimary,
+            color: iconColor ?? AppColors.textPrimary,
             size: 18.r,
           ),
         ),
@@ -339,7 +368,10 @@ class _BackButton extends StatelessWidget {
 
 /// Przycisk zamknięcia X — dla wariantu modal.
 class _CloseButton extends StatelessWidget {
-  const _CloseButton();
+  const _CloseButton({this.iconColor, this.bgColor});
+
+  final Color? iconColor;
+  final Color? bgColor;
 
   @override
   Widget build(BuildContext context) {
@@ -351,13 +383,13 @@ class _CloseButton extends StatelessWidget {
         child: Container(
           width: 40.r,
           height: 40.r,
-          decoration: const BoxDecoration(
-            color: AppColors.borderLight,
+          decoration: BoxDecoration(
+            color: bgColor ?? AppColors.borderLight,
             shape: BoxShape.circle,
           ),
           child: Icon(
             Icons.close,
-            color: AppColors.textPrimary,
+            color: iconColor ?? AppColors.textPrimary,
             size: 20.r,
           ),
         ),

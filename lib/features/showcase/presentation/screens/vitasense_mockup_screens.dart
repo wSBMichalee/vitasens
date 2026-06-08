@@ -330,6 +330,8 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
                 title: 'Today\'s Progress',
                 subtitle: 'Hello, ${widget.userName}',
                 variant: AppHeaderVariant.main,
+                backgroundColor: AppColors.primary,
+                textColor: AppColors.textWhite,
                 actions: [
                   Container(
                     height: 36.r,

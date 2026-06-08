@@ -149,9 +149,11 @@ class _PantryViewState extends State<_PantryView> {
       children: [
         // ── AppHeader: wariant main, przycisk + jako action ───────────────
         AppHeader(
-          title: 'Spiżarnia',
-          subtitle: '$count składnik${count == 1 ? '' : 'ów'} dostępnych',
+          title: 'Pantry',
+          subtitle: '$count ingredient${count == 1 ? '' : 's'} available',
           variant: AppHeaderVariant.main,
+          backgroundColor: AppColors.primary,
+          textColor: AppColors.textWhite,
           actions: [
             AppHeaderIconButton(
               icon: Icons.add,

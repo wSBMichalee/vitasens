@@ -98,7 +98,7 @@ class _ProfileSliverAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SliverAppBar(
-      expandedHeight: 130.h,
+      expandedHeight: 104.h,
       pinned: true,
       backgroundColor: AppColors.primaryDark,
       elevation: 0,
@@ -120,11 +120,6 @@ class _HeroBanner extends StatelessWidget {
     final String? avatarUrl = Supabase.instance.client.auth.currentUser?.userMetadata?['avatar_url'] as String?
         ?? Supabase.instance.client.auth.currentUser?.userMetadata?['picture'] as String?
         ?? user.avatarUrl;
-    final isProActive = user.subscriptionStatus?.toLowerCase() == 'active';
-    final badgeLabel = isProActive ? 'PRO ACTIVE' : 'FREE PLAN';
-    final badgeBg = isProActive
-        ? AppColors.primaryLight.withValues(alpha: 0.25)
-        : AppColors.textWhite.withValues(alpha: 0.15);
 
     return Container(
       decoration: const BoxDecoration(
@@ -134,9 +129,12 @@ class _HeroBanner extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
       ),
-      child: SafeArea(
+      child: OverflowBox(
+        maxHeight: double.infinity,
+        alignment: Alignment.topCenter,
+        child: SafeArea(
         child: Padding(
-          padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 20.h),
+          padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 12.h),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,30 +196,7 @@ class _HeroBanner extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        SizedBox(height: 8.h),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 10.w,
-                            vertical: 4.h,
-                          ),
-                          decoration: BoxDecoration(
-                            color: badgeBg,
-                            borderRadius: BorderRadius.circular(20.r),
-                            border: Border.all(
-                              color: AppColors.textWhite.withValues(alpha: 0.4),
-                              width: 1,
-                            ),
-                          ),
-                          child: Text(
-                            badgeLabel,
-                            style: TextStyle(
-                              fontSize: 10.sp,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textWhite,
-                              letterSpacing: 0.8,
-                            ),
-                          ),
-                        ),
+
                       ],
                     ),
                   ),
@@ -229,6 +204,7 @@ class _HeroBanner extends StatelessWidget {
               ),
             ],
           ),
+        ),
         ),
       ),
     );

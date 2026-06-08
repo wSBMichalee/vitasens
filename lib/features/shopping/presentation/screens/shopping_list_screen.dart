@@ -204,6 +204,8 @@ class _ShoppingListViewState extends State<_ShoppingListView> {
                     title: 'Lista zakupów',
                     subtitle: subtitle,
                     variant: AppHeaderVariant.nested,
+                    backgroundColor: AppColors.primary,
+                    textColor: AppColors.textWhite,
                     onBack: () => context.pop(),
                     actions: [
                       AppHeaderIconButton(

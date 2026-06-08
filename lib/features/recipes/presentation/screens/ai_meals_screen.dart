@@ -52,7 +52,7 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundWhite,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -64,6 +64,8 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
                   title: 'AI Meals',
                   subtitle: 'Based on your pantry',
                   variant: AppHeaderVariant.main,
+                  backgroundColor: AppColors.primary,
+                  textColor: AppColors.textWhite,
                   actions: [
                     if (isLoading)
                       SizedBox(width: 20.r, height: 20.r, child: const CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary)),

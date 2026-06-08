@@ -135,9 +135,11 @@ class _ProgressView extends StatelessWidget {
       children: [
         // ── AppHeader: wariant main, streak pill jako action ──────────────
         AppHeader(
-          title: 'Postęp',
-          subtitle: 'Bądź konsekwentny',
+          title: 'Progress',
+          subtitle: 'Stay consistent',
           variant: AppHeaderVariant.main,
+          backgroundColor: AppColors.primary,
+          textColor: AppColors.textWhite,
           actions: [
             Container(
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),
@@ -190,7 +192,7 @@ class _ProgressView extends StatelessWidget {
 
                 // ─── Recent meals ────────────────────────────────────────
                 Text(
-                  'OSTATNIE POSIŁKI',
+                  'RECENT MEALS',
                   style: TextStyle(
                     fontSize: 11.sp,
                     fontWeight: FontWeight.w600,

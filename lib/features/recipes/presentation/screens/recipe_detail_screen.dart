@@ -36,15 +36,33 @@ class _RecipeDetailView extends StatelessWidget {
 
   void _cookRecipe(BuildContext context) {
     final recipeId = recipe['id']?.toString() ?? '';
+    if (recipeId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Cannot cook this recipe — try re-loading it.', style: TextStyle(color: AppColors.textWhite, fontSize: 13.sp)),
+        backgroundColor: AppColors.error,
+      ));
+      return;
+    }
     context.read<RecipesBloc>().add(CookRecipe(recipeId, 1));
   }
 
   @override
   Widget build(BuildContext context) {
     final title = recipe['title'] ?? 'Unknown Recipe';
-    final cookTime = recipe['cookTimeMinutes'] ?? 0;
     final calories = recipe['calories'] ?? 0;
-    final imageUrl = recipe['image']?.toString();
+    final imageUrl = recipe['imageUrl']?.toString() ?? recipe['image']?.toString();
+    final proteinG = (recipe['proteinG'] as num?)?.toDouble() ?? 0;
+    final carbsG = (recipe['carbsG'] as num?)?.toDouble() ?? 0;
+    final fatG = (recipe['fatG'] as num?)?.toDouble() ?? 0;
+    final description = recipe['description']?.toString() ?? '';
+    final steps = <Map<String, dynamic>>[];
+    if (recipe['steps'] is List) {
+      for (final s in recipe['steps'] as List) {
+        if (s is Map<String, dynamic>) steps.add(s);
+      }
+    }
+    final dietTags = (recipe['dietTags'] ?? recipe['diet_tags'] ?? []) as List;
+    final cookTimeMinutes = recipe['cookTimeMinutes'] ?? recipe['cook_time_minutes'] ?? 0;
 
     final usedIngredients = <Map<String, dynamic>>[];
     final missedIngredients = <Map<String, dynamic>>[];
@@ -253,84 +271,35 @@ class _RecipeDetailView extends StatelessWidget {
                         SizedBox(height: 14.h),
 
                         // Info chips row
-                        Row(
+                        Wrap(
+                          spacing: 8.w,
+                          runSpacing: 8.h,
                           children: [
-                            _InfoChip(
-                              icon: Icons.timer_outlined,
-                              label: '$cookTime MIN',
-                            ),
-                            SizedBox(width: 8.w),
-                            _InfoChip(
-                              icon: Icons.local_fire_department_outlined,
-                              label: '$calories KCAL',
-                            ),
-                            SizedBox(width: 8.w),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 10.w,
-                                vertical: 6.h,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryLight,
-                                borderRadius: BorderRadius.circular(6.r),
-                              ),
-                              child: Text(
-                                'HIGH PROTEIN',
-                                style: TextStyle(
-                                  fontSize: 11.sp,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.primary,
-                                  letterSpacing: 0.3,
-                                ),
-                              ),
-                            ),
+                            _InfoChip(icon: Icons.timer_outlined, label: '$cookTimeMinutes MIN'),
+                            _InfoChip(icon: Icons.local_fire_department_outlined, label: '$calories KCAL'),
+                            if (cookTimeMinutes <= 30)
+                              _DietTag(label: 'QUICK', color: AppColors.primary),
+                            if (proteinG >= 25)
+                              _DietTag(label: 'HIGH PROTEIN', color: AppColors.proteinColor),
+                            if (carbsG <= 20)
+                              _DietTag(label: 'LOW CARB', color: AppColors.carbsColor),
+                            ...dietTags.take(2).map((tag) => _DietTag(
+                              label: tag.toString().toUpperCase(),
+                              color: AppColors.secondary,
+                            )),
                           ],
                         ),
 
                         SizedBox(height: 28.h),
 
                         // Section header
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'USES FROM YOUR',
-                                  style: TextStyle(
-                                    fontSize: 11.sp,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.textSecondary,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                                Text(
-                                  'PANTRY',
-                                  style: TextStyle(
-                                    fontSize: 11.sp,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.textSecondary,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const Spacer(),
-                            Text(
-                              'INGREDIENTS WILL BE\nUPDATED AUTOMATICALLY',
-                              style: TextStyle(
-                                fontSize: 9.sp,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.secondary,
-                                letterSpacing: 0.3,
-                              ),
-                              textAlign: TextAlign.right,
-                            ),
-                          ],
+                        Text('Ingredients', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                        SizedBox(height: 4.h),
+                        Text(
+                          missedIngredients.isEmpty ? 'You have everything you need ✓' : '${usedIngredients.length} in pantry · ${missedIngredients.length} missing',
+                          style: TextStyle(fontSize: 13.sp, color: missedIngredients.isEmpty ? AppColors.primary : AppColors.textSecondary),
                         ),
-
-                        SizedBox(height: 14.h),
+                        SizedBox(height: 12.h),
 
                         // Ingredients list
                         allIngredients.isEmpty
@@ -358,6 +327,109 @@ class _RecipeDetailView extends StatelessWidget {
                         // Substitutes section
                         if (missingNames.isNotEmpty)
                           _SubstitutesSection(missingNames: missingNames),
+
+                        // ── NUTRITION ──────────────────────────────────────
+                        SizedBox(height: 28.h),
+                        Row(children: [
+                          Icon(Icons.monitor_heart_outlined, color: AppColors.primary, size: 18.r),
+                          SizedBox(width: 8.w),
+                          Text('Nutrition per serving', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                        ]),
+                        SizedBox(height: 12.h),
+                        Row(children: [
+                          _NutritionTile(label: 'Calories', value: '$calories', unit: 'kcal', color: AppColors.primary),
+                          SizedBox(width: 8.w),
+                          _NutritionTile(label: 'Protein', value: proteinG.toStringAsFixed(1), unit: 'g', color: AppColors.proteinColor),
+                          SizedBox(width: 8.w),
+                          _NutritionTile(label: 'Carbs', value: carbsG.toStringAsFixed(1), unit: 'g', color: AppColors.carbsColor),
+                          SizedBox(width: 8.w),
+                          _NutritionTile(label: 'Fat', value: fatG.toStringAsFixed(1), unit: 'g', color: AppColors.fatColor),
+                        ]),
+
+                        // ── DIFFICULTY ─────────────────────────────────────
+                        SizedBox(height: 28.h),
+                        Row(children: [
+                          Icon(Icons.bar_chart_rounded, color: AppColors.primary, size: 18.r),
+                          SizedBox(width: 8.w),
+                          Text('Difficulty', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                        ]),
+                        SizedBox(height: 12.h),
+                        Builder(
+                          builder: (context) {
+                            final difficultyLevel = cookTimeMinutes <= 20 ? 0 : cookTimeMinutes <= 45 ? 1 : 2;
+                            final difficultyLabels = ['Easy', 'Medium', 'Hard'];
+                            final difficultyColors = [AppColors.primary, AppColors.warning, AppColors.error];
+                            return Row(children: difficultyLabels.asMap().entries.map((e) {
+                              final active = e.key == difficultyLevel;
+                              return Expanded(child: Padding(
+                                padding: EdgeInsets.only(right: e.key < 2 ? 8.w : 0),
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(vertical: 10.h),
+                                  decoration: BoxDecoration(
+                                    color: active ? difficultyColors[e.key] : AppColors.borderLight,
+                                    borderRadius: BorderRadius.circular(8.r),
+                                  ),
+                                  child: Center(child: Text(e.value,
+                                    style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w700,
+                                      color: active ? AppColors.textWhite : AppColors.textMuted))),
+                                ),
+                              ));
+                            }).toList());
+                          }
+                        ),
+
+                        // ── DESCRIPTION ────────────────────────────────────
+                        if (description.isNotEmpty) ...[
+                          SizedBox(height: 28.h),
+                          Row(children: [
+                            Icon(Icons.info_outline, color: AppColors.primary, size: 18.r),
+                            SizedBox(width: 8.w),
+                            Text('About', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                          ]),
+                          SizedBox(height: 8.h),
+                          Text(description, style: TextStyle(fontSize: 14.sp, color: AppColors.textSecondary, height: 1.6)),
+                        ],
+
+                        // ── INSTRUCTIONS ───────────────────────────────────
+                        SizedBox(height: 28.h),
+                        Row(children: [
+                          Icon(Icons.menu_book_outlined, color: AppColors.primary, size: 18.r),
+                          SizedBox(width: 8.w),
+                          Text('How to prepare', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                        ]),
+                        SizedBox(height: 16.h),
+                        if (steps.isEmpty)
+                          Container(
+                            padding: EdgeInsets.all(16.r),
+                            decoration: BoxDecoration(color: AppColors.borderLight, borderRadius: BorderRadius.circular(12.r)),
+                            child: Row(children: [
+                              Icon(Icons.info_outline, color: AppColors.textMuted, size: 20.r),
+                              SizedBox(width: 12.w),
+                              Expanded(child: Text('Step-by-step instructions not available yet. Try cooking this recipe after re-syncing.',
+                                style: TextStyle(fontSize: 13.sp, color: AppColors.textSecondary, height: 1.5))),
+                            ]),
+                          )
+                        else
+                          ...steps.asMap().entries.map((entry) {
+                            final stepText = entry.value['step']?.toString() ?? '';
+                            final stepNum = entry.value['number'] ?? (entry.key + 1);
+                            return Padding(
+                              padding: EdgeInsets.only(bottom: 16.h),
+                              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                Container(
+                                  width: 32.r, height: 32.r,
+                                  decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                                  child: Center(child: Text('$stepNum',
+                                    style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: AppColors.textWhite))),
+                                ),
+                                SizedBox(width: 12.w),
+                                Expanded(child: Padding(
+                                  padding: EdgeInsets.only(top: 6.h),
+                                  child: Text(stepText, style: TextStyle(fontSize: 14.sp, color: AppColors.textPrimary, height: 1.6)),
+                                )),
+                              ]),
+                            );
+                          }),
                       ],
                     ),
                   ),
@@ -768,6 +840,50 @@ class _SubstitutesSection extends StatelessWidget {
           }),
         ],
       ),
+    );
+  }
+}
+
+class _NutritionTile extends StatelessWidget {
+  const _NutritionTile({required this.label, required this.value, required this.unit, required this.color});
+  final String label, value, unit;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 6.w),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Column(children: [
+          Text(value, style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w800, color: color)),
+          Text(unit, style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.w600, color: color)),
+          SizedBox(height: 2.h),
+          Text(label, style: TextStyle(fontSize: 10.sp, color: AppColors.textMuted)),
+        ]),
+      ),
+    );
+  }
+}
+
+class _DietTag extends StatelessWidget {
+  const _DietTag({required this.label, required this.color});
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6.r),
+      ),
+      child: Text(label, style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.w700, color: color, letterSpacing: 0.3)),
     );
   }
 }

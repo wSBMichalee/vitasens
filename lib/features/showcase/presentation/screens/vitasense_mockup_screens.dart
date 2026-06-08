@@ -487,72 +487,6 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
   }
 }
 
-/// FAB z visual feedbackiem (animowany scale przy press)
-class _AddMealFab extends StatefulWidget {
-  const _AddMealFab({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  State<_AddMealFab> createState() => _AddMealFabState();
-}
-
-class _AddMealFabState extends State<_AddMealFab>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  late final Animation<double> _scale;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 150),
-      lowerBound: 0,
-      upperBound: 0.08,
-    );
-    _scale = Tween<double>(begin: 1, end: 0.92).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => _ctrl.forward(),
-      onTapUp: (_) {
-        _ctrl.reverse();
-        widget.onPressed();
-      },
-      onTapCancel: () => _ctrl.reverse(),
-      child: ScaleTransition(
-        scale: _scale,
-        child: Container(
-          width: 64.r,
-          height: 64.r,
-          decoration: BoxDecoration(
-            color: AppColors.backgroundDark,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-                color: AppColors.backgroundDark.withValues(alpha: 0.40),
-              ),
-            ],
-          ),
-          child: Icon(Icons.add, color: AppColors.textWhite, size: 32.r),
-        ),
-      ),
-    );
-  }
-}
 
 class ProblemFatigueScreen extends StatelessWidget {
   const ProblemFatigueScreen({super.key});
@@ -1056,7 +990,7 @@ class _ProgressCard extends StatelessWidget {
                   ),
                   SizedBox(height: 4.h),
                   Text(
-                    'z $kcalGoal kcal celu',
+                    'of $kcalGoal kcal goal',
                     style: TextStyle(
                       fontSize: 14.sp,
                       height: 1.5,

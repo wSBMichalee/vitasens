@@ -16,6 +16,9 @@ export interface Recipe {
   servings: number;
   imageUrl?: string;
   createdAt: string;
+  cuisineType?: string;
+  mealType?: string;
+  dietTags?: string[];
 }
 
 export interface RecipeIngredient {
@@ -37,6 +40,9 @@ export interface UpsertRecipeDTO {
   servings: number;
   imageUrl?: string;
   description?: string;
+  cuisineType?: string;
+  mealType?: string;
+  dietTags?: string[];
 }
 
 export class RecipeRepository {
@@ -58,7 +64,10 @@ export class RecipeRepository {
         cook_time_minutes: data.cookTimeMinutes,
         servings: data.servings,
         image_url: data.imageUrl,
-        description: data.description
+        description: data.description,
+        cuisine_type: data.cuisineType ?? 'other',
+        meal_type: data.mealType ?? 'dinner',
+        diet_tags: data.dietTags ?? []
       }, {
         onConflict: 'source,source_id'
       })
@@ -160,7 +169,10 @@ export class RecipeRepository {
       cookTimeMinutes: row.cook_time_minutes,
       servings: row.servings,
       imageUrl: row.image_url,
-      createdAt: row.created_at
+      createdAt: row.created_at,
+      cuisineType: row.cuisine_type ?? 'other',
+      mealType: row.meal_type ?? 'dinner',
+      dietTags: row.diet_tags ?? []
     };
   }
 }

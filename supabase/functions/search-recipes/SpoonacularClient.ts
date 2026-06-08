@@ -24,6 +24,9 @@ export interface SpoonacularRecipeDetail {
   image: string;
   readyInMinutes: number;
   servings: number;
+  cuisines?: string[];
+  dishTypes?: string[];
+  diets?: string[];
   nutrition?: {
     nutrients: Array<{
       name: string;

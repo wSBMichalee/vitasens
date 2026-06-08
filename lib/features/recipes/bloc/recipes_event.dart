@@ -16,13 +16,40 @@ class LoadRecipes extends RecipesEvent {
   List<Object?> get props => [pantryIngredients];
 }
 
-class FilterRecipes extends RecipesEvent {
-  final String filter; // quick/high_protein/low_sugar
+class SetRecipeCategory extends RecipesEvent {
+  const SetRecipeCategory(this.category);
+  final String category;
+  @override
+  List<Object?> get props => [category];
+}
 
-  const FilterRecipes(this.filter);
-
+class ToggleRecipeFilter extends RecipesEvent {
+  const ToggleRecipeFilter(this.filter);
+  final String filter;
   @override
   List<Object?> get props => [filter];
+}
+
+class ClearRecipeFilters extends RecipesEvent {
+  const ClearRecipeFilters();
+}
+
+class ApplyRangeFilters extends RecipesEvent {
+  const ApplyRangeFilters({
+    required this.minCookTime,
+    required this.maxCookTime,
+    required this.minCalories,
+    required this.maxCalories,
+    required this.minIngredients,
+  });
+  final int minCookTime;
+  final int maxCookTime;
+  final int minCalories;
+  final int maxCalories;
+  final int minIngredients;
+
+  @override
+  List<Object?> get props => [minCookTime, maxCookTime, minCalories, maxCalories, minIngredients];
 }
 
 class SelectRecipe extends RecipesEvent {

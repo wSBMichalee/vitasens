@@ -459,10 +459,12 @@ class ScaffoldWithBottomNav extends StatelessWidget {
       body: child,
       floatingActionButton: currentIndex == 0
           ? FloatingActionButton(
+              heroTag: 'add_meal_fab',
               onPressed: () => context.go(AppRoutes.aiMeals),
-              backgroundColor: AppColors.textPrimary,
+              backgroundColor: AppColors.primary,
               shape: const CircleBorder(),
-              child: const Icon(Icons.add, color: AppColors.textWhite, size: 28),
+              elevation: 4,
+              child: const Icon(Icons.add, color: Colors.white, size: 28),
             )
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.endContained,

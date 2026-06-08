@@ -44,6 +44,46 @@ async function saveRecipesToCache(cacheKey: string, result: unknown): Promise<vo
     .upsert({ cache_key: cacheKey, result }, { onConflict: 'cache_key' });
 }
 
+// Pomocnicze funkcje mapowania
+const mapCuisine = (cuisines: string[]): string => {
+  if (!cuisines || cuisines.length === 0) return 'other';
+  const c = cuisines[0].toLowerCase();
+  if (c.includes('italian')) return 'italian';
+  if (c.includes('asian') || c.includes('chinese') || c.includes('japanese') || c.includes('korean') || c.includes('thai')) return 'asian';
+  if (c.includes('mexican') || c.includes('latin')) return 'mexican';
+  if (c.includes('mediterranean') || c.includes('greek')) return 'mediterranean';
+  if (c.includes('indian')) return 'indian';
+  if (c.includes('american')) return 'american';
+  if (c.includes('french')) return 'french';
+  return cuisines[0].toLowerCase();
+};
+
+const mapMealType = (dishTypes: string[]): string => {
+  if (!dishTypes || dishTypes.length === 0) return 'dinner';
+  const types = dishTypes.map(t => t.toLowerCase());
+  if (types.some(t => t.includes('breakfast') || t.includes('morning'))) return 'breakfast';
+  if (types.some(t => t.includes('lunch') || t.includes('salad') || t.includes('soup'))) return 'lunch';
+  if (types.some(t => t.includes('snack') || t.includes('appetizer') || t.includes('fingerfood'))) return 'snack';
+  if (types.some(t => t.includes('dessert') || t.includes('sweet') || t.includes('cake') || t.includes('cookie'))) return 'dessert';
+  return 'dinner';
+};
+
+const mapDietTags = (diets: string[], proteinG: number, carbsG: number, fatG: number, calories: number): string[] => {
+  const tags: string[] = [];
+  if (diets) {
+    if (diets.some(d => d.toLowerCase().includes('vegetarian'))) tags.push('vegetarian');
+    if (diets.some(d => d.toLowerCase().includes('vegan'))) tags.push('vegan');
+    if (diets.some(d => d.toLowerCase().includes('gluten'))) tags.push('gluten-free');
+    if (diets.some(d => d.toLowerCase().includes('ketogenic') || d.toLowerCase().includes('keto'))) tags.push('keto');
+    if (diets.some(d => d.toLowerCase().includes('paleo'))) tags.push('paleo');
+  }
+  // Auto-tag na podstawie makr
+  if (proteinG >= 25) tags.push('high-protein');
+  if (carbsG <= 20) tags.push('low-carb');
+  if (calories <= 400) tags.push('low-calorie');
+  return [...new Set(tags)];
+};
+
 // ─── HANDLER ──────────────────────────────────────────────────────────────────
 
 serve(async (req: Request) => {
@@ -94,6 +134,9 @@ serve(async (req: Request) => {
               fatG: Math.round(nut('Fat') * 10) / 10,
               calories: Math.round(nut('Calories')),
               cookTimeMinutes: d.readyInMinutes, servings: d.servings, imageUrl: d.image,
+              cuisineType: mapCuisine(d.cuisines ?? []),
+              mealType: mapMealType(d.dishTypes ?? []),
+              dietTags: mapDietTags(d.diets ?? [], Math.round(nut('Protein') * 10) / 10, Math.round(nut('Carbohydrates') * 10) / 10, Math.round(nut('Fat') * 10) / 10, Math.round(nut('Calories'))),
             };
           });
 

@@ -61,77 +61,42 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
               builder: (context, state) {
                 final isLoading = state is RecipesLoading;
                 return AppHeader(
-                  title: 'AI Posiłki',
-                  subtitle: 'Na podstawie twojej spiżarni',
+                  title: 'AI Meals',
+                  subtitle: 'Based on your pantry',
                   variant: AppHeaderVariant.main,
                   actions: [
                     if (isLoading)
-                      SizedBox(
-                        width: 20.r,
-                        height: 20.r,
-                        child: const CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.primary,
-                        ),
-                      ),
+                      SizedBox(width: 20.r, height: 20.r, child: const CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary)),
+                    BlocBuilder<RecipesBloc, RecipesState>(
+                      builder: (context, state) {
+                        final activeFilters = state is RecipesLoaded ? state.activeFilters : <String>{};
+                        final selectedCategory = state is RecipesLoaded ? state.selectedCategory : 'ALL';
+                        final hasActive = activeFilters.isNotEmpty || selectedCategory != 'ALL';
+                        return GestureDetector(
+                          onTap: () => showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (_) => BlocProvider.value(
+                              value: context.read<RecipesBloc>(),
+                              child: const _FilterBottomSheet(),
+                            ),
+                          ),
+                          child: Container(
+                            width: 40.r, height: 40.r,
+                            decoration: BoxDecoration(
+                              color: hasActive ? AppColors.primary : AppColors.borderLight,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.tune_rounded, color: hasActive ? AppColors.textWhite : AppColors.textPrimary, size: 20.r),
+                          ),
+                        );
+                      },
+                    ),
                   ],
                 );
               },
             ),
-
-            SizedBox(
-              height: 48.h,
-              child: BlocBuilder<RecipesBloc, RecipesState>(
-                builder: (context, state) {
-                  final selectedFilter =
-                      state is RecipesLoaded ? state.selectedFilter : 'ALL';
-                  return ListView(
-                    scrollDirection: Axis.horizontal,
-                    padding: EdgeInsets.symmetric(horizontal: 20.w),
-                    children: ['ALL', 'QUICK ✓', 'HIGH PROTEIN 🏃', 'LOW SUGAR 🅰']
-                        .map((f) {
-                      final selected = selectedFilter == f;
-                      return Padding(
-                        padding: EdgeInsets.only(right: 8.w),
-                        child: GestureDetector(
-                          onTap: () =>
-                              context.read<RecipesBloc>().add(FilterRecipes(f)),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 16.w, vertical: 12.h),
-                            decoration: BoxDecoration(
-                              color: selected
-                                  ? AppColors.primary
-                                  : AppColors.backgroundWhite,
-                              border: Border.all(
-                                color: selected
-                                    ? AppColors.primary
-                                    : AppColors.border,
-                              ),
-                              borderRadius: BorderRadius.circular(20.r),
-                            ),
-                            child: Text(
-                              f,
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w600,
-                                color: selected
-                                    ? AppColors.textWhite
-                                    : AppColors.textSecondary,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  );
-                },
-              ),
-            ),
-
-            SizedBox(height: 12.h),
-
             Expanded(
               child: BlocBuilder<RecipesBloc, RecipesState>(
                 builder: (context, state) {
@@ -242,7 +207,7 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
                                 child: FilledButton(
                                   onPressed: () => context
                                       .read<RecipesBloc>()
-                                      .add(const FilterRecipes('ALL')),
+                                      .add(const ClearRecipeFilters()),
                                   style: FilledButton.styleFrom(
                                     backgroundColor: AppColors.primary,
                                     shape: RoundedRectangleBorder(
@@ -265,8 +230,7 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
                       );
                     }
                     return ListView.builder(
-                      padding:
-                          EdgeInsets.fromLTRB(20.w, 0, 20.w, 24.h),
+                      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 24.h),
                       itemCount: state.recipes.length,
                       itemBuilder: (context, index) {
                         return _RecipeCard(recipe: state.recipes[index]);
@@ -296,6 +260,11 @@ class _RecipeCard extends StatelessWidget {
         recipe['cookTimeMinutes'] ?? recipe['readyInMinutes'] ?? 0;
     final imageUrl = recipe['image']?.toString();
 
+    final calories = recipe['calories'] ?? recipe['nutrition']?['calories'] ?? 0;
+    final protein = recipe['protein'] ?? recipe['nutrition']?['protein'] ?? '0g';
+    final carbs = recipe['carbs'] ?? recipe['nutrition']?['carbs'] ?? '0g';
+    final fat = recipe['fat'] ?? recipe['nutrition']?['fat'] ?? '0g';
+
     final usedIngredients = <Map<String, dynamic>>[];
     final missedIngredients = <Map<String, dynamic>>[];
 
@@ -313,167 +282,471 @@ class _RecipeCard extends StatelessWidget {
     return GestureDetector(
       onTap: () => context.push(AppRoutes.recipeDetails, extra: recipe),
       child: Container(
-        margin: EdgeInsets.only(bottom: 16.h),
+        margin: EdgeInsets.only(bottom: 12.h),
         decoration: BoxDecoration(
           color: AppColors.backgroundWhite,
           borderRadius: BorderRadius.circular(16.r),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.textPrimary.withValues(alpha: 0.04),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
+          boxShadow: [BoxShadow(color: AppColors.textPrimary.withValues(alpha: 0.04), blurRadius: 16, offset: const Offset(0, 6))],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Zdjęcie po lewej ──
+            ClipRRect(
+              borderRadius: BorderRadius.horizontal(left: Radius.circular(16.r)),
+              child: imageUrl != null && imageUrl.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: imageUrl,
+                      width: 110.r,
+                      height: 110.r,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) => Container(width: 110.r, height: 110.r, color: AppColors.borderLight),
+                      errorWidget: (_, __, ___) => Container(width: 110.r, height: 110.r, color: AppColors.borderLight, child: Icon(Icons.image_not_supported_outlined, color: AppColors.textMuted, size: 24.r)),
+                    )
+                  : Container(width: 110.r, height: 110.r, color: AppColors.borderLight),
+            ),
+            // ── Info po prawej ──
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.all(12.r),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary), maxLines: 2, overflow: TextOverflow.ellipsis),
+                    SizedBox(height: 4.h),
+                    Row(
+                      children: [
+                        Icon(Icons.timer_outlined, color: AppColors.textMuted, size: 12.r),
+                        SizedBox(width: 3.w),
+                        Text('$cookTime min', style: TextStyle(fontSize: 11.sp, color: AppColors.textMuted)),
+                        SizedBox(width: 8.w),
+                        Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 12.r),
+                        SizedBox(width: 3.w),
+                        Text('${usedIngredients.length} have', style: TextStyle(fontSize: 11.sp, color: AppColors.primary)),
+                        if (missedIngredients.isNotEmpty) ...[
+                          SizedBox(width: 8.w),
+                          Icon(Icons.cancel_outlined, color: AppColors.error, size: 12.r),
+                          SizedBox(width: 3.w),
+                          Text('${missedIngredients.length} miss', style: TextStyle(fontSize: 11.sp, color: AppColors.error)),
+                        ],
+                      ],
+                    ),
+                    SizedBox(height: 6.h),
+                    Wrap(
+                      spacing: 4.w,
+                      runSpacing: 4.h,
+                      children: [
+                        _NutriBadge(label: '$calories kcal', color: AppColors.primary),
+                        _NutriBadge(label: 'P: $protein', color: AppColors.proteinColor),
+                        _NutriBadge(label: 'C: $carbs', color: AppColors.carbsColor),
+                        _NutriBadge(label: 'F: $fat', color: AppColors.fatColor),
+                      ],
+                    ),
+                    if (missedIngredients.isNotEmpty) ...[
+                      SizedBox(height: 6.h),
+                      Wrap(
+                        spacing: 4.w,
+                        runSpacing: 4.h,
+                        children: missedIngredients.take(2).map((ing) {
+                          final name = ing['name']?.toString() ?? '';
+                          return GestureDetector(
+                            onTap: () {
+                              context.read<ShoppingBloc>().add(AddShoppingItem(name, (ing['amount'] as num?)?.toDouble() ?? 1.0, ing['unit']?.toString() ?? 'piece'));
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('"$name" added to list ✓', style: TextStyle(color: AppColors.textWhite, fontSize: 13.sp)), backgroundColor: AppColors.primary, duration: const Duration(seconds: 2)));
+                            },
+                            child: Container(
+                              padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
+                              decoration: BoxDecoration(color: AppColors.error.withValues(alpha: 0.08), border: Border.all(color: AppColors.error.withValues(alpha: 0.3)), borderRadius: BorderRadius.circular(4.r)),
+                              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                Icon(Icons.cancel_outlined, color: AppColors.error, size: 10.r),
+                                SizedBox(width: 3.w),
+                                Text(name, style: TextStyle(fontSize: 10.sp, color: AppColors.error)),
+                              ]),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (imageUrl != null && imageUrl.isNotEmpty)
-              ClipRRect(
-                borderRadius:
-                    BorderRadius.vertical(top: Radius.circular(16.r)),
-                child: CachedNetworkImage(
-                  imageUrl: imageUrl,
-                  height: 160.h,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
-                    height: 160.h,
-                    color: AppColors.borderLight,
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    height: 160.h,
-                    color: AppColors.borderLight,
-                    child: Icon(Icons.image_not_supported_outlined,
-                        color: AppColors.textMuted, size: 32.r),
-                  ),
-                ),
-              ),
+      ),
+    );
+  }
+}
 
-            Padding(
-              padding: EdgeInsets.all(14.r),
+class _FilterBottomSheet extends StatefulWidget {
+  const _FilterBottomSheet();
+
+  @override
+  State<_FilterBottomSheet> createState() => _FilterBottomSheetState();
+}
+
+class _FilterBottomSheetState extends State<_FilterBottomSheet> {
+  RangeValues _cookTimeRange = const RangeValues(0, 120);
+  RangeValues _caloriesRange = const RangeValues(0, 1200);
+  int _minIngredients = 0; // 0 = any, 1 = 1+, 3 = 3+, 5 = 5+
+
+  static const _categories = ['ALL', 'BREAKFAST', 'LUNCH', 'DINNER', 'SNACK', 'DESSERT'];
+  static const _quickFilters = [
+    ('QUICK', 'Under 30 min'),
+    ('HIGH PROTEIN', '25g+ protein'),
+    ('LOW CARB', 'Under 20g carbs'),
+    ('LOW CALORIE', 'Under 400 kcal'),
+    ('VEGETARIAN', 'No meat'),
+    ('VEGAN', 'Plant-based'),
+    ('KETO', 'Very low carb'),
+    ('GLUTEN FREE', 'No gluten'),
+  ];
+  static const _cuisines = [
+    ('ITALIAN', '🇮🇹'),
+    ('ASIAN', '🥢'),
+    ('MEXICAN', '🌮'),
+    ('MEDITERRANEAN', '🫒'),
+    ('INDIAN', '🍛'),
+    ('AMERICAN', '🍔'),
+    ('FRENCH', '🥐'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<RecipesBloc, RecipesState>(
+      builder: (context, state) {
+        final selectedCategory = state is RecipesLoaded ? state.selectedCategory : 'ALL';
+        final activeFilters = state is RecipesLoaded ? state.activeFilters : <String>{};
+        final hasAny = activeFilters.isNotEmpty || selectedCategory != 'ALL';
+
+        return SafeArea(
+          top: false,
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.backgroundWhite,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+            ),
+            padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 24.h),
+            child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
+              children: [
+                // Handle
+                Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                    child: Container(width: 40.w, height: 4.h, decoration: BoxDecoration(color: AppColors.borderMedium, borderRadius: BorderRadius.circular(2.r))),
                   ),
-                  SizedBox(height: 4.h),
-                  Row(
-                    children: [
-                      Icon(Icons.timer_outlined,
-                          color: AppColors.textSecondary, size: 14.r),
-                      SizedBox(width: 4.w),
-                      Text(
-                        '$cookTime min',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: AppColors.textSecondary,
-                        ),
+                ),
+                // Header
+                Row(
+                  children: [
+                    Expanded(child: Text('Filters', style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary))),
+                    if (hasAny)
+                      GestureDetector(
+                        onTap: () => context.read<RecipesBloc>().add(const ClearRecipeFilters()),
+                        child: Text('Clear all', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: AppColors.primary)),
                       ),
-                      SizedBox(width: 12.w),
-                      Icon(Icons.check_circle_rounded,
-                          color: AppColors.primary, size: 14.r),
-                      SizedBox(width: 4.w),
-                      Text(
-                        '${usedIngredients.length} have',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      Icon(Icons.cancel_outlined,
-                          color: AppColors.error, size: 14.r),
-                      SizedBox(width: 4.w),
-                      Text(
-                        '${missedIngredients.length} missing',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: AppColors.error,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  if (missedIngredients.isNotEmpty) ...[
-                    SizedBox(height: 10.h),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: missedIngredients.map((ing) {
-                        final name = ing['name']?.toString() ?? '';
-                        return GestureDetector(
-                          onTap: () {
-                            context.read<ShoppingBloc>().add(
-                                  AddShoppingItem(
-                                    name,
-                                    (ing['amount'] as num?)?.toDouble() ?? 1.0,
-                                    ing['unit']?.toString() ?? 'piece',
-                                  ),
-                                );
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Added "$name" to shopping list ✓',
-                                  style: TextStyle(
-                                    color: AppColors.textWhite,
-                                    fontSize: 13.sp,
-                                  ),
-                                ),
-                                backgroundColor: AppColors.primary,
-                                duration: const Duration(seconds: 2),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 8.w, vertical: 4.h),
-                            decoration: BoxDecoration(
-                              color: AppColors.error.withValues(alpha: 0.08),
-                              border: Border.all(
-                                  color:
-                                      AppColors.error.withValues(alpha: 0.3)),
-                              borderRadius: BorderRadius.circular(6.r),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.cancel_outlined,
-                                    color: AppColors.error, size: 12.r),
-                                SizedBox(width: 4.w),
-                                Text(
-                                  name,
-                                  style: TextStyle(
-                                    fontSize: 11.sp,
-                                    color: AppColors.error,
-                                  ),
-                                ),
-                                SizedBox(width: 4.w),
-                                Text(
-                                  '+ List',
-                                  style: TextStyle(
-                                    fontSize: 10.sp,
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
                   ],
-                ],
-              ),
+                ),
+                SizedBox(height: 24.h),
+
+                // ── Meal Type ──
+                Row(children: [
+                  Icon(Icons.restaurant_menu_outlined, color: AppColors.primary, size: 16.r),
+                  SizedBox(width: 6.w),
+                  Text('Meal Type', style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w700, color: AppColors.textMuted, letterSpacing: 0.8)),
+                ]),
+                SizedBox(height: 12.h),
+                Wrap(
+                  spacing: 8.w,
+                  runSpacing: 8.h,
+                  children: _categories.map((cat) {
+                    final selected = selectedCategory == cat;
+                    return GestureDetector(
+                      onTap: () => context.read<RecipesBloc>().add(SetRecipeCategory(cat)),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                        decoration: BoxDecoration(
+                          color: selected ? AppColors.primary : AppColors.backgroundWhite,
+                          border: Border.all(color: selected ? AppColors.primary : AppColors.border),
+                          borderRadius: BorderRadius.circular(20.r),
+                        ),
+                        child: Text(cat, style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600, color: selected ? AppColors.textWhite : AppColors.textSecondary)),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                SizedBox(height: 24.h),
+
+                // ── Diet & Nutrition ──
+                Row(children: [
+                  Icon(Icons.monitor_heart_outlined, color: AppColors.primary, size: 16.r),
+                  SizedBox(width: 6.w),
+                  Text('Diet & Nutrition', style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w700, color: AppColors.textMuted, letterSpacing: 0.8)),
+                ]),
+                SizedBox(height: 12.h),
+                Wrap(
+                  spacing: 8.w,
+                  runSpacing: 8.h,
+                  children: _quickFilters.map((f) {
+                    final active = activeFilters.contains(f.$1);
+                    return GestureDetector(
+                      onTap: () => context.read<RecipesBloc>().add(ToggleRecipeFilter(f.$1)),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                        decoration: BoxDecoration(
+                          color: active ? AppColors.primaryLight : AppColors.backgroundWhite,
+                          border: Border.all(color: active ? AppColors.primary : AppColors.border),
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(f.$1, style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w700, color: active ? AppColors.primary : AppColors.textPrimary)),
+                            Text(f.$2, style: TextStyle(fontSize: 10.sp, color: active ? AppColors.primary : AppColors.textMuted)),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                SizedBox(height: 24.h),
+
+                // ── Cook Time ──
+                Row(children: [
+                  Icon(Icons.timer_outlined, color: AppColors.primary, size: 16.r),
+                  SizedBox(width: 6.w),
+                  Text('Cook Time', style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w700, color: AppColors.textMuted, letterSpacing: 0.8)),
+                ]),
+                SizedBox(height: 4.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('${_cookTimeRange.start.round()} min', style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary)),
+                    Text('${_cookTimeRange.end.round() == 120 ? '120+' : _cookTimeRange.end.round().toString()} min', style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary)),
+                  ],
+                ),
+                SliderTheme(
+                  data: SliderThemeData(
+                    activeTrackColor: AppColors.primary,
+                    inactiveTrackColor: AppColors.borderLight,
+                    thumbColor: AppColors.primary,
+                    overlayColor: AppColors.primary.withValues(alpha: 0.1),
+                    trackHeight: 4,
+                    rangeThumbShape: const RoundRangeSliderThumbShape(enabledThumbRadius: 10),
+                  ),
+                  child: RangeSlider(
+                    values: _cookTimeRange,
+                    min: 0,
+                    max: 120,
+                    divisions: 12,
+                    onChanged: (v) => setState(() => _cookTimeRange = v),
+                  ),
+                ),
+                SizedBox(height: 20.h),
+
+                // ── Calories ──
+                Row(children: [
+                  Icon(Icons.local_fire_department_outlined, color: AppColors.primary, size: 16.r),
+                  SizedBox(width: 6.w),
+                  Text('Calories', style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w700, color: AppColors.textMuted, letterSpacing: 0.8)),
+                ]),
+                SizedBox(height: 4.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('${_caloriesRange.start.round()} kcal', style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary)),
+                    Text('${_caloriesRange.end.round() == 1200 ? '1200+' : _caloriesRange.end.round().toString()} kcal', style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary)),
+                  ],
+                ),
+                SliderTheme(
+                  data: SliderThemeData(
+                    activeTrackColor: AppColors.primary,
+                    inactiveTrackColor: AppColors.borderLight,
+                    thumbColor: AppColors.primary,
+                    overlayColor: AppColors.primary.withValues(alpha: 0.1),
+                    trackHeight: 4,
+                    rangeThumbShape: const RoundRangeSliderThumbShape(enabledThumbRadius: 10),
+                  ),
+                  child: RangeSlider(
+                    values: _caloriesRange,
+                    min: 0,
+                    max: 1200,
+                    divisions: 12,
+                    onChanged: (v) => setState(() => _caloriesRange = v),
+                  ),
+                ),
+                SizedBox(height: 20.h),
+
+                // ── Cuisine ──
+                Row(children: [
+                  Icon(Icons.public_outlined, color: AppColors.primary, size: 16.r),
+                  SizedBox(width: 6.w),
+                  Text('Cuisine', style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w700, color: AppColors.textMuted, letterSpacing: 0.8)),
+                ]),
+                SizedBox(height: 12.h),
+                Wrap(
+                  spacing: 8.w,
+                  runSpacing: 8.h,
+                  children: _cuisines.map((c) {
+                    final active = activeFilters.contains(c.$1);
+                    return GestureDetector(
+                      onTap: () => context.read<RecipesBloc>().add(ToggleRecipeFilter(c.$1)),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                        decoration: BoxDecoration(
+                          color: active ? AppColors.secondaryLight : AppColors.backgroundWhite,
+                          border: Border.all(color: active ? AppColors.secondary : AppColors.border),
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(c.$2, style: TextStyle(fontSize: 16.sp)),
+                            SizedBox(width: 6.w),
+                            Text(c.$1, style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600, color: active ? AppColors.secondary : AppColors.textSecondary)),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                SizedBox(height: 20.h),
+
+                // ── Spice Level ──
+                Row(children: [
+                  Icon(Icons.whatshot_outlined, color: AppColors.warning, size: 16.r),
+                  SizedBox(width: 6.w),
+                  Text('Spice Level', style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w700, color: AppColors.textMuted, letterSpacing: 0.8)),
+                ]),
+                SizedBox(height: 12.h),
+                Wrap(
+                  spacing: 8.w,
+                  runSpacing: 8.h,
+                  children: [
+                    ('MILD', 'mild', '🟢'),
+                    ('MEDIUM', 'medium', '🟡'),
+                    ('HOT', 'hot', '🔴'),
+                    ('VERY HOT', 'very-hot', '🌶'),
+                  ].map((s) {
+                    final active = activeFilters.contains(s.$2);
+                    return GestureDetector(
+                      onTap: () => context.read<RecipesBloc>().add(ToggleRecipeFilter(s.$2)),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                        decoration: BoxDecoration(
+                          color: active ? AppColors.warningLight : AppColors.backgroundWhite,
+                          border: Border.all(color: active ? AppColors.warning : AppColors.border),
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(s.$3, style: TextStyle(fontSize: 14.sp)),
+                            SizedBox(width: 6.w),
+                            Text(s.$1, style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600, color: active ? AppColors.warning : AppColors.textSecondary)),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                SizedBox(height: 20.h),
+
+                // ── Ingredients Available ──
+                Row(children: [
+                  Icon(Icons.kitchen_outlined, color: AppColors.primary, size: 16.r),
+                  SizedBox(width: 6.w),
+                  Text('Ingredients Available', style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w700, color: AppColors.textMuted, letterSpacing: 0.8)),
+                ]),
+                SizedBox(height: 12.h),
+                Wrap(
+                  spacing: 8.w,
+                  runSpacing: 8.h,
+                  children: [
+                    ('Any', 0),
+                    ('1+ have', 1),
+                    ('3+ have', 3),
+                    ('5+ have', 5),
+                  ].map((opt) {
+                    final selected = _minIngredients == opt.$2;
+                    return GestureDetector(
+                      onTap: () => setState(() => _minIngredients = opt.$2),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                        decoration: BoxDecoration(
+                          color: selected ? AppColors.primaryLight : AppColors.backgroundWhite,
+                          border: Border.all(color: selected ? AppColors.primary : AppColors.border),
+                          borderRadius: BorderRadius.circular(20.r),
+                        ),
+                        child: Text(opt.$1, style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600, color: selected ? AppColors.primary : AppColors.textSecondary)),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                SizedBox(height: 32.h),
+
+                // ── Apply button ──
+                SizedBox(
+                  width: double.infinity,
+                  height: 56.h,
+                  child: FilledButton(
+                    onPressed: () {
+                      context.read<RecipesBloc>().add(ApplyRangeFilters(
+                        minCookTime: _cookTimeRange.start.round(),
+                        maxCookTime: _cookTimeRange.end.round(),
+                        minCalories: _caloriesRange.start.round(),
+                        maxCalories: _caloriesRange.end.round(),
+                        minIngredients: _minIngredients,
+                      ));
+                      Navigator.pop(context);
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                    ),
+                    child: Text(
+                      hasAny || _cookTimeRange.start > 0 || _cookTimeRange.end < 120 || _caloriesRange.start > 0 || _caloriesRange.end < 1200 || _minIngredients > 0 ? 'Apply filters' : 'Close',
+                      style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700, color: AppColors.textWhite),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
+        ),
+        );
+      },
+    );
+  }
+}
+
+class _NutriBadge extends StatelessWidget {
+  const _NutriBadge({required this.label, required this.color});
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4.r),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10.sp,
+          fontWeight: FontWeight.w700,
+          color: color,
         ),
       ),
     );

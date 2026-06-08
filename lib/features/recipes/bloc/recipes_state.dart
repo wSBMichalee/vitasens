@@ -17,16 +17,50 @@ class RecipesLoading extends RecipesState {
 }
 
 class RecipesLoaded extends RecipesState {
-  final List<Map<String, dynamic>> recipes;
-  final String selectedFilter;
-
   const RecipesLoaded({
     required this.recipes,
-    required this.selectedFilter,
+    this.activeFilters = const {},
+    this.selectedCategory = 'ALL',
+    this.minCookTime = 0,
+    this.maxCookTime = 120,
+    this.minCalories = 0,
+    this.maxCalories = 1200,
+    this.minIngredients = 0,
   });
+  final List<Map<String, dynamic>> recipes;
+  final Set<String> activeFilters;
+  final String selectedCategory;
+  final int minCookTime;
+  final int maxCookTime;
+  final int minCalories;
+  final int maxCalories;
+  final int minIngredients;
+
+  RecipesLoaded copyWith({
+    List<Map<String, dynamic>>? recipes,
+    Set<String>? activeFilters,
+    String? selectedCategory,
+    int? minCookTime,
+    int? maxCookTime,
+    int? minCalories,
+    int? maxCalories,
+    int? minIngredients,
+  }) => RecipesLoaded(
+    recipes: recipes ?? this.recipes,
+    activeFilters: activeFilters ?? this.activeFilters,
+    selectedCategory: selectedCategory ?? this.selectedCategory,
+    minCookTime: minCookTime ?? this.minCookTime,
+    maxCookTime: maxCookTime ?? this.maxCookTime,
+    minCalories: minCalories ?? this.minCalories,
+    maxCalories: maxCalories ?? this.maxCalories,
+    minIngredients: minIngredients ?? this.minIngredients,
+  );
 
   @override
-  List<Object?> get props => [recipes, selectedFilter];
+  List<Object?> get props => [
+    recipes, activeFilters, selectedCategory,
+    minCookTime, maxCookTime, minCalories, maxCalories, minIngredients
+  ];
 }
 
 class RecipesError extends RecipesState {

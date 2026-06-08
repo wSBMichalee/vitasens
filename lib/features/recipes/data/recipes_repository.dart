@@ -135,4 +135,48 @@ class RecipesRepository {
       },
     );
   }
+  Future<void> addFavorite(String recipeId) async {
+    await _supabase.functions.invoke(
+      'search-recipes',
+      body: {'action': 'add_favorite', 'recipeId': recipeId},
+    );
+  }
+
+  Future<void> removeFavorite(String recipeId) async {
+    await _supabase.functions.invoke(
+      'search-recipes',
+      body: {'action': 'remove_favorite', 'recipeId': recipeId},
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getFavorites() async {
+    final response = await _supabase.functions.invoke(
+      'search-recipes',
+      body: {'action': 'favorites'},
+    );
+    final body = response.data as Map<String, dynamic>;
+    final data = body['data'] as List? ?? [];
+    return data.map((e) {
+      final r = Map<String, dynamic>.from(e as Map);
+      r['imageUrl'] = r['imageUrl'] ?? r['image_url'];
+      r['cookTimeMinutes'] = r['cookTimeMinutes'] ?? r['cook_time_minutes'];
+      r['proteinG'] = (r['proteinG'] ?? r['protein_g'] ?? 0).toDouble();
+      r['carbsG'] = (r['carbsG'] ?? r['carbs_g'] ?? 0).toDouble();
+      r['fatG'] = (r['fatG'] ?? r['fat_g'] ?? 0).toDouble();
+      r['calories'] = (r['calories'] ?? 0).toInt();
+      r['usedIngredients'] = [];
+      r['missedIngredients'] = [];
+      return r;
+    }).toList();
+  }
+
+  Future<bool> isFavorite(String recipeId) async {
+    final response = await _supabase.functions.invoke(
+      'search-recipes',
+      body: {'action': 'is_favorite', 'recipeId': recipeId},
+    );
+    final body = response.data as Map<String, dynamic>;
+    final data = body['data'] as Map<String, dynamic>;
+    return data['isFavorite'] as bool? ?? false;
+  }
 }

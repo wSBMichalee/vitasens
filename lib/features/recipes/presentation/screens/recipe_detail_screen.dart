@@ -29,13 +29,32 @@ class RecipeDetailScreen extends StatelessWidget {
   }
 }
 
-class _RecipeDetailView extends StatelessWidget {
+class _RecipeDetailView extends StatefulWidget {
   final Map<String, dynamic> recipe;
 
   const _RecipeDetailView({required this.recipe});
 
+  @override
+  State<_RecipeDetailView> createState() => _RecipeDetailViewState();
+}
+
+class _RecipeDetailViewState extends State<_RecipeDetailView> {
+  bool _isFavorite = false;
+  bool _checkingFavorite = true;
+
+  @override
+  void initState() {
+    super.initState();
+    final recipeId = widget.recipe['id']?.toString() ?? '';
+    if (recipeId.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<RecipesBloc>().add(CheckFavorite(recipeId));
+      });
+    }
+  }
+
   void _cookRecipe(BuildContext context) {
-    final recipeId = recipe['id']?.toString() ?? '';
+    final recipeId = widget.recipe['id']?.toString() ?? '';
     if (recipeId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Cannot cook this recipe — try re-loading it.', style: TextStyle(color: AppColors.textWhite, fontSize: 13.sp)),
@@ -48,6 +67,7 @@ class _RecipeDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final recipe = widget.recipe;
     final title = recipe['title'] ?? 'Unknown Recipe';
     final calories = recipe['calories'] ?? 0;
     final imageUrl = recipe['imageUrl']?.toString() ?? recipe['image']?.toString();
@@ -125,6 +145,25 @@ class _RecipeDetailView extends StatelessWidget {
               backgroundColor: AppColors.error,
             ),
           );
+        } else if (state is FavoriteChecked) {
+          if (state.recipeId == (widget.recipe['id']?.toString() ?? '')) {
+            setState(() {
+              _isFavorite = state.isFavorite;
+              _checkingFavorite = false;
+            });
+          }
+        } else if (state is FavoriteToggled) {
+          if (state.recipeId == (widget.recipe['id']?.toString() ?? '')) {
+            setState(() => _isFavorite = state.isFavorite);
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(
+                state.isFavorite ? 'Recipe saved! ✓' : 'Removed from saved',
+                style: TextStyle(color: AppColors.textWhite, fontSize: 13.sp),
+              ),
+              backgroundColor: state.isFavorite ? AppColors.primary : AppColors.textSecondary,
+              duration: const Duration(seconds: 2),
+            ));
+          }
         }
       },
       child: Scaffold(
@@ -168,23 +207,28 @@ class _RecipeDetailView extends StatelessWidget {
                   actions: [
                     Padding(
                       padding: EdgeInsets.only(right: 16.w),
-                      child: Container(
-                        width: 36.w,
-                        height: 36.h,
-                        decoration: BoxDecoration(
-                          color: AppColors.backgroundWhite.withValues(alpha: 0.9),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.textPrimary.withValues(alpha: 0.1),
-                              blurRadius: 8.r,
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          Icons.bookmark_border,
-                          color: AppColors.textPrimary,
-                          size: 20.r,
+                      child: GestureDetector(
+                        onTap: () {
+                          final recipeId = widget.recipe['id']?.toString() ?? '';
+                          if (recipeId.isEmpty) return;
+                          context.read<RecipesBloc>().add(
+                            ToggleFavorite(recipeId, currentlyFavorited: _isFavorite),
+                          );
+                        },
+                        child: Container(
+                          width: 36.w, height: 36.h,
+                          decoration: BoxDecoration(
+                            color: AppColors.backgroundWhite.withValues(alpha: 0.9),
+                            shape: BoxShape.circle,
+                            boxShadow: [BoxShadow(color: AppColors.textPrimary.withValues(alpha: 0.1), blurRadius: 8.r)],
+                          ),
+                          child: _checkingFavorite
+                              ? SizedBox(width: 16.r, height: 16.r, child: const CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary))
+                              : Icon(
+                                  _isFavorite ? Icons.bookmark_rounded : Icons.bookmark_border,
+                                  color: _isFavorite ? AppColors.primary : AppColors.textPrimary,
+                                  size: 20.r,
+                                ),
                         ),
                       ),
                     ),

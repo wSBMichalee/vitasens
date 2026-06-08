@@ -36,6 +36,7 @@ import 'package:vitasense/features/recipes/presentation/screens/create_recipe_sc
 import 'package:vitasense/features/macros/presentation/screens/progress_history_screen.dart';
 import 'package:vitasense/features/voice/presentation/screens/voice_log_screen.dart';
 import 'package:vitasense/features/showcase/presentation/screens/vitasense_mockup_screens.dart';
+import 'package:vitasense/features/recipes/presentation/screens/saved_recipes_screen.dart';
 
 // ─── STAŁE NAZWY TRAS ─────────────────────────────────────────────────────────
 class AppRoutes {
@@ -76,6 +77,7 @@ class AppRoutes {
   static const String privacyPolicy = '/privacy-policy';
   static const String termsOfService = '/terms-of-service';
   static const String deleteAccount = '/delete-account';
+  static const String savedRecipes = '/saved-recipes';
 }
 
 // ─── INSTANCJA ROUTERA ────────────────────────────────────────────────────────
@@ -344,6 +346,10 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.voiceLog,
       pageBuilder: (context, state) =>
           _slideUpPage(state: state, child: const VoiceLogScreen()),
+    ),
+    GoRoute(
+      path: AppRoutes.savedRecipes,
+      builder: (context, state) => const SavedRecipesScreen(),
     ),
   ],
 );

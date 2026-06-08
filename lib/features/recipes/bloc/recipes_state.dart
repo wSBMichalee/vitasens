@@ -101,3 +101,20 @@ class RecipeCreated extends RecipesState {
   @override
   List<Object?> get props => [recipe];
 }
+
+class FavoritesLoaded extends RecipesState {
+  const FavoritesLoaded(this.recipes);
+  final List<Map<String, dynamic>> recipes;
+}
+
+class FavoriteToggled extends RecipesState {
+  const FavoriteToggled({required this.recipeId, required this.isFavorite});
+  final String recipeId;
+  final bool isFavorite;
+}
+
+class FavoriteChecked extends RecipesState {
+  const FavoriteChecked({required this.recipeId, required this.isFavorite});
+  final String recipeId;
+  final bool isFavorite;
+}

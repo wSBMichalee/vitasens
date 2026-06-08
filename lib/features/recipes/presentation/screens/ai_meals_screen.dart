@@ -69,6 +69,18 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
                   actions: [
                     if (isLoading)
                       SizedBox(width: 20.r, height: 20.r, child: const CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary)),
+                    GestureDetector(
+                      onTap: () => context.push(AppRoutes.savedRecipes),
+                      child: Container(
+                        width: 40.r, height: 40.r,
+                        decoration: BoxDecoration(
+                          color: AppColors.textWhite.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.bookmark_border, color: AppColors.textWhite, size: 20.r),
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
                     BlocBuilder<RecipesBloc, RecipesState>(
                       builder: (context, state) {
                         final activeFilters = state is RecipesLoaded ? state.activeFilters : <String>{};
@@ -232,7 +244,7 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
                       );
                     }
                     return ListView.builder(
-                      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 24.h),
+                      padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 100.h),
                       itemCount: state.recipes.length,
                       itemBuilder: (context, index) {
                         return _RecipeCard(recipe: state.recipes[index]);
@@ -449,6 +461,15 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                         onTap: () => context.read<RecipesBloc>().add(const ClearRecipeFilters()),
                         child: Text('Clear all', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: AppColors.primary)),
                       ),
+                    SizedBox(width: 12.w),
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        width: 32.r, height: 32.r,
+                        decoration: BoxDecoration(color: AppColors.borderLight, shape: BoxShape.circle),
+                        child: Icon(Icons.close, color: AppColors.textPrimary, size: 18.r),
+                      ),
+                    ),
                   ],
                 ),
                 SizedBox(height: 24.h),

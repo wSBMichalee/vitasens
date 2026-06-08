@@ -20,6 +20,9 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
     on<PublishRecipe>(_onPublishRecipe);
     on<DeleteRecipe>(_onDeleteRecipe);
     on<LikeRecipe>(_onLikeRecipe);
+    on<ToggleFavorite>(_onToggleFavorite);
+    on<LoadFavorites>(_onLoadFavorites);
+    on<CheckFavorite>(_onCheckFavorite);
   }
 
   Future<void> _onLoadRecipes(
@@ -261,6 +264,41 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
       add(const LoadMyRecipes());
     } catch (e) {
       emit(RecipesError(_parseError(e)));
+    }
+  }
+
+  // ─── Favorites Handlers ────────────────────────────────────────────────────────
+
+  Future<void> _onToggleFavorite(ToggleFavorite event, Emitter<RecipesState> emit) async {
+    try {
+      if (event.currentlyFavorited) {
+        await repository.removeFavorite(event.recipeId);
+        emit(FavoriteToggled(recipeId: event.recipeId, isFavorite: false));
+      } else {
+        await repository.addFavorite(event.recipeId);
+        emit(FavoriteToggled(recipeId: event.recipeId, isFavorite: true));
+      }
+    } catch (e) {
+      emit(RecipesError(_parseError(e)));
+    }
+  }
+
+  Future<void> _onLoadFavorites(LoadFavorites event, Emitter<RecipesState> emit) async {
+    emit(const RecipesLoading());
+    try {
+      final recipes = await repository.getFavorites();
+      emit(FavoritesLoaded(recipes));
+    } catch (e) {
+      emit(RecipesError(_parseError(e)));
+    }
+  }
+
+  Future<void> _onCheckFavorite(CheckFavorite event, Emitter<RecipesState> emit) async {
+    try {
+      final isFav = await repository.isFavorite(event.recipeId);
+      emit(FavoriteChecked(recipeId: event.recipeId, isFavorite: isFav));
+    } catch (e) {
+      // silent fail
     }
   }
 

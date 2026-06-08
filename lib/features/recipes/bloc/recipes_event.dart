@@ -135,3 +135,24 @@ class LikeRecipe extends RecipesEvent {
   @override
   List<Object?> get props => [recipeId];
 }
+
+class ToggleFavorite extends RecipesEvent {
+  const ToggleFavorite(this.recipeId, {this.currentlyFavorited = false});
+  final String recipeId;
+  final bool currentlyFavorited;
+
+  @override
+  List<Object?> get props => [recipeId, currentlyFavorited];
+}
+
+class LoadFavorites extends RecipesEvent {
+  const LoadFavorites();
+}
+
+class CheckFavorite extends RecipesEvent {
+  const CheckFavorite(this.recipeId);
+  final String recipeId;
+
+  @override
+  List<Object?> get props => [recipeId];
+}

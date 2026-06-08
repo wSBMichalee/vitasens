@@ -9,6 +9,12 @@ class UserModel {
   final int? dailyProteinTarget;
   final int? dailyCarbsTarget;
   final int? dailyFatTarget;
+  final String? goalPace;
+  final double? weightKg;
+  final double? targetWeightKg;
+  final String? activityLevel;
+  final int? dailyWaterTarget;
+  final String? avatarUrl;
 
   const UserModel({
     required this.id,
@@ -21,6 +27,12 @@ class UserModel {
     this.dailyProteinTarget,
     this.dailyCarbsTarget,
     this.dailyFatTarget,
+    this.goalPace,
+    this.weightKg,
+    this.targetWeightKg,
+    this.activityLevel,
+    this.dailyWaterTarget,
+    this.avatarUrl,
   });
 
   static int? _toInt(dynamic val) {
@@ -42,6 +54,12 @@ class UserModel {
       dailyProteinTarget: _toInt(json['daily_protein_target'] ?? json['dailyProteinTarget']),
       dailyCarbsTarget: _toInt(json['daily_carbs_target'] ?? json['dailyCarbsTarget']),
       dailyFatTarget: _toInt(json['daily_fat_target'] ?? json['dailyFatTarget']),
+      goalPace: (json['goal_pace'] ?? json['goalPace']) as String?,
+      activityLevel: (json['activity_level'] ?? json['activityLevel']) as String?,
+      weightKg: (json['weight_kg'] ?? json['weightKg'])?.toDouble(),
+      targetWeightKg: (json['target_weight_kg'] ?? json['targetWeightKg'])?.toDouble(),
+      dailyWaterTarget: _toInt(json['daily_water_target'] ?? json['dailyWaterTarget']),
+      avatarUrl: (json['avatar_url'] ?? json['avatarUrl']) as String?,
     );
   }
 
@@ -57,6 +75,12 @@ class UserModel {
       'daily_protein_target': dailyProteinTarget,
       'daily_carbs_target': dailyCarbsTarget,
       'daily_fat_target': dailyFatTarget,
+      'goal_pace': goalPace,
+      'activity_level': activityLevel,
+      'weight_kg': weightKg,
+      'target_weight_kg': targetWeightKg,
+      'daily_water_target': dailyWaterTarget,
+      'avatar_url': avatarUrl,
     };
   }
 
@@ -71,6 +95,12 @@ class UserModel {
     int? dailyProteinTarget,
     int? dailyCarbsTarget,
     int? dailyFatTarget,
+    String? goalPace,
+    double? weightKg,
+    double? targetWeightKg,
+    String? activityLevel,
+    int? dailyWaterTarget,
+    String? avatarUrl,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -83,6 +113,12 @@ class UserModel {
       dailyProteinTarget: dailyProteinTarget ?? this.dailyProteinTarget,
       dailyCarbsTarget: dailyCarbsTarget ?? this.dailyCarbsTarget,
       dailyFatTarget: dailyFatTarget ?? this.dailyFatTarget,
+      goalPace: goalPace ?? this.goalPace,
+      weightKg: weightKg ?? this.weightKg,
+      targetWeightKg: targetWeightKg ?? this.targetWeightKg,
+      activityLevel: activityLevel ?? this.activityLevel,
+      dailyWaterTarget: dailyWaterTarget ?? this.dailyWaterTarget,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
     );
   }
 

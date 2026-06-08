@@ -47,7 +47,7 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
   }
 
   void _nextStep() {
-    if (_currentStep < 13) {
+    if (_currentStep < 14) {
       _pageController.animateToPage(
         _currentStep + 1,
         duration: const Duration(milliseconds: 300),
@@ -139,7 +139,7 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
                     child: TweenAnimationBuilder<double>(
                       tween: Tween(
                         begin: 0,
-                        end: (_currentStep + 1) / 14,
+                        end: (_currentStep + 1) / 15,
                       ),
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeOutCubic,
@@ -156,7 +156,7 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
                   ),
                   SizedBox(width: 16.w),
                   Text(
-                    '${_currentStep + 1}/14',
+                    '${_currentStep + 1}/15',
                     style: TextStyle(
                       fontSize: 13.sp,
                       color: AppColors.textSecondary,
@@ -261,6 +261,14 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
                     goal: _goal,
                     useKg: _useKg,
                     onChanged: (v) => setState(() => _targetWeight = v),
+                    onNext: _nextStep,
+                  ),
+                  _GoalProjectionStep(
+                    targetWeight: _targetWeight,
+                    currentWeight: _weight,
+                    pace: _pace,
+                    goal: _goal,
+                    useKg: _useKg,
                     onNext: _nextStep,
                   ),
                   _PreferencesStep(
@@ -1900,6 +1908,133 @@ class _CheckboxRow extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class _GoalProjectionStep extends StatelessWidget {
+  const _GoalProjectionStep({
+    required this.targetWeight,
+    required this.currentWeight,
+    required this.pace,
+    required this.goal,
+    required this.useKg,
+    required this.onNext,
+  });
+
+  final int targetWeight;
+  final int currentWeight;
+  final String? pace;
+  final String? goal;
+  final bool useKg;
+  final VoidCallback onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    final double weeklyRate = pace == 'slow' ? 0.25 : pace == 'fast' ? 0.75 : 0.5;
+    final int diff = (targetWeight - currentWeight).abs();
+    final bool alreadyThere = diff == 0 || goal == 'maintain';
+    final int weeksToGoal = alreadyThere ? 0 : (diff / weeklyRate).ceil();
+    final DateTime targetDate = DateTime.now().add(Duration(days: weeksToGoal * 7));
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    final String formattedDate = '${months[targetDate.month - 1]} ${targetDate.day}, ${targetDate.year}';
+    final String weeklyLabel = '${weeklyRate.toString().replaceAll(RegExp(r'\.?0+$'), '')} ${useKg ? 'kg' : 'lbs'} / week';
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            alreadyThere ? "You're already there! 🎉" : "You're on track! 🎯",
+            style: AppTextStyles.headingLarge,
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            'Based on your goals and pace',
+            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+          ),
+          SizedBox(height: 40.h),
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(28.r),
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight,
+              borderRadius: BorderRadius.circular(24.r),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.flag_rounded, color: AppColors.primary, size: 22.r),
+                    SizedBox(width: 8.w),
+                    Text(
+                      'Goal date',
+                      style: TextStyle(fontSize: 13.sp, color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16.h),
+                if (alreadyThere)
+                  Text(
+                    'Right now! 🏆',
+                    style: TextStyle(fontSize: 28.sp, fontWeight: FontWeight.w700, color: AppColors.primary),
+                  )
+                else ...[
+                  Text(
+                    formattedDate,
+                    style: TextStyle(fontSize: 28.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    'in $weeksToGoal weeks',
+                    style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600, color: AppColors.primary),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(20.r),
+            decoration: BoxDecoration(
+              color: AppColors.backgroundWhite,
+              borderRadius: BorderRadius.circular(16.r),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.textPrimary.withValues(alpha: 0.04),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.local_fire_department_rounded, color: AppColors.primary, size: 20.r),
+                    SizedBox(width: 8.w),
+                    Text(
+                      'Weekly target',
+                      style: TextStyle(fontSize: 13.sp, color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  alreadyThere ? 'Maintenance mode' : weeklyLabel,
+                  style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                ),
+              ],
+            ),
+          ),
+          const Spacer(),
+          _ContinueButton(onPressed: onNext),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.05, end: 0);
   }
 }
 

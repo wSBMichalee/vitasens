@@ -9,6 +9,7 @@ import 'package:vitasense/core/widgets/app_header.dart';
 import 'package:vitasense/features/subscription/bloc/subscription_bloc.dart';
 import 'package:vitasense/features/subscription/bloc/subscription_event.dart';
 import 'package:vitasense/features/subscription/bloc/subscription_state.dart';
+import 'package:vitasense/features/auth/data/auth_repository.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -55,7 +56,7 @@ class _SettingsView extends StatelessWidget {
             children: [
               // ── AppHeader: wariant nested (push navigation, back po lewej) ────
               AppHeader(
-                title: 'Ustawienia',
+                title: 'Settings',
                 variant: AppHeaderVariant.nested,
                 onBack: () => context.pop(),
               ),
@@ -324,12 +325,6 @@ class _AccountSettingsSection extends StatelessWidget {
       child: Column(
         children: [
           _ActionRow(
-            icon: Icons.person_outline,
-            label: 'Edit Profile',
-            onTap: () => context.push(AppRoutes.userOnboarding),
-          ),
-          const Divider(color: AppColors.border),
-          _ActionRow(
             icon: Icons.lock_outline,
             label: 'Change Password',
             onTap: () => _showComingSoon(context),
@@ -345,6 +340,15 @@ class _AccountSettingsSection extends StatelessWidget {
             icon: Icons.description_outlined,
             label: 'Terms of Service',
             onTap: () => _showComingSoon(context),
+          ),
+          const Divider(color: AppColors.border),
+          _ActionRow(
+            icon: Icons.logout_rounded,
+            label: 'Sign Out',
+            onTap: () async {
+              await AuthRepository().signOut();
+              if (context.mounted) context.go(AppRoutes.login);
+            },
           ),
           const Divider(color: AppColors.border),
           _ActionRow(

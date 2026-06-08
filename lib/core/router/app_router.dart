@@ -71,6 +71,11 @@ class AppRoutes {
   static const String extract = '/extract';
   static const String myRecipes = '/my-recipes';
   static const String voiceLog = '/voice-log';
+  static const String subscription = '/subscription';
+  static const String changePassword = '/change-password';
+  static const String privacyPolicy = '/privacy-policy';
+  static const String termsOfService = '/terms-of-service';
+  static const String deleteAccount = '/delete-account';
 }
 
 // ─── INSTANCJA ROUTERA ────────────────────────────────────────────────────────
@@ -452,6 +457,15 @@ class ScaffoldWithBottomNav extends StatelessWidget {
     return Scaffold(
       extendBody: true,
       body: child,
+      floatingActionButton: currentIndex == 0
+          ? FloatingActionButton(
+              onPressed: () => context.go(AppRoutes.aiMeals),
+              backgroundColor: AppColors.textPrimary,
+              shape: const CircleBorder(),
+              child: const Icon(Icons.add, color: AppColors.textWhite, size: 28),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endContained,
       bottomNavigationBar: ClipRect(
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),

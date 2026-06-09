@@ -43,23 +43,89 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
 
   static const List<String> _commonItems = [
     'Eggs', 'Chicken', 'Milk', 'Rice', 'Spinach',
+    'Tomatoes', 'Onion', 'Garlic', 'Pasta', 'Bread',
+    'Cheese', 'Yogurt', 'Butter', 'Olive Oil', 'Potatoes',
+    'Carrots', 'Broccoli', 'Salmon', 'Tuna', 'Beef',
+    'Apple', 'Banana', 'Orange', 'Lemon', 'Avocado',
+    'Mushrooms', 'Peppers', 'Cucumber', 'Lettuce', 'Oats',
+    'Greek Yogurt', 'Sweet Potato', 'Zucchini', 'Shrimp', 'Turkey',
   ];
 
   // Replace with CDN URLs before release
   static const Map<String, String> _ingredientImages = {
-    'eggs':    'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=300&q=80',
-    'chicken': 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=300&q=80',
-    'milk':    'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=300&q=80',
-    'rice':    'https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?w=300&q=80',
-    'spinach': 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=300&q=80',
+    'eggs':         'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=300&q=80',
+    'chicken':      'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=300&q=80',
+    'milk':         'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=300&q=80',
+    'rice':         'https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?w=300&q=80',
+    'spinach':      'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=300&q=80',
+    'tomatoes':     'https://images.unsplash.com/photo-1546094096-0df4bcaaa337?w=300&q=80',
+    'onion':        'https://images.unsplash.com/photo-1508747703725-719777637510?w=300&q=80',
+    'garlic':       'https://images.unsplash.com/photo-1615478503562-ec2d8aa0e24e?w=300&q=80',
+    'pasta':        'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=300&q=80',
+    'bread':        'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300&q=80',
+    'cheese':       'https://images.unsplash.com/photo-1552767059-ce182ead6c1b?w=300&q=80',
+    'yogurt':       'https://images.unsplash.com/photo-1571212515416-fca988282d23?w=300&q=80',
+    'butter':       'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=300&q=80',
+    'olive oil':    'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=300&q=80',
+    'potatoes':     'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=300&q=80',
+    'carrots':      'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=300&q=80',
+    'broccoli':     'https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=300&q=80',
+    'salmon':       'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=300&q=80',
+    'tuna':         'https://images.unsplash.com/photo-1565689157206-0fddef7589a2?w=300&q=80',
+    'beef':         'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&q=80',
+    'apple':        'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=300&q=80',
+    'banana':       'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=300&q=80',
+    'orange':       'https://images.unsplash.com/photo-1580052614034-c55d20bfee3b?w=300&q=80',
+    'lemon':        'https://images.unsplash.com/photo-1590502593747-42a996133562?w=300&q=80',
+    'avocado':      'https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?w=300&q=80',
+    'mushrooms':    'https://images.unsplash.com/photo-1552825897-bb8d9e0c0f80?w=300&q=80',
+    'peppers':      'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=300&q=80',
+    'cucumber':     'https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=300&q=80',
+    'lettuce':      'https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=300&q=80',
+    'oats':         'https://images.unsplash.com/photo-1614961233913-a5113a4a34ed?w=300&q=80',
+    'greek yogurt': 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=300&q=80',
+    'sweet potato': 'https://images.unsplash.com/photo-1596097635121-14b63b7a0c19?w=300&q=80',
+    'zucchini':     'https://images.unsplash.com/photo-1587411768638-ec71f8e33b78?w=300&q=80',
+    'shrimp':       'https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=300&q=80',
+    'turkey':       'https://images.unsplash.com/photo-1574672280600-4accfa5b6f98?w=300&q=80',
   };
 
   static const Map<String, String> _displayNames = {
-    'eggs':    'Eggs',
-    'chicken': 'Chicken Breast',
-    'milk':    'Whole Milk',
-    'rice':    'White Rice',
-    'spinach': 'Fresh Spinach',
+    'eggs':         'Eggs',
+    'chicken':      'Chicken Breast',
+    'milk':         'Whole Milk',
+    'rice':         'White Rice',
+    'spinach':      'Fresh Spinach',
+    'tomatoes':     'Tomatoes',
+    'onion':        'Onion',
+    'garlic':       'Garlic',
+    'pasta':        'Pasta',
+    'bread':        'Bread',
+    'cheese':       'Cheese',
+    'yogurt':       'Yogurt',
+    'butter':       'Butter',
+    'olive oil':    'Olive Oil',
+    'potatoes':     'Potatoes',
+    'carrots':      'Carrots',
+    'broccoli':     'Broccoli',
+    'salmon':       'Salmon Fillet',
+    'tuna':         'Tuna',
+    'beef':         'Ground Beef',
+    'apple':        'Apple',
+    'banana':       'Banana',
+    'orange':       'Orange',
+    'lemon':        'Lemon',
+    'avocado':      'Avocado',
+    'mushrooms':    'Mushrooms',
+    'peppers':      'Bell Peppers',
+    'cucumber':     'Cucumber',
+    'lettuce':      'Lettuce',
+    'oats':         'Rolled Oats',
+    'greek yogurt': 'Greek Yogurt',
+    'sweet potato': 'Sweet Potato',
+    'zucchini':     'Zucchini',
+    'shrimp':       'Shrimp',
+    'turkey':       'Turkey Breast',
   };
 
   static const Map<String, String> _categoryLabels = {
@@ -73,13 +139,16 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
   };
 
   static const Map<String, String> _categoryUnits = {
-    'protein': 'grams',
-    'dairy':   'ml',
-    'grains':  'grams',
-    'grain':   'grams',
+    'protein':    'grams',
+    'dairy':      'ml',
+    'grains':     'grams',
+    'grain':      'grams',
     'vegetables': 'grams',
-    'vegetable': 'grams',
-    'other':   'grams',
+    'vegetable':  'grams',
+    'fruits':     'pieces',
+    'fruit':      'pieces',
+    'fats':       'ml',
+    'other':      'grams',
   };
 
   String? get _imageUrl => _ingredientImages[_selectedName.toLowerCase()];
@@ -94,17 +163,28 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
 
   void _resolveCategory(String name) {
     final key = name.toLowerCase();
-    if (key.contains('chicken') || key.contains('beef') ||
-        key.contains('fish') || key.contains('egg')) {
+    if (key.contains('chicken') || key.contains('beef') || key.contains('fish') ||
+        key.contains('egg') || key.contains('salmon') || key.contains('tuna') ||
+        key.contains('shrimp') || key.contains('turkey') || key.contains('pork')) {
       _category = 'protein';
-    } else if (key.contains('milk') || key.contains('cheese') ||
-        key.contains('yogurt')) {
+    } else if (key.contains('milk') || key.contains('cheese') || key.contains('yogurt') ||
+        key.contains('butter') || key.contains('cream')) {
       _category = 'dairy';
-    } else if (key.contains('rice') || key.contains('pasta') ||
-        key.contains('bread') || key.contains('oat')) {
+    } else if (key.contains('rice') || key.contains('pasta') || key.contains('bread') ||
+        key.contains('oat') || key.contains('flour') || key.contains('grain')) {
       _category = 'grains';
-    } else if (key.contains('spinach') || key.contains('broccoli') ||
-        key.contains('carrot') || key.contains('tomato')) {
+    } else if (key.contains('apple') || key.contains('banana') || key.contains('orange') ||
+        key.contains('lemon') || key.contains('avocado') || key.contains('berry') ||
+        key.contains('mango') || key.contains('grape') || key.contains('fruit')) {
+      _category = 'fruits';
+    } else if (key.contains('olive') || key.contains('oil') || key.contains('nut') ||
+        key.contains('seed') || key.contains('almond') || key.contains('walnut')) {
+      _category = 'fats';
+    } else if (key.contains('spinach') || key.contains('broccoli') || key.contains('carrot') ||
+        key.contains('tomato') || key.contains('onion') || key.contains('garlic') ||
+        key.contains('potato') || key.contains('pepper') || key.contains('cucumber') ||
+        key.contains('lettuce') || key.contains('mushroom') || key.contains('zucchini') ||
+        key.contains('celery') || key.contains('kale') || key.contains('cabbage')) {
       _category = 'vegetables';
     } else {
       _category = 'other';
@@ -186,7 +266,7 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
                   children: [
                     // ─── Header ─────────────────────────────────────────
                     AppHeader(
-                      title: 'Dodaj składnik',
+                      title: 'Add ingredient',
                       variant: AppHeaderVariant.modal,
                       onBack: () => context.pop(),
                     ),
@@ -236,37 +316,26 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
                         ),
                       ),
                       SizedBox(height: 12.h),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 10,
-                        children: _commonItems.map((name) {
-                          return GestureDetector(
-                            onTap: () => _selectCommon(name),
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 16.w, vertical: 9.h),
-                              decoration: BoxDecoration(
-                                color: AppColors.backgroundWhite,
-                                borderRadius: BorderRadius.circular(20.r),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.textPrimary.withValues(alpha: 0.04),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Text(
-                                name,
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
+                      SizedBox(
+                        height: 40.h,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          children: _commonItems.map((name) {
+                            return GestureDetector(
+                              onTap: () => _selectCommon(name),
+                              child: Container(
+                                margin: EdgeInsets.only(right: 8.w),
+                                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 9.h),
+                                decoration: BoxDecoration(
+                                  color: AppColors.backgroundWhite,
+                                  borderRadius: BorderRadius.circular(20.r),
+                                  boxShadow: [BoxShadow(color: AppColors.textPrimary.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
                                 ),
+                                child: Text(name, style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                               ),
-                            ),
-                          );
-                        }).toList(),
+                            );
+                          }).toList(),
+                        ),
                       ),
                     ],
 
@@ -479,7 +548,7 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
                       height: 56.h,
                       child: FilledButton(
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.backgroundDark,
+                          backgroundColor: AppColors.primary,
                           disabledBackgroundColor:
                               AppColors.backgroundDark.withValues(alpha: 0.4),
                           shape: RoundedRectangleBorder(

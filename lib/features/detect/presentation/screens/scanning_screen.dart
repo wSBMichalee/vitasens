@@ -115,6 +115,7 @@ class _ScanningViewState extends State<_ScanningView> {
           }
         },
         child: Stack(
+          alignment: Alignment.center,
           children: [
             // 1. Camera preview
             Positioned.fill(
@@ -252,13 +253,17 @@ class _ScanningViewState extends State<_ScanningView> {
               right: 0,
               child: SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.only(bottom: 32),
+                  padding: EdgeInsets.only(bottom: 48.h),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // 4. BOTTOM TEXT
                       Text(
-                        "Scan your meal",
+                        _mode == 'meal'
+                            ? 'Scan your meal'
+                            : _mode == 'fridge'
+                                ? 'Scan your fridge'
+                                : 'Scan your receipt',
                         style: TextStyle(
                           fontSize: 16.sp,
                           fontWeight: FontWeight.w500,

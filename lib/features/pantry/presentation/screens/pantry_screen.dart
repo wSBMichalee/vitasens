@@ -157,7 +157,11 @@ class _PantryViewState extends State<_PantryView> {
           actions: [
             AppHeaderIconButton(
               icon: Icons.add,
-              onPressed: () => context.push(AppRoutes.addIngredient),
+              onPressed: () => context.push(AppRoutes.addIngredient).then((_) {
+                if (context.mounted) {
+                  context.read<PantryBloc>().add(const RefreshPantry());
+                }
+              }),
             ),
           ],
         ),
@@ -535,7 +539,11 @@ class _PantryViewState extends State<_PantryView> {
                             .read<PantryBloc>()
                             .add(const FilterPantry('all'));
                       }
-                    : () => context.push(AppRoutes.addIngredient),
+                    : () => context.push(AppRoutes.addIngredient).then((_) {
+                          if (context.mounted) {
+                            context.read<PantryBloc>().add(const RefreshPantry());
+                          }
+                        }),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   shape: RoundedRectangleBorder(

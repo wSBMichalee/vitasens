@@ -69,6 +69,12 @@
 		<key>UIStatusBarHidden</key>
 		<false/>
 
+		<key>NSAppTransportSecurity</key>
+		<dict>
+			<key>NSAllowsArbitraryLoads</key>
+			<true/>
+		</dict>
+
 		<!-- Permissions: Camera, Microphone, Photo Library -->
 		<key>NSCameraUsageDescription</key>
 		<string>VitaSense needs camera access to scan your meals, fridge, and product barcodes.</string>

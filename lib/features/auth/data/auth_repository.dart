@@ -21,6 +21,8 @@ class AuthRepository {
         'fullName': fullName,
       },
     );
+    print('SignUp response: ${response.data}');
+    print('SignUp status: ${response.status}');
     final responseData = response.data as Map;
     return Map<String, dynamic>.from(responseData['data'] as Map);
   }

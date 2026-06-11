@@ -9,6 +9,7 @@ import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
 import 'package:vitasense/features/auth/bloc/auth_bloc.dart';
+import 'package:vitasense/features/auth/bloc/auth_event.dart';
 import 'package:vitasense/features/auth/bloc/auth_state.dart';
 import 'package:vitasense/features/auth/data/models/user_model.dart';
 import 'package:vitasense/features/auth/data/auth_repository.dart';
@@ -52,6 +53,8 @@ class _ProfileView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('goalPace: ${user.goalPace}, activityLevel: ${user.activityLevel}');
+    
     return Scaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
@@ -71,6 +74,10 @@ class _ProfileView extends StatelessWidget {
 
                   // ── MY GOALS ─────────────────────────────────────
                   _MyGoalsCard(user: user),
+                  SizedBox(height: 16.h),
+
+                  // ── PERSONAL INFO ────────────────────────────────
+                  _PersonalInfoCard(user: user),
                   SizedBox(height: 16.h),
 
                   // ── NAVIGATION MENU ───────────────────────────────
@@ -220,13 +227,79 @@ class _HeroBanner extends StatelessWidget {
 
 // ─── DAILY TARGETS CARD ───────────────────────────────────────────────────────
 
-class _DailyTargetsCard extends StatelessWidget {
+class _DailyTargetsCard extends StatefulWidget {
   const _DailyTargetsCard({required this.user});
 
   final UserModel user;
 
   @override
+  State<_DailyTargetsCard> createState() => _DailyTargetsCardState();
+}
+
+class _DailyTargetsCardState extends State<_DailyTargetsCard> {
+  int _consumedCalories = 0;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchMonthlyCalories();
+  }
+
+  Future<void> _fetchMonthlyCalories() async {
+    try {
+      final now = DateTime.now();
+      final firstDay = DateTime(now.year, now.month, 1);
+      final lastDay = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+      
+      final response = await Supabase.instance.client
+          .from('meal_logs')
+          .select('calories')
+          .gte('logged_at', firstDay.toIso8601String())
+          .lte('logged_at', lastDay.toIso8601String())
+          .eq('user_id', widget.user.id);
+          
+      int sum = 0;
+      for (final row in response) {
+        sum += (row['calories'] as num?)?.toInt() ?? 0;
+      }
+      if (mounted) {
+        setState(() {
+          _consumedCalories = sum;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    }
+  }
+
+  String _formatMacro(int dailyValue, void Function(String) setUnit) {
+    int monthlyValue = dailyValue * 30;
+    if (monthlyValue >= 1000) {
+      setUnit('kg');
+      return (monthlyValue / 1000).toStringAsFixed(1);
+    } else {
+      setUnit('g');
+      return monthlyValue.toString();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    String proteinUnit = 'g';
+    String carbsUnit = 'g';
+    String fatUnit = 'g';
+    
+    final proteinValue = _formatMacro(widget.user.dailyProteinTarget ?? 0, (u) => proteinUnit = u);
+    final carbsValue = _formatMacro(widget.user.dailyCarbsTarget ?? 0, (u) => carbsUnit = u);
+    final fatValue = _formatMacro(widget.user.dailyFatTarget ?? 0, (u) => fatUnit = u);
+    
+    final int monthlyTarget = (widget.user.dailyCalorieTarget ?? 0) * 30;
+    final double progress = monthlyTarget > 0 ? (_consumedCalories / monthlyTarget).clamp(0.0, 1.0) : 0.0;
+
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A2E),
@@ -259,14 +332,27 @@ class _DailyTargetsCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'MONTHLY TARGETS',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.6),
-                        fontSize: 11.sp,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1.5,
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'MONTHLY TARGETS',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.6),
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          'Your 30-day nutrition overview',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.5),
+                            fontSize: 11.sp,
+                          ),
+                        ),
+                      ],
                     ),
                     Row(
                       children: [
@@ -299,7 +385,7 @@ class _DailyTargetsCard extends StatelessWidget {
                   textBaseline: TextBaseline.alphabetic,
                   children: [
                     Text(
-                      '${((user.dailyCalorieTarget ?? 0) * 30 / 1000).toStringAsFixed(1)}k',
+                      '${(monthlyTarget / 1000).toStringAsFixed(1)}k',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 42.sp,
@@ -319,46 +405,59 @@ class _DailyTargetsCard extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: 12.h),
-                
-                // Progress bar
-                Container(
-                  height: 4.h,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(2.r),
-                  ),
-                  child: FractionallySizedBox(
-                    alignment: Alignment.centerLeft,
-                    widthFactor: 0.65, // Mocked progress
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF4CAF50),
-                        borderRadius: BorderRadius.circular(2.r),
+
+                // Progress Bar
+                if (!_loading) ...[
+                  Container(
+                    height: 4.h,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(2.r),
+                    ),
+                    child: FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: progress,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF4CAF50),
+                          borderRadius: BorderRadius.circular(2.r),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                SizedBox(height: 24.h),
+                  SizedBox(height: 6.h),
+                  Text(
+                    '${_consumedCalories} / $monthlyTarget kcal',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                      fontSize: 10.sp,
+                    ),
+                  ),
+                ],
+                SizedBox(height: 20.h),
                 
                 // Macro Tiles
                 Row(
                   children: [
                     _PremiumMacroTile(
                       iconColor: Colors.blue,
-                      value: '${(user.dailyProteinTarget ?? 0) * 30}',
+                      value: proteinValue,
+                      unit: proteinUnit,
                       label: 'Protein',
                     ),
                     Container(width: 1, height: 40.h, color: Colors.white.withValues(alpha: 0.1)),
                     _PremiumMacroTile(
                       iconColor: const Color(0xFF4CAF50),
-                      value: '${(user.dailyCarbsTarget ?? 0) * 30}',
+                      value: carbsValue,
+                      unit: carbsUnit,
                       label: 'Carbs',
                     ),
                     Container(width: 1, height: 40.h, color: Colors.white.withValues(alpha: 0.1)),
                     _PremiumMacroTile(
                       iconColor: Colors.orange,
-                      value: '${(user.dailyFatTarget ?? 0) * 30}',
+                      value: fatValue,
+                      unit: fatUnit,
                       label: 'Fat',
                     ),
                   ],
@@ -377,11 +476,13 @@ class _PremiumMacroTile extends StatelessWidget {
     required this.iconColor,
     required this.value,
     required this.label,
+    this.unit = 'g',
   });
 
   final Color iconColor;
   final String value;
   final String label;
+  final String unit;
 
   @override
   Widget build(BuildContext context) {
@@ -412,7 +513,7 @@ class _PremiumMacroTile extends StatelessWidget {
               ),
               SizedBox(width: 2.w),
               Text(
-                'g',
+                unit,
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.6),
                   fontSize: 12.sp,
@@ -497,14 +598,12 @@ class _MyGoalsCard extends StatelessWidget {
 
   static String _goalLabel(String? goalType) {
     switch (goalType) {
+      case 'general_health':
+        return 'General Health';
       case 'weight_loss':
-        return 'Lose Weight';
-      case 'weight_gain':
-        return 'Gain Weight';
-      case 'maintain':
-        return 'Maintain Weight';
+        return 'Weight Loss';
       case 'muscle_gain':
-        return 'Build Muscle';
+        return 'Muscle Gain';
       default:
         return 'Not set';
     }
@@ -517,7 +616,7 @@ class _MyGoalsCard extends StatelessWidget {
       case 'moderate':
         return 'Moderate';
       case 'fast':
-        return 'Fast';
+        return 'Aggressive';
       default:
         return 'Not set';
     }
@@ -527,14 +626,10 @@ class _MyGoalsCard extends StatelessWidget {
     switch (activity) {
       case 'sedentary':
         return 'Sedentary';
-      case 'light':
-        return 'Lightly Active';
       case 'moderate':
         return 'Moderately Active';
       case 'active':
         return 'Very Active';
-      case 'very_active':
-        return 'Extremely Active';
       default:
         return 'Not set';
     }
@@ -546,7 +641,11 @@ class _MyGoalsCard extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _EditGoalSheet(type: type, user: user),
-    );
+    ).then((_) {
+      if (context.mounted) {
+        context.read<AuthBloc>().add(AppStarted());
+      }
+    });
   }
 }
 
@@ -675,11 +774,9 @@ class _EditGoalSheetState extends State<_EditGoalSheet> {
           if (widget.type == 'goal') ...[
             Text('Edit Goal', style: AppTextStyles.headingSmall),
             SizedBox(height: 20.h),
+            _buildGoalCard('General Health', 'general_health', Icons.health_and_safety, 'Overall well-being'),
+            SizedBox(height: 10.h),
             _buildGoalCard('Lose Weight', 'weight_loss', Icons.trending_down, 'Burn fat with smart meals'),
-            SizedBox(height: 10.h),
-            _buildGoalCard('Gain Weight', 'weight_gain', Icons.trending_up, 'Build mass with proper nutrition'),
-            SizedBox(height: 10.h),
-            _buildGoalCard('Maintain Weight', 'maintain', Icons.balance, 'Stay consistent and healthy'),
             SizedBox(height: 10.h),
             _buildGoalCard('Build Muscle', 'muscle_gain', Icons.fitness_center, 'High protein meals for growth'),
             SizedBox(height: 24.h),
@@ -1278,4 +1375,255 @@ abstract class GoogleFontsSafeStyle {
         fontWeight: FontWeight.w400,
         color: AppColors.textWhite.withValues(alpha: 0.75),
       );
+}
+
+// ─── PERSONAL INFO CARD ───────────────────────────────────────────────────────
+
+class _PersonalInfoCard extends StatelessWidget {
+  const _PersonalInfoCard({required this.user});
+
+  final UserModel user;
+
+  @override
+  Widget build(BuildContext context) {
+    return _Card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text('Personal Info', style: AppTextStyles.headingSmall),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          _TagsRow(
+            icon: Icons.no_food_outlined,
+            iconBg: Colors.red.withValues(alpha: 0.1),
+            iconColor: Colors.red,
+            label: 'Allergies',
+            tags: user.allergies ?? [],
+            onTap: () => _showEditTagsSheet(context, 'allergies', user),
+          ),
+          Divider(color: AppColors.border, height: 20.h),
+          _TagsRow(
+            icon: Icons.medical_services_outlined,
+            iconBg: Colors.blue.withValues(alpha: 0.1),
+            iconColor: Colors.blue,
+            label: 'Health Conditions',
+            tags: user.healthConditions ?? [],
+            onTap: () => _showEditTagsSheet(context, 'health_conditions', user),
+          ),
+          Divider(color: AppColors.border, height: 20.h),
+          _TagsRow(
+            icon: Icons.restaurant_outlined,
+            iconBg: Colors.orange.withValues(alpha: 0.1),
+            iconColor: Colors.orange,
+            label: 'Dietary Preferences',
+            tags: user.dietaryPreferences ?? [],
+            onTap: () => _showEditTagsSheet(context, 'dietary_preferences', user),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditTagsSheet(BuildContext context, String type, UserModel user) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _EditTagsSheet(type: type, user: user),
+    ).then((_) {
+      if (context.mounted) {
+        context.read<AuthBloc>().add(AppStarted());
+      }
+    });
+  }
+}
+
+class _TagsRow extends StatelessWidget {
+  const _TagsRow({
+    required this.icon,
+    required this.iconBg,
+    required this.iconColor,
+    required this.label,
+    required this.tags,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final Color iconBg;
+  final Color iconColor;
+  final String label;
+  final List<String> tags;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Row(
+        crossAxisAlignment: tags.isNotEmpty ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 36.r,
+            height: 36.r,
+            decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(10.r)),
+            child: Icon(icon, color: iconColor, size: 18.r),
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500, color: AppColors.textSecondary)),
+                if (tags.isNotEmpty) SizedBox(height: 8.h),
+                if (tags.isNotEmpty)
+                  Wrap(
+                    spacing: 8.w,
+                    runSpacing: 8.h,
+                    children: tags.map((t) => Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryLight.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(100.r),
+                      ),
+                      child: Text(t, style: TextStyle(fontSize: 12.sp, color: AppColors.primaryDark, fontWeight: FontWeight.w500)),
+                    )).toList(),
+                  )
+                else
+                  Text('Not set', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+              ],
+            ),
+          ),
+          if (onTap != null) Icon(Icons.chevron_right, color: AppColors.textMuted, size: 18.r),
+        ],
+      ),
+    );
+  }
+}
+
+class _EditTagsSheet extends StatefulWidget {
+  const _EditTagsSheet({required this.type, required this.user});
+  final String type;
+  final UserModel user;
+
+  @override
+  State<_EditTagsSheet> createState() => _EditTagsSheetState();
+}
+
+class _EditTagsSheetState extends State<_EditTagsSheet> {
+  final TextEditingController _controller = TextEditingController();
+  late List<String> _tags;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.type == 'allergies') _tags = List.from(widget.user.allergies ?? []);
+    else if (widget.type == 'health_conditions') _tags = List.from(widget.user.healthConditions ?? []);
+    else _tags = List.from(widget.user.dietaryPreferences ?? []);
+  }
+
+  void _addTag() {
+    final text = _controller.text.trim();
+    if (text.isNotEmpty && !_tags.contains(text)) {
+      setState(() {
+        _tags.add(text);
+        _controller.clear();
+      });
+    }
+  }
+
+  Future<void> _save() async {
+    setState(() => _saving = true);
+    try {
+      await AuthRepository().updateProfile({widget.type: _tags});
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    String title = 'Edit';
+    if (widget.type == 'allergies') title = 'Edit Allergies';
+    if (widget.type == 'health_conditions') title = 'Edit Health Conditions';
+    if (widget.type == 'dietary_preferences') title = 'Edit Dietary Preferences';
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.backgroundWhite,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
+        ),
+        padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 40.h),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40.w, height: 4.h,
+                decoration: BoxDecoration(color: AppColors.borderMedium, borderRadius: BorderRadius.circular(2.r)),
+              ),
+            ),
+            SizedBox(height: 24.h),
+            Text(title, style: AppTextStyles.headingSmall),
+            SizedBox(height: 16.h),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: InputDecoration(
+                      hintText: 'Add new tag...',
+                      filled: true,
+                      fillColor: AppColors.background,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide.none),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                    ),
+                    onSubmitted: (_) => _addTag(),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                GestureDetector(
+                  onTap: _addTag,
+                  child: Container(
+                    padding: EdgeInsets.all(12.r),
+                    decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(12.r)),
+                    child: Icon(Icons.add, color: Colors.white, size: 24.r),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            Wrap(
+              spacing: 8.w,
+              runSpacing: 8.h,
+              children: _tags.map((t) => Chip(
+                label: Text(t, style: TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.w500)),
+                backgroundColor: AppColors.primaryLight.withValues(alpha: 0.5),
+                deleteIconColor: AppColors.primaryDark,
+                onDeleted: () => setState(() => _tags.remove(t)),
+                side: BorderSide.none,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100.r)),
+              )).toList(),
+            ),
+            SizedBox(height: 24.h),
+            _SaveButton(saving: _saving, onPressed: _save),
+          ],
+        ),
+      ),
+    );
+  }
 }

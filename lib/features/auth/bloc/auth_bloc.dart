@@ -101,8 +101,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final profileData = await _authRepository.getUserProfile();
       final user = UserModel.fromJson(profileData);
       emit(AuthAuthenticated(user: user));
-    } catch (e) {
-      print('SignUp Error: $e');
+    } catch (e, stackTrace) {
+      print('Auth bloc signUp error: $e');
+      print('Auth bloc signUp stack: $stackTrace');
       emit(AuthError(message: _parseError(e)));
     }
   }

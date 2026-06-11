@@ -20,6 +20,16 @@ export interface UserProfile {
   dailyProteinTarget?: number;
   dailyCarbsTarget?: number;
   dailyFatTarget?: number;
+  goalPace?: string;
+  activityLevel?: string;
+  weightKg?: number;
+  heightCm?: number;
+  gender?: string;
+  age?: number;
+  allergies?: string[];
+  healthConditions?: string[];
+  dietaryPreferences?: string[];
+  dailyWaterTarget?: number;
 }
 
 export class AuthRepository {
@@ -39,23 +49,25 @@ export class AuthRepository {
     if (error || !data.user) throw new ValidationError(error?.message ?? 'Rejestracja nie powiodła się.');
 
     // Auto-confirm email to allow immediate sign-in
-    const { error: confirmError } = await supabaseAdmin.auth.admin.updateUserById(
-      data.user.id,
-      { email_confirm: true }
-    );
-    if (confirmError) {
-      throw new ValidationError(`Potwierdzanie konta nie powiodło się: ${confirmError.message}`);
+    try {
+      await supabaseAdmin.auth.admin.updateUserById(
+        data.user.id,
+        { email_confirm: true }
+      );
+    } catch (e) {
+      console.warn(`[manage-auth] signUp - auto-confirm failed:`, e);
     }
 
     // Ensure the profile is created in the database
-    const { error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .upsert({
-        id: data.user.id,
-        name: fullName,
-      }, { onConflict: 'id' });
-    if (profileError) {
-      throw new ValidationError(`Błąd podczas tworzenia profilu: ${profileError.message}`);
+    try {
+      await supabaseAdmin
+        .from('profiles')
+        .upsert({
+          id: data.user.id,
+          name: fullName,
+        }, { onConflict: 'id' });
+    } catch (e) {
+      console.warn(`[manage-auth] signUp - profile upsert failed:`, e);
     }
 
     return {
@@ -140,6 +152,16 @@ export class AuthRepository {
       dailyProteinTarget: p.daily_protein_target ? Number(p.daily_protein_target) : undefined,
       dailyCarbsTarget:   p.daily_carbs_target   ? Number(p.daily_carbs_target)   : undefined,
       dailyFatTarget:     p.daily_fat_target      ? Number(p.daily_fat_target)     : undefined,
+      goalPace: p.goal_pace ?? undefined,
+      activityLevel: p.activity_level ?? undefined,
+      weightKg: p.weight_kg ? Number(p.weight_kg) : undefined,
+      heightCm: p.height_cm ? Number(p.height_cm) : undefined,
+      gender: p.gender ?? undefined,
+      age: p.age ? Number(p.age) : undefined,
+      allergies: p.allergies ?? [],
+      healthConditions: p.health_conditions ?? [],
+      dietaryPreferences: p.dietary_preferences ?? [],
+      dailyWaterTarget: p.daily_water_target ? Number(p.daily_water_target) : undefined,
     };
   }
 }

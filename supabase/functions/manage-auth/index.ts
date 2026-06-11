@@ -10,6 +10,7 @@ serve(async (req: Request) => {
     const body = await req.json();
     const { action, email, password, fullName, refreshToken } = body;
     const authHeader = req.headers.get('Authorization') || '';
+    console.log(`[manage-auth] action: ${action}, start: ${Date.now()}`);
     let res;
     switch (action) {
       case 'sign_up':
@@ -40,6 +41,7 @@ serve(async (req: Request) => {
       default:
         throw new ValidationError('Nieznana akcja');
     }
+    console.log(`[manage-auth] action: ${action}, end: ${Date.now()}`);
     return new Response(JSON.stringify({ success: true, data: res }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (e) { return handleError(e); }

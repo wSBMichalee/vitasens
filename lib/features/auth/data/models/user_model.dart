@@ -15,6 +15,12 @@ class UserModel {
   final String? activityLevel;
   final int? dailyWaterTarget;
   final String? avatarUrl;
+  final double? heightCm;
+  final String? gender;
+  final int? age;
+  final List<String>? allergies;
+  final List<String>? healthConditions;
+  final List<String>? dietaryPreferences;
 
   const UserModel({
     required this.id,
@@ -33,6 +39,12 @@ class UserModel {
     this.activityLevel,
     this.dailyWaterTarget,
     this.avatarUrl,
+    this.heightCm,
+    this.gender,
+    this.age,
+    this.allergies,
+    this.healthConditions,
+    this.dietaryPreferences,
   });
 
   static int? _toInt(dynamic val) {
@@ -58,8 +70,14 @@ class UserModel {
       activityLevel: (json['activity_level'] ?? json['activityLevel']) as String?,
       weightKg: (json['weight_kg'] ?? json['weightKg'])?.toDouble(),
       targetWeightKg: (json['target_weight_kg'] ?? json['targetWeightKg'])?.toDouble(),
+      heightCm: (json['height_cm'] ?? json['heightCm'])?.toDouble(),
+      gender: (json['gender']) as String?,
+      age: _toInt(json['age']),
       dailyWaterTarget: _toInt(json['daily_water_target'] ?? json['dailyWaterTarget']),
       avatarUrl: (json['avatar_url'] ?? json['avatarUrl']) as String?,
+      allergies: ((json['allergies']) as List<dynamic>?)?.map((e) => e.toString()).toList(),
+      healthConditions: ((json['health_conditions'] ?? json['healthConditions']) as List<dynamic>?)?.map((e) => e.toString()).toList(),
+      dietaryPreferences: ((json['dietary_preferences'] ?? json['dietaryPreferences']) as List<dynamic>?)?.map((e) => e.toString()).toList(),
     );
   }
 
@@ -79,8 +97,14 @@ class UserModel {
       'activity_level': activityLevel,
       'weight_kg': weightKg,
       'target_weight_kg': targetWeightKg,
+      'height_cm': heightCm,
+      'gender': gender,
+      'age': age,
       'daily_water_target': dailyWaterTarget,
       'avatar_url': avatarUrl,
+      if (allergies != null) 'allergies': allergies,
+      if (healthConditions != null) 'health_conditions': healthConditions,
+      if (dietaryPreferences != null) 'dietary_preferences': dietaryPreferences,
     };
   }
 
@@ -101,6 +125,12 @@ class UserModel {
     String? activityLevel,
     int? dailyWaterTarget,
     String? avatarUrl,
+    double? heightCm,
+    String? gender,
+    int? age,
+    List<String>? allergies,
+    List<String>? healthConditions,
+    List<String>? dietaryPreferences,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -119,6 +149,12 @@ class UserModel {
       activityLevel: activityLevel ?? this.activityLevel,
       dailyWaterTarget: dailyWaterTarget ?? this.dailyWaterTarget,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      heightCm: heightCm ?? this.heightCm,
+      gender: gender ?? this.gender,
+      age: age ?? this.age,
+      allergies: allergies ?? this.allergies,
+      healthConditions: healthConditions ?? this.healthConditions,
+      dietaryPreferences: dietaryPreferences ?? this.dietaryPreferences,
     );
   }
 

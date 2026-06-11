@@ -13,6 +13,7 @@ import 'package:vitasense/features/pantry/bloc/pantry_event.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_state.dart';
 import 'package:vitasense/features/pantry/data/models/ingredient_model.dart';
 import 'package:vitasense/features/pantry/data/pantry_repository.dart';
+import 'package:vitasense/features/pantry/presentation/screens/add_ingredient_screen.dart';
 
 class PantryScreen extends StatelessWidget {
   const PantryScreen({super.key});
@@ -157,7 +158,12 @@ class _PantryViewState extends State<_PantryView> {
           actions: [
             AppHeaderIconButton(
               icon: Icons.add,
-              onPressed: () => context.push(AppRoutes.addIngredient).then((_) {
+              onPressed: () => showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => const AddIngredientScreen(),
+              ).then((_) {
                 if (context.mounted) {
                   context.read<PantryBloc>().add(const RefreshPantry());
                 }
@@ -221,7 +227,7 @@ class _PantryViewState extends State<_PantryView> {
                         crossAxisCount: 2,
                         crossAxisSpacing: 12.w,
                         mainAxisSpacing: 12.h,
-                        childAspectRatio: 0.85,
+                        childAspectRatio: 0.75,
                       ),
                       delegate: SliverChildBuilderDelegate(
                         (context, index) => _IngredientCard(ingredient: filtered[index]),
@@ -542,7 +548,12 @@ class _PantryViewState extends State<_PantryView> {
                             .read<PantryBloc>()
                             .add(const FilterPantry('all'));
                       }
-                    : () => context.push(AppRoutes.addIngredient).then((_) {
+                    : () => showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) => const AddIngredientScreen(),
+                        ).then((_) {
                           if (context.mounted) {
                             context.read<PantryBloc>().add(const RefreshPantry());
                           }
@@ -842,38 +853,69 @@ class _IngredientCard extends StatelessWidget {
 
   final IngredientModel ingredient;
 
-  IconData _iconForCategory(String category) {
+  String _emojiForCategory(String category) {
     switch (category.toLowerCase()) {
       case 'protein':
-        return Icons.set_meal;
+        return '🥩';
       case 'vegetables':
       case 'vegetable':
-        return Icons.eco;
+        return '🥦';
       case 'dairy':
-        return Icons.water_drop;
+        return '🥛';
       case 'grains':
       case 'grain':
-        return Icons.grain;
+        return '🌾';
       default:
-        return Icons.kitchen;
+        return '🛒';
+    }
+  }
+
+  Color _colorForCategory(String category) {
+    switch (category.toLowerCase()) {
+      case 'protein':
+        return const Color(0xFFFFEBEE);
+      case 'vegetables':
+      case 'vegetable':
+        return const Color(0xFFE8F5E9);
+      case 'dairy':
+        return const Color(0xFFE3F2FD);
+      case 'grains':
+      case 'grain':
+        return const Color(0xFFFFF8E1);
+      default:
+        return const Color(0xFFF5F5F5);
     }
   }
 
   Widget _buildPlaceholder() {
     return Container(
-      color: const Color(0xFFF5F5F5),
+      color: _colorForCategory(ingredient.category),
       alignment: Alignment.center,
-      child: Icon(
-        _iconForCategory(ingredient.category),
-        size: 36.r,
-        color: AppColors.textSecondary.withValues(alpha: 0.6),
+      child: Text(
+        _emojiForCategory(ingredient.category),
+        style: TextStyle(fontSize: 36.r),
       ),
     );
+  }
+
+  String _formatQuantity(double quantity, String unit) {
+    final u = unit.toLowerCase();
+    if ((u == 'grams' || u == 'g') && quantity >= 1000) {
+      return '${(quantity / 1000).toStringAsFixed(1).replaceAll(RegExp(r'\\.0\$'), '')} kg';
+    }
+    if (['pieces', 'szt', 'pcs', 'units'].contains(u)) {
+      return '${quantity.toInt()} szt';
+    }
+    if (u == 'ml' && quantity >= 1000) {
+      return '${(quantity / 1000).toStringAsFixed(1).replaceAll(RegExp(r'\\.0\$'), '')} l';
+    }
+    return '${quantity.toStringAsFixed(1).replaceAll(RegExp(r'\\.0\$'), '')} $unit';
   }
 
   @override
   Widget build(BuildContext context) {
     final days = ingredient.expiryDate?.difference(DateTime.now()).inDays;
+    final imgUrl = 'https://source.unsplash.com/200x200/?food,${Uri.encodeComponent(ingredient.name)}';
 
     return Dismissible(
       key: Key(ingredient.id),
@@ -895,7 +937,7 @@ class _IngredientCard extends StatelessWidget {
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 8,
+              blurRadius: 6,
               offset: const Offset(0, 2),
             ),
           ],
@@ -912,14 +954,16 @@ class _IngredientCard extends StatelessWidget {
                   flex: 55,
                   child: ClipRRect(
                     borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
-                    child: ingredient.imageUrl != null && ingredient.imageUrl!.isNotEmpty
-                        ? CachedNetworkImage(
-                            imageUrl: ingredient.imageUrl!,
-                            fit: BoxFit.cover,
-                            placeholder: (_, __) => _buildPlaceholder(),
-                            errorWidget: (_, __, ___) => _buildPlaceholder(),
-                          )
-                        : _buildPlaceholder(),
+                    child: CachedNetworkImage(
+                      imageUrl: imgUrl,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) => Shimmer.fromColors(
+                        baseColor: AppColors.borderLight,
+                        highlightColor: AppColors.border,
+                        child: Container(color: AppColors.borderLight),
+                      ),
+                      errorWidget: (_, __, ___) => _buildPlaceholder(),
+                    ),
                   ),
                 ),
                 Expanded(
@@ -932,7 +976,7 @@ class _IngredientCard extends StatelessWidget {
                         Text(
                           ingredient.name,
                           style: TextStyle(
-                            fontSize: 14.sp,
+                            fontSize: 13.sp,
                             fontWeight: FontWeight.bold,
                             color: AppColors.textPrimary,
                           ),
@@ -941,7 +985,7 @@ class _IngredientCard extends StatelessWidget {
                         ),
                         SizedBox(height: 2.h),
                         Text(
-                          '${ingredient.quantity} ${ingredient.unit}',
+                          _formatQuantity(ingredient.quantity, ingredient.unit),
                           style: TextStyle(
                             fontSize: 12.sp,
                             color: AppColors.textSecondary,

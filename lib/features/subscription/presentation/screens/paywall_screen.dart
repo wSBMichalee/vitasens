@@ -76,7 +76,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     price: '\$4.91',
                     priceSuffix: '/mo',
                     billingNote: '\$59.00 billed annually',
-                    badgeText: 'BEST VALUE',
+                    badgeText: '3 DAYS FREE',
                     isSelected: _selectedPlanIndex == 0,
                     onTap: () => setState(() => _selectedPlanIndex = 0),
                   ).animate(delay: 280.ms).fadeIn(duration: 400.ms),
@@ -88,7 +88,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     price: '\$9.99',
                     priceSuffix: '/mo',
                     billingNote: 'Billed monthly',
-                    badgeText: null,
+                    badgeText: '3 DAYS FREE',
                     isSelected: _selectedPlanIndex == 1,
                     onTap: () => setState(() => _selectedPlanIndex = 1),
                   ).animate(delay: 320.ms).fadeIn(duration: 400.ms),
@@ -100,15 +100,18 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     width: double.infinity,
                     height: 56.h,
                     child: FilledButton(
-                      onPressed: () => context.go(AppRoutes.successPurchase),
+                      onPressed: () {
+                        // TODO: RevenueCat purchase
+                        context.go(AppRoutes.home);
+                      },
                       style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: const Color(0xFF2ECC71),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14.r),
                         ),
                       ),
                       child: Text(
-                        'Start My Plan',
+                        _selectedPlanIndex == 0 ? 'Start My 3-Day Free Trial' : 'Start Monthly Plan',
                         style: TextStyle(
                           fontSize: 16.sp,
                           fontWeight: FontWeight.bold,
@@ -180,9 +183,9 @@ class _PlanCard extends StatelessWidget {
           child: Container(
             padding: EdgeInsets.all(20.r),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isSelected ? const Color(0xFF1A1A2E) : Colors.white,
               border: Border.all(
-                color: isSelected ? AppColors.primary : Colors.grey[200]!,
+                color: isSelected ? const Color(0xFF2ECC71) : Colors.grey[200]!,
                 width: 1.5,
               ),
               borderRadius: BorderRadius.circular(14.r),
@@ -193,20 +196,28 @@ class _PlanCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
+                      Row(
+                        children: [
+                          if (isSelected) ...[
+                            Icon(Icons.check_circle, color: const Color(0xFF2ECC71), size: 20.r),
+                            SizedBox(width: 8.w),
+                          ],
+                          Text(
+                            title,
+                            style: TextStyle(
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.bold,
+                              color: isSelected ? Colors.white : Colors.black,
+                            ),
+                          ),
+                        ],
                       ),
                       SizedBox(height: 4.h),
                       Text(
                         billingNote,
                         style: TextStyle(
                           fontSize: 14.sp,
-                          color: Colors.grey[500],
+                          color: isSelected ? Colors.white70 : Colors.grey[500],
                         ),
                       ),
                     ],
@@ -221,14 +232,14 @@ class _PlanCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 24.sp,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: isSelected ? Colors.white : Colors.black,
                       ),
                     ),
                     Text(
                       priceSuffix,
                       style: TextStyle(
                         fontSize: 14.sp,
-                        color: Colors.grey[500],
+                        color: isSelected ? Colors.white70 : Colors.grey[500],
                       ),
                     ),
                   ],
@@ -244,7 +255,7 @@ class _PlanCard extends StatelessWidget {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
               decoration: BoxDecoration(
-                color: AppColors.primary,
+                color: const Color(0xFF2ECC71),
                 borderRadius: BorderRadius.circular(20.r),
               ),
               child: Text(

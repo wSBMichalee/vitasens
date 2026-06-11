@@ -48,10 +48,12 @@ Future<void> main() async {
     defaultValue: 'sb_publishable_zTDgWgJw1Npfl2KqBkuK4w_qFToVItm',
   );
 
-  // Konfiguracja RevenueCat (tylko jeśli podano poprawny klucz)
-  if (revenueCatApiKey != 'placeholder-rc-key') {
-    await Purchases.configure(PurchasesConfiguration(revenueCatApiKey));
-  }
+  // Konfiguracja RevenueCat (opóźniona by nie blokować cold startu)
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    if (revenueCatApiKey != 'placeholder-rc-key') {
+      await Purchases.configure(PurchasesConfiguration(revenueCatApiKey));
+    }
+  });
 
   runApp(const MyApp());
 }

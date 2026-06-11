@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:go_router/go_router.dart';
 import 'package:native_glass_navbar/native_glass_navbar.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
@@ -12,7 +13,6 @@ import 'package:vitasense/features/auth/bloc/auth_state.dart';
 
 import 'package:vitasense/features/auth/presentation/screens/splash_screen.dart';
 import 'package:vitasense/features/auth/presentation/screens/landing_screen.dart';
-import 'package:vitasense/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:vitasense/features/auth/presentation/screens/login_screen.dart';
 import 'package:vitasense/features/auth/presentation/screens/signup_screen.dart';
 import 'package:vitasense/features/auth/presentation/screens/forgot_password_screen.dart';
@@ -25,6 +25,7 @@ import 'package:vitasense/features/macros/presentation/screens/home_screen.dart'
 import 'package:vitasense/features/pantry/presentation/screens/pantry_screen.dart';
 import 'package:vitasense/features/pantry/presentation/screens/add_ingredient_screen.dart';
 import 'package:vitasense/features/detect/presentation/screens/scanning_screen.dart';
+import 'package:vitasense/features/detect/presentation/screens/food_detected_screen.dart';
 import 'package:vitasense/features/recipes/presentation/screens/ai_meals_screen.dart';
 import 'package:vitasense/features/recipes/presentation/screens/recipe_detail_screen.dart';
 import 'package:vitasense/features/macros/presentation/screens/progress_screen.dart';
@@ -65,6 +66,7 @@ class AppRoutes {
   static const String addIngredient = '/add-ingredient';
   static const String scanning = '/scanning';
   static const String aiMeals = '/ai-meals';
+  static const String foodDetected = '/food-detected';
   static const String recipeDetails = '/recipe-details/:id';
   static const String progress = '/progress';
   static const String progressHistory = '/progress-history';
@@ -185,7 +187,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.onboarding,
       pageBuilder: (context, state) =>
-          _slideHorizontalPage(state: state, child: const OnboardingScreen()),
+          _slideHorizontalPage(state: state, child: const UserOnboardingScreen()),
     ),
     GoRoute(
       path: AppRoutes.valueExplanation,
@@ -245,45 +247,64 @@ final GoRouter appRouter = GoRouter(
           _slideUpPage(state: state, child: const SuccessPurchaseScreen()),
     ),
 
-    // ─── MAIN APP (SHELL ROUTE z bottom navigation) ──────────────────────────
-    ShellRoute(
-      builder: (context, state, child) {
-        return ScaffoldWithBottomNav(child: child);
+    // ─── MAIN APP (STATEFUL SHELL ROUTE z bottom navigation) ──────────────────────────
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, navigationShell) {
+        return ScaffoldWithBottomNav(navigationShell: navigationShell);
       },
-      routes: [
-        GoRoute(
-          path: AppRoutes.home,
-          pageBuilder: (context, state) =>
-              _fadePage(state: state, child: const HomeScreen()),
-        ),
-        GoRoute(
-          path: AppRoutes.pantry,
-          pageBuilder: (context, state) =>
-              _fadePage(state: state, child: const PantryScreen()),
-        ),
-        GoRoute(
-          path: AppRoutes.aiMeals,
-          pageBuilder: (context, state) => _fadePage(
-            state: state,
-            child: AiMealsScreen(
-              ingredients: state.extra is Map<String, dynamic>
-                  ? (state.extra as Map<String, dynamic>)['ingredients']
-                        as List<String>?
-                  : state.extra is List<String>
-                  ? state.extra as List<String>
-                  : null,
+      branches: [
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.home,
+              builder: (context, state) => const HomeScreen(),
             ),
-          ),
+          ],
         ),
-        GoRoute(
-          path: AppRoutes.progress,
-          pageBuilder: (context, state) =>
-              _fadePage(state: state, child: const ProgressScreen()),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.pantry,
+              builder: (context, state) => const PantryScreen(),
+            ),
+          ],
         ),
-        GoRoute(
-          path: AppRoutes.profile,
-          pageBuilder: (context, state) =>
-              _fadePage(state: state, child: const ProfileScreen()),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.aiMeals,
+              builder: (context, state) => AiMealsScreen(
+                ingredients: state.extra is Map<String, dynamic>
+                    ? (state.extra as Map<String, dynamic>)['ingredients']
+                        as List<String>?
+                    : state.extra is List<String>
+                        ? state.extra as List<String>
+                        : null,
+              ),
+            ),
+            GoRoute(
+              path: AppRoutes.foodDetected,
+              builder: (context, state) => FoodDetectedScreen(
+                result: state.extra as Map<String, dynamic>? ?? {},
+              ),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.progress,
+              builder: (context, state) => const ProgressScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: AppRoutes.profile,
+              builder: (context, state) => const ProfileScreen(),
+            ),
+          ],
         ),
       ],
     ),
@@ -311,12 +332,9 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.recipeDetails,
-      pageBuilder: (context, state) {
+      builder: (context, state) {
         final recipe = state.extra as Map<String, dynamic>? ?? {};
-        return _fadePage(
-          state: state,
-          child: RecipeDetailScreen(recipe: recipe),
-        );
+        return RecipeDetailScreen(recipe: recipe);
       },
     ),
     GoRoute(
@@ -413,8 +431,8 @@ CustomTransitionPage<void> _slideHorizontalPage({
 
 // ─── SCAFFOLD Z BOTTOM NAVIGATION ────────────────────────────────────────────
 class ScaffoldWithBottomNav extends StatefulWidget {
-  const ScaffoldWithBottomNav({super.key, required this.child});
-  final Widget child;
+  const ScaffoldWithBottomNav({super.key, required this.navigationShell});
+  final StatefulNavigationShell navigationShell;
 
   @override
   State<ScaffoldWithBottomNav> createState() => _ScaffoldWithBottomNavState();
@@ -433,11 +451,7 @@ class _ScaffoldWithBottomNavState extends State<ScaffoldWithBottomNav>
   ];
 
   int _currentIndex(BuildContext context) {
-    final location = GoRouterState.of(context).uri.toString();
-    for (int i = 0; i < _tabs.length; i++) {
-      if (location.startsWith(_tabs[i].route)) return i;
-    }
-    return 0;
+    return widget.navigationShell.currentIndex;
   }
 
   @override
@@ -454,7 +468,10 @@ class _ScaffoldWithBottomNavState extends State<ScaffoldWithBottomNav>
 
   void _onTap(int index, BuildContext context) {
     _controller.forward().then((_) => _controller.reverse());
-    context.go(_tabs[index].route);
+    widget.navigationShell.goBranch(
+      index,
+      initialLocation: index == widget.navigationShell.currentIndex,
+    );
   }
 
   @override
@@ -464,16 +481,48 @@ class _ScaffoldWithBottomNavState extends State<ScaffoldWithBottomNav>
     return Scaffold(
       extendBody: true,
       backgroundColor: AppColors.background,
-      body: widget.child,
+      body: widget.navigationShell,
       floatingActionButton: currentIndex == 0
-          ? FloatingActionButton(
-              heroTag: 'add_meal_fab',
-              onPressed: () => context.go(AppRoutes.aiMeals),
+          ? SpeedDial(
+              icon: Icons.add,
+              activeIcon: Icons.add, // keeps the add icon and just rotates it
+              iconTheme: const IconThemeData(color: Colors.white, size: 28),
               backgroundColor: AppColors.primary,
               shape: const CircleBorder(),
               elevation: 4,
-              mini: false,
-              child: const Icon(Icons.add, color: Colors.white, size: 28),
+              animationDuration: const Duration(milliseconds: 200),
+              animationAngle: 3.14159 / 4, // 45 degrees
+              overlayColor: Colors.black,
+              overlayOpacity: 0.15,
+              children: [
+                SpeedDialChild(
+                  child: const Icon(Icons.menu_book, color: Colors.white),
+                  backgroundColor: AppColors.primary,
+                  label: 'Scan Recipe',
+                  labelStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                  labelBackgroundColor: Colors.white,
+                  shape: const CircleBorder(),
+                  onTap: () => context.go(AppRoutes.extract),
+                ),
+                SpeedDialChild(
+                  child: const Icon(Icons.qr_code_scanner, color: Colors.white),
+                  backgroundColor: AppColors.primary,
+                  label: 'Scan Food',
+                  labelStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                  labelBackgroundColor: Colors.white,
+                  shape: const CircleBorder(),
+                  onTap: () => context.go(AppRoutes.scanning),
+                ),
+                SpeedDialChild(
+                  child: const Icon(Icons.restaurant_menu, color: Colors.white),
+                  backgroundColor: AppColors.primary,
+                  label: 'Log Meal',
+                  labelStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                  labelBackgroundColor: Colors.white,
+                  shape: const CircleBorder(),
+                  onTap: () => context.go(AppRoutes.aiMeals),
+                ),
+              ],
             )
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,

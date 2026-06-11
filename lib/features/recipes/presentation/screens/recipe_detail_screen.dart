@@ -322,11 +322,11 @@ class _RecipeDetailViewState extends State<_RecipeDetailView> {
                             _InfoChip(icon: Icons.timer_outlined, label: '$cookTimeMinutes MIN'),
                             _InfoChip(icon: Icons.local_fire_department_outlined, label: '$calories KCAL'),
                             if (cookTimeMinutes <= 30)
-                              _DietTag(label: 'QUICK', color: AppColors.primary),
+                              const _DietTag(label: 'QUICK', color: AppColors.primary),
                             if (proteinG >= 25)
-                              _DietTag(label: 'HIGH PROTEIN', color: AppColors.proteinColor),
+                              const _DietTag(label: 'HIGH PROTEIN', color: AppColors.proteinColor),
                             if (carbsG <= 20)
-                              _DietTag(label: 'LOW CARB', color: AppColors.carbsColor),
+                              const _DietTag(label: 'LOW CARB', color: AppColors.carbsColor),
                             ...dietTags.take(2).map((tag) => _DietTag(
                               label: tag.toString().toUpperCase(),
                               color: AppColors.secondary,

@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:vitasense/features/auth/bloc/auth_event.dart';
 import 'package:vitasense/features/auth/bloc/auth_state.dart';
@@ -50,11 +52,28 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         email: event.email,
         password: event.password,
       );
+      await _syncOnboardingDataIfNeeded();
       final profileData = await _authRepository.getUserProfile();
       final user = UserModel.fromJson(profileData);
       emit(AuthAuthenticated(user: user));
     } catch (e) {
       emit(AuthError(message: _parseError(e)));
+    }
+  }
+
+  Future<void> _syncOnboardingDataIfNeeded() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final onboardingStr = prefs.getString('onboarding_data');
+      if (onboardingStr != null) {
+        final onboardingData = jsonDecode(onboardingStr) as Map<String, dynamic>;
+        await _authRepository.updateProfile(onboardingData);
+        await _authRepository.completeOnboarding();
+        await _authRepository.calculateTargets();
+        await prefs.remove('onboarding_data');
+      }
+    } catch (e) {
+      print('Error processing onboarding data during sync: $e');
     }
   }
 
@@ -65,14 +84,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(const AuthLoading());
     try {
-      final data = await _authRepository.signUp(
+      await _authRepository.signUp(
         email: event.email,
         password: event.password,
         fullName: event.fullName,
       );
-      final user = UserModel.fromJson(data);
+      
+      // Auto sign-in after sign up since edge function doesn't give us a session
+      await _authRepository.signIn(
+        email: event.email,
+        password: event.password,
+      );
+
+      await _syncOnboardingDataIfNeeded();
+
+      final profileData = await _authRepository.getUserProfile();
+      final user = UserModel.fromJson(profileData);
       emit(AuthAuthenticated(user: user));
     } catch (e) {
+      print('SignUp Error: $e');
       emit(AuthError(message: _parseError(e)));
     }
   }

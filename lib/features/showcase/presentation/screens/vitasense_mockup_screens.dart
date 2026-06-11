@@ -351,12 +351,19 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
                     ),
                   ),
                   SizedBox(width: 8.w),
-                  CircleAvatar(
-                    radius: 18.r,
-                    backgroundColor: AppColors.primary,
-                    child: Text(
-                      widget.userName.isNotEmpty ? widget.userName[0].toUpperCase() : '?',
-                      style: TextStyle(color: AppColors.textWhite, fontSize: 14.sp, fontWeight: FontWeight.w700),
+                  GestureDetector(
+                    onTap: () => context.push(AppRoutes.profile),
+                    child: CircleAvatar(
+                      radius: 18.r,
+                      backgroundColor: Colors.white,
+                      child: CircleAvatar(
+                        radius: 16.r,
+                        backgroundColor: AppColors.primary,
+                        child: Text(
+                          widget.userName.isNotEmpty ? widget.userName[0].toUpperCase() : '?',
+                          style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.bold),
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -1161,7 +1168,7 @@ class _MacroColumn extends StatelessWidget {
           ),
           SizedBox(height: 2.h),
           Text(
-            'z ${goal}g',
+            'of ${goal}g',
             style: TextStyle(
               fontSize: 12.sp,
               height: 1.5,
@@ -1582,7 +1589,7 @@ class _WeekStrip extends StatelessWidget {
               );
             }),
           ),
-          Divider(color: AppColors.borderLight, height: 1, thickness: 1),
+          const Divider(color: AppColors.borderLight, height: 1, thickness: 1),
         ],
       ),
     );

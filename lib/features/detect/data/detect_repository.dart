@@ -19,7 +19,9 @@ class DetectRepository {
         if (mealTime != null) 'mealTime': mealTime,
         if (mealDate != null) 'mealDate': mealDate,
       },
-    );
+    ).timeout(const Duration(seconds: 15), onTimeout: () {
+      throw Exception('Connection timed out. Please try again later.');
+    });
 
     return response.data as Map<String, dynamic>;
   }
@@ -31,7 +33,9 @@ class DetectRepository {
         'action': 'lookup',
         'barcode': barcode,
       },
-    );
+    ).timeout(const Duration(seconds: 15), onTimeout: () {
+      throw Exception('Connection timed out. Please try again later.');
+    });
 
     return response.data as Map<String, dynamic>;
   }

@@ -154,7 +154,7 @@ class _MainHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = textColor != null ? textColor : AppColors.textPrimary;
+    final iconColor = textColor ?? AppColors.textPrimary;
     final bgColor = textColor != null ? textColor!.withValues(alpha: 0.2) : AppColors.borderLight;
 
     return Row(
@@ -221,7 +221,7 @@ class _NestedHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool hasActions = actions != null && actions!.isNotEmpty;
-    final iconColor = textColor != null ? textColor : AppColors.textPrimary;
+    final iconColor = textColor ?? AppColors.textPrimary;
     final bgColor = textColor != null ? textColor!.withValues(alpha: 0.2) : AppColors.borderLight;
 
     return Row(
@@ -283,7 +283,7 @@ class _ModalHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = textColor != null ? textColor : AppColors.textPrimary;
+    final iconColor = textColor ?? AppColors.textPrimary;
     final bgColor = textColor != null ? textColor!.withValues(alpha: 0.2) : AppColors.borderLight;
 
     return Row(

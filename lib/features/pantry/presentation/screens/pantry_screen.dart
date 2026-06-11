@@ -216,12 +216,15 @@ class _PantryViewState extends State<_PantryView> {
                 else
                   SliverPadding(
                     padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 40.h),
-                    sliver: SliverList(
+                    sliver: SliverGrid(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 12.w,
+                        mainAxisSpacing: 12.h,
+                        childAspectRatio: 0.85,
+                      ),
                       delegate: SliverChildBuilderDelegate(
-                        (context, index) => Padding(
-                          padding: EdgeInsets.only(bottom: 10.h),
-                          child: _IngredientCard(ingredient: filtered[index]),
-                        ),
+                        (context, index) => _IngredientCard(ingredient: filtered[index]),
                         childCount: filtered.length,
                       ),
                     ),
@@ -800,14 +803,12 @@ class _ExpiryItem extends StatelessWidget {
                       ),
                       errorWidget: (_, __, ___) => Container(
                         color: AppColors.warningLight,
-                        child: Icon(Icons.eco,
-                            color: AppColors.warning, size: 20.r),
+                        child: Icon(Icons.eco, color: AppColors.warning, size: 20.r),
                       ),
                     )
                   : Container(
                       color: AppColors.warningLight,
-                      child: Icon(Icons.eco,
-                          color: AppColors.warning, size: 20.r),
+                      child: Icon(Icons.eco, color: AppColors.warning, size: 20.r),
                     ),
             ),
           ),
@@ -818,21 +819,13 @@ class _ExpiryItem extends StatelessWidget {
               children: [
                 Text(
                   ingredient.name,
-                  style: TextStyle(
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
+                  style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   days <= 0 ? 'Today' : days == 1 ? 'Tomorrow' : '$days days',
-                  style: TextStyle(
-                    fontSize: 11.sp,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.warningDark,
-                  ),
+                  style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.w600, color: AppColors.warningDark),
                 ),
               ],
             ),
@@ -866,107 +859,122 @@ class _IngredientCard extends StatelessWidget {
     }
   }
 
+  Widget _buildPlaceholder() {
+    return Container(
+      color: const Color(0xFFF5F5F5),
+      alignment: Alignment.center,
+      child: Icon(
+        _iconForCategory(ingredient.category),
+        size: 36.r,
+        color: AppColors.textSecondary.withValues(alpha: 0.6),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final days = ingredient.expiryDate
-            ?.difference(DateTime.now())
-            .inDays;
+    final days = ingredient.expiryDate?.difference(DateTime.now()).inDays;
 
     return Dismissible(
       key: Key(ingredient.id),
-      direction: DismissDirection.endToStart,
+      direction: DismissDirection.up,
       onDismissed: (_) =>
           context.read<PantryBloc>().add(DeleteIngredient(ingredient.id)),
       background: Container(
         decoration: BoxDecoration(
           color: AppColors.error,
-          borderRadius: BorderRadius.circular(12.r),
+          borderRadius: BorderRadius.circular(16.r),
         ),
-        alignment: Alignment.centerRight,
-        padding: EdgeInsets.only(right: 20.w),
-        child: Icon(Icons.delete_outline, color: AppColors.textWhite, size: 22.r),
+        alignment: Alignment.center,
+        child: Icon(Icons.delete_outline, color: AppColors.textWhite, size: 28.r),
       ),
       child: Container(
-        padding: EdgeInsets.all(12.r),
         decoration: BoxDecoration(
-          color: AppColors.backgroundWhite,
-          borderRadius: BorderRadius.circular(12.r),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16.r),
           boxShadow: [
             BoxShadow(
-              color: AppColors.textPrimary.withValues(alpha: 0.04),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 44.r,
-              height: 44.r,
-              decoration: BoxDecoration(
-                color: AppColors.borderLight,
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-              child: Icon(
-                _iconForCategory(ingredient.category),
-                color: AppColors.textSecondary,
-                size: 22.r,
-              ),
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    ingredient.name,
-                    style: TextStyle(
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16.r),
+            onTap: () {},
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  flex: 55,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+                    child: ingredient.imageUrl != null && ingredient.imageUrl!.isNotEmpty
+                        ? CachedNetworkImage(
+                            imageUrl: ingredient.imageUrl!,
+                            fit: BoxFit.cover,
+                            placeholder: (_, __) => _buildPlaceholder(),
+                            errorWidget: (_, __, ___) => _buildPlaceholder(),
+                          )
+                        : _buildPlaceholder(),
+                  ),
+                ),
+                Expanded(
+                  flex: 45,
+                  child: Padding(
+                    padding: EdgeInsets.all(10.r),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          ingredient.name,
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 2.h),
+                        Text(
+                          '${ingredient.quantity} ${ingredient.unit}',
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const Spacer(),
+                        if (days != null)
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                            decoration: BoxDecoration(
+                              color: days <= 0
+                                  ? AppColors.error
+                                  : days <= 3
+                                      ? AppColors.warning
+                                      : AppColors.success,
+                              borderRadius: BorderRadius.circular(20.r),
+                            ),
+                            child: Text(
+                              days <= 0 ? 'Expired' : '${days}d left',
+                              style: TextStyle(
+                                fontSize: 10.sp,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                  Text(
-                    '${ingredient.quantity} ${ingredient.unit}',
-                    style: TextStyle(
-                        fontSize: 13.sp, color: AppColors.textSecondary),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-            if (days != null) ...[
-              SizedBox(width: 8.w),
-              Container(
-                padding:
-                    EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: days < 2
-                      ? AppColors.errorLight
-                      : days < 4
-                          ? AppColors.warningLight
-                          : AppColors.borderLight,
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Text(
-                  days <= 0
-                      ? 'Today'
-                      : days == 1
-                          ? '1 day'
-                          : '$days days',
-                  style: TextStyle(
-                    fontSize: 11.sp,
-                    fontWeight: FontWeight.w600,
-                    color: days < 2
-                        ? AppColors.error
-                        : days < 4
-                            ? AppColors.warningDark
-                            : AppColors.textSecondary,
-                  ),
-                ),
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );

@@ -3,12 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
 import 'package:vitasense/features/auth/bloc/auth_bloc.dart';
-import 'package:vitasense/features/auth/bloc/auth_event.dart';
 import 'package:vitasense/features/auth/bloc/auth_state.dart';
 import 'package:vitasense/features/auth/data/models/user_model.dart';
 import 'package:vitasense/features/auth/data/auth_repository.dart';
@@ -98,6 +98,7 @@ class _ProfileSliverAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SliverAppBar(
+      automaticallyImplyLeading: false,
       expandedHeight: 104.h,
       pinned: true,
       backgroundColor: AppColors.primaryDark,
@@ -156,12 +157,18 @@ class _HeroBanner extends StatelessWidget {
                     ),
                     child: avatarUrl != null
                         ? ClipOval(
-                            child: Image.network(
-                              avatarUrl,
+                            child: CachedNetworkImage(
+                              imageUrl: avatarUrl,
                               width: 64.r,
                               height: 64.r,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Icon(
+                              memCacheWidth: 200,
+                              placeholder: (_, __) => Icon(
+                                Icons.person,
+                                color: AppColors.textWhite,
+                                size: 36.r,
+                              ),
+                              errorWidget: (_, __, ___) => Icon(
                                 Icons.person,
                                 color: AppColors.textWhite,
                                 size: 36.r,
@@ -220,59 +227,144 @@ class _DailyTargetsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A2E),
+        borderRadius: BorderRadius.circular(20.r),
+      ),
+      child: Stack(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Daily Targets',
-                      style: AppTextStyles.headingSmall,
-                    ),
-                    SizedBox(height: 2.h),
-                    Text(
-                      'Based on your goals',
-                      style: AppTextStyles.bodySmall,
-                    ),
+          // Radial glow / noise texture overlay
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20.r),
+                gradient: RadialGradient(
+                  center: const Alignment(-0.5, -0.8),
+                  radius: 1.5,
+                  colors: [
+                    Colors.white.withValues(alpha: 0.08),
+                    Colors.transparent,
                   ],
                 ),
               ),
-              Icon(Icons.flag_outlined, color: AppColors.primary, size: 20.r),
-            ],
+            ),
           ),
-          SizedBox(height: 20.h),
-          Row(
-            children: [
-              _MacroColumn(
-                value: user.dailyCalorieTarget ?? 0,
-                unit: 'kcal',
-                label: 'Calories',
-                valueColor: AppColors.primary,
-              ),
-              _MacroColumn(
-                value: user.dailyProteinTarget ?? 0,
-                unit: 'g',
-                label: 'Protein',
-                valueColor: AppColors.proteinColor,
-              ),
-              _MacroColumn(
-                value: user.dailyCarbsTarget ?? 0,
-                unit: 'g',
-                label: 'Carbs',
-                valueColor: AppColors.carbsColor,
-              ),
-              _MacroColumn(
-                value: user.dailyFatTarget ?? 0,
-                unit: 'g',
-                label: 'Fat',
-                valueColor: AppColors.fatColor,
-              ),
-            ],
+          Padding(
+            padding: EdgeInsets.all(20.r),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'MONTHLY TARGETS',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.6),
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(100.r),
+                          ),
+                          child: Text(
+                            '30 days',
+                            style: TextStyle(
+                              color: const Color(0xFF4CAF50),
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                        Icon(Icons.flag_rounded, color: Colors.white, size: 18.r),
+                      ],
+                    ),
+                  ],
+                ),
+                SizedBox(height: 24.h),
+                
+                // Hero Calories
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      '${((user.dailyCalorieTarget ?? 0) * 30 / 1000).toStringAsFixed(1)}k',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 42.sp,
+                        fontWeight: FontWeight.w800,
+                        height: 1.0,
+                      ),
+                    ),
+                    SizedBox(width: 6.w),
+                    Text(
+                      'kcal',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12.h),
+                
+                // Progress bar
+                Container(
+                  height: 4.h,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(2.r),
+                  ),
+                  child: FractionallySizedBox(
+                    alignment: Alignment.centerLeft,
+                    widthFactor: 0.65, // Mocked progress
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4CAF50),
+                        borderRadius: BorderRadius.circular(2.r),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 24.h),
+                
+                // Macro Tiles
+                Row(
+                  children: [
+                    _PremiumMacroTile(
+                      iconColor: Colors.blue,
+                      value: '${(user.dailyProteinTarget ?? 0) * 30}',
+                      label: 'Protein',
+                    ),
+                    Container(width: 1, height: 40.h, color: Colors.white.withValues(alpha: 0.1)),
+                    _PremiumMacroTile(
+                      iconColor: const Color(0xFF4CAF50),
+                      value: '${(user.dailyCarbsTarget ?? 0) * 30}',
+                      label: 'Carbs',
+                    ),
+                    Container(width: 1, height: 40.h, color: Colors.white.withValues(alpha: 0.1)),
+                    _PremiumMacroTile(
+                      iconColor: Colors.orange,
+                      value: '${(user.dailyFatTarget ?? 0) * 30}',
+                      label: 'Fat',
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -280,53 +372,62 @@ class _DailyTargetsCard extends StatelessWidget {
   }
 }
 
-class _MacroColumn extends StatelessWidget {
-  const _MacroColumn({
+class _PremiumMacroTile extends StatelessWidget {
+  const _PremiumMacroTile({
+    required this.iconColor,
     required this.value,
-    required this.unit,
     required this.label,
-    required this.valueColor,
   });
 
-  final int value;
-  final String unit;
+  final Color iconColor;
+  final String value;
   final String label;
-  final Color valueColor;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: Column(
         children: [
-          RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: '$value',
-                  style: TextStyle(
-                    fontSize: 22.sp,
-                    fontWeight: FontWeight.w700,
-                    color: valueColor,
-                  ),
-                ),
-                TextSpan(
-                  text: unit,
-                  style: TextStyle(
-                    fontSize: 11.sp,
-                    fontWeight: FontWeight.w500,
-                    color: valueColor.withValues(alpha: 0.75),
-                  ),
-                ),
-              ],
+          Container(
+            width: 8.r,
+            height: 8.r,
+            decoration: BoxDecoration(
+              color: iconColor,
+              shape: BoxShape.circle,
             ),
+          ),
+          SizedBox(height: 8.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                value,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              SizedBox(width: 2.w),
+              Text(
+                'g',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
           SizedBox(height: 4.h),
           Text(
             label,
             style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.6),
               fontSize: 11.sp,
               fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary,
             ),
           ),
         ],
@@ -1078,22 +1179,22 @@ class _SettingsMenuCard extends StatelessWidget {
           child: Column(
             children: [
               _buildRow(context, Icons.notifications_outlined, AppColors.borderLight, AppColors.textSecondary, 'Notifications', null),
-              Divider(color: AppColors.border, height: 1),
+              const Divider(color: AppColors.border, height: 1),
               _buildRow(context, Icons.help_outline, AppColors.borderLight, AppColors.textSecondary, 'Help & Support', null),
-              Divider(color: AppColors.border, height: 1),
+              const Divider(color: AppColors.border, height: 1),
               _buildRow(context, Icons.lock_outline, AppColors.borderLight, AppColors.textSecondary, 'Change Password', AppRoutes.changePassword),
-              Divider(color: AppColors.border, height: 1),
+              const Divider(color: AppColors.border, height: 1),
               _buildRow(context, Icons.shield_outlined, AppColors.borderLight, AppColors.textSecondary, 'Privacy Policy', AppRoutes.privacyPolicy),
-              Divider(color: AppColors.border, height: 1),
+              const Divider(color: AppColors.border, height: 1),
               _buildRow(context, Icons.description_outlined, AppColors.borderLight, AppColors.textSecondary, 'Terms of Service', AppRoutes.termsOfService),
-              Divider(color: AppColors.border, height: 1),
+              const Divider(color: AppColors.border, height: 1),
               _buildRow(context, Icons.logout_rounded, AppColors.borderLight, AppColors.textSecondary, 'Sign Out', null,
                 onTap: () async {
                   await AuthRepository().signOut();
                   if (context.mounted) context.go(AppRoutes.login);
                 },
               ),
-              Divider(color: AppColors.border, height: 1),
+              const Divider(color: AppColors.border, height: 1),
               _buildRow(context, Icons.delete_outline, AppColors.errorLight, AppColors.error, 'Delete Account', AppRoutes.deleteAccount, isDestructive: true),
             ],
           ),

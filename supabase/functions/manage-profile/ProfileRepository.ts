@@ -13,6 +13,7 @@ export interface UpdateProfileData {
   favoriteCuisines?: string[];
   favoriteProducts?: string[];
   healthConditions?: string[];
+  [key: string]: any;
 }
 
 export interface MacroTargets {
@@ -50,17 +51,33 @@ export class ProfileRepository {
     const supabase = getSupabaseAdmin();
     const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
-    if (data.gender !== undefined)          payload.gender           = data.gender;
-    if (data.age !== undefined)             payload.age              = data.age;
+    // camelCase (z edit profilu)
     if (data.weightKg !== undefined)        payload.weight_kg        = data.weightKg;
     if (data.heightCm !== undefined)        payload.height_cm        = data.heightCm;
     if (data.activityLevel !== undefined)   payload.activity_level   = data.activityLevel;
     if (data.goalType !== undefined)        payload.goal_type        = data.goalType;
     if (data.goalPace !== undefined)        payload.goal_pace        = data.goalPace;
+    if (data.gender !== undefined)          payload.gender           = data.gender;
+    if (data.age !== undefined)             payload.age              = data.age;
+    if (data.targetWeightKg !== undefined)  payload.target_weight_kg = data.targetWeightKg;
     if (data.allergies !== undefined)       payload.allergies        = data.allergies;
-    if (data.favoriteCuisines !== undefined) payload.favorite_cuisines = data.favoriteCuisines;
-    if (data.favoriteProducts !== undefined) payload.favorite_products = data.favoriteProducts;
     if (data.healthConditions !== undefined) payload.health_conditions = data.healthConditions;
+    if (data.favoriteCuisines !== undefined) payload.favorite_cuisines = data.favoriteCuisines;
+
+    // snake_case (z onboardingu Flutter)
+    if (data.weight_kg !== undefined)        payload.weight_kg        = data.weight_kg;
+    if (data.height_cm !== undefined)        payload.height_cm        = data.height_cm;
+    if (data.activity_level !== undefined)   payload.activity_level   = data.activity_level;
+    if (data.goal_type !== undefined)        payload.goal_type        = data.goal_type;
+    if (data.goal_pace !== undefined)        payload.goal_pace        = data.goal_pace;
+    if (data.gender !== undefined)           payload.gender           = data.gender;
+    if (data.age !== undefined)              payload.age              = data.age;
+    if (data.target_weight_kg !== undefined) payload.target_weight_kg = data.target_weight_kg;
+    if (data.allergies !== undefined)        payload.allergies        = data.allergies;
+    if (data.health_conditions !== undefined) payload.health_conditions = data.health_conditions;
+    if (data.favorite_cuisines !== undefined) payload.favorite_cuisines = data.favorite_cuisines;
+    if (data.accomplishments !== undefined)  payload.accomplishments  = data.accomplishments;
+    if (data.used_other_apps !== undefined)  payload.used_other_apps  = data.used_other_apps;
 
     const { data: result, error } = await supabase
       .from('profiles')

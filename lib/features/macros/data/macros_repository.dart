@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:vitasense/core/services/cache_service.dart';
 
 class MacrosRepository {
   final SupabaseClient _supabase;
@@ -7,31 +8,39 @@ class MacrosRepository {
       : _supabase = supabase ?? Supabase.instance.client;
 
   Future<Map<String, dynamic>> getDailyMacros(String date) async {
-    final response = await _supabase.functions.invoke(
-      'calculate-daily-macros',
-      body: {
-        'action': 'daily',
-        'date': date,
+    return CacheService().fetchWithStaleWhileRevalidate(
+      key: 'daily_macros_$date',
+      fetchFuture: () async {
+        final response = await _supabase.functions.invoke(
+          'calculate-daily-macros',
+          body: {
+            'action': 'daily',
+            'date': date,
+          },
+        );
+        final body = response.data as Map<String, dynamic>;
+        return body['data'] as Map<String, dynamic>;
       },
     );
-
-    final body = response.data as Map<String, dynamic>;
-    return body['data'] as Map<String, dynamic>;
   }
 
   Future<Map<String, dynamic>> getWeeklyMacros(
       String startDate, String endDate) async {
-    final response = await _supabase.functions.invoke(
-      'calculate-daily-macros',
-      body: {
-        'action': 'weekly',
-        'startDate': startDate,
-        'endDate': endDate,
+    return CacheService().fetchWithStaleWhileRevalidate(
+      key: 'weekly_macros_${startDate}_$endDate',
+      fetchFuture: () async {
+        final response = await _supabase.functions.invoke(
+          'calculate-daily-macros',
+          body: {
+            'action': 'weekly',
+            'startDate': startDate,
+            'endDate': endDate,
+          },
+        );
+        final body = response.data as Map<String, dynamic>;
+        return body['data'] as Map<String, dynamic>;
       },
     );
-
-    final body = response.data as Map<String, dynamic>;
-    return body['data'] as Map<String, dynamic>;
   }
 
   Future<List<Map<String, dynamic>>> getTodayMeals() async {

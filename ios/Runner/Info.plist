@@ -81,5 +81,17 @@
 
 		<key>NSPhotoLibraryAddUsageDescription</key>
 		<string>VitaSense needs permission to save recipe photos to your library.</string>
+
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>vitasense</string>
+				</array>
+			</dict>
+		</array>
 	</dict>
 </plist>

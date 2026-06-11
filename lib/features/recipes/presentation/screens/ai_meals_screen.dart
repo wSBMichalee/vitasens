@@ -466,7 +466,7 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                       onTap: () => Navigator.pop(context),
                       child: Container(
                         width: 32.r, height: 32.r,
-                        decoration: BoxDecoration(color: AppColors.borderLight, shape: BoxShape.circle),
+                        decoration: const BoxDecoration(color: AppColors.borderLight, shape: BoxShape.circle),
                         child: Icon(Icons.close, color: AppColors.textPrimary, size: 18.r),
                       ),
                     ),

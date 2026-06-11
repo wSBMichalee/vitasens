@@ -1,6 +1,7 @@
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:vitasense/core/services/cache_service.dart';
 
 class AuthRepository {
   final SupabaseClient _client = Supabase.instance.client;
@@ -125,14 +126,19 @@ class AuthRepository {
 
   // ─── Get User Profile ─────────────────────────────────────────────────────────
   Future<Map<String, dynamic>> getUserProfile() async {
-    final response = await _client.functions.invoke(
-      'manage-auth',
-      body: {
-        'action': 'get_user',
+    return CacheService().fetchWithStaleWhileRevalidate(
+      key: 'user_profile',
+      fetchFuture: () async {
+        final response = await _client.functions.invoke(
+          'manage-auth',
+          body: {
+            'action': 'get_user',
+          },
+        );
+        final responseData = response.data as Map;
+        return Map<String, dynamic>.from(responseData['data'] as Map);
       },
     );
-    final responseData = response.data as Map;
-    return Map<String, dynamic>.from(responseData['data'] as Map);
   }
 
   // ─── Update Profile ───────────────────────────────────────────────────────────
@@ -144,18 +150,24 @@ class AuthRepository {
         ...data,
       },
     );
+    CacheService().invalidate('user_profile');
   }
 
   // ─── Calculate Targets ────────────────────────────────────────────────────────
   Future<Map<String, dynamic>> calculateTargets() async {
-    final response = await _client.functions.invoke(
-      'manage-profile',
-      body: {
-        'action': 'calculate_targets',
+    return CacheService().fetchWithStaleWhileRevalidate(
+      key: 'user_targets',
+      fetchFuture: () async {
+        final response = await _client.functions.invoke(
+          'manage-profile',
+          body: {
+            'action': 'calculate_targets',
+          },
+        );
+        final responseData = response.data as Map;
+        return Map<String, dynamic>.from(responseData['data'] as Map);
       },
     );
-    final responseData = response.data as Map;
-    return Map<String, dynamic>.from(responseData['data'] as Map);
   }
 
   // ─── Complete Onboarding ──────────────────────────────────────────────────────

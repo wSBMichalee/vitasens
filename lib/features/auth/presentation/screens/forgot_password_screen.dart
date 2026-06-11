@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/features/auth/bloc/auth_bloc.dart';
 import 'package:vitasense/features/auth/bloc/auth_event.dart';
@@ -15,30 +15,33 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  final _emailFocus = FocusNode();
-  bool _emailFocused = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _emailFocus.addListener(
-      () => setState(() => _emailFocused = _emailFocus.hasFocus),
-    );
-  }
 
   @override
   void dispose() {
     _emailController.dispose();
-    _emailFocus.dispose();
     super.dispose();
   }
 
   void _resetPassword() {
-    if (_emailController.text.trim().isEmpty) return;
-    context.read<AuthBloc>().add(
-          ResetPasswordRequested(email: _emailController.text.trim()),
-        );
+    if (_formKey.currentState!.validate()) {
+      context.read<AuthBloc>().add(
+            ResetPasswordRequested(email: _emailController.text.trim()),
+          );
+    }
+  }
+
+  void _showSnackBar(String message, {bool isError = true}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(color: Colors.white)),
+        backgroundColor: isError ? Colors.red : AppColors.success,
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.all(16.r),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+      ),
+    );
   }
 
   @override
@@ -46,294 +49,177 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthPasswordResetSent) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text(
-                'Reset link sent! Check your inbox.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textWhite),
-              ),
-              backgroundColor: AppColors.success,
-              behavior: SnackBarBehavior.floating,
-              margin: EdgeInsets.all(16.r),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-            ),
-          );
-          Navigator.of(context).pop();
+          _showSnackBar('Reset link sent! Check your inbox.', isError: false);
+          context.pop();
         } else if (state is AuthError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                state.message,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.textWhite),
-              ),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.floating,
-              margin: EdgeInsets.all(16.r),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-            ),
-          );
+          _showSnackBar(state.message);
         }
       },
       child: Scaffold(
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF0A1628),
-                Color(0xFF0D2137),
-                Color(0xFF0A2E1A),
-              ],
-              stops: [0.0, 0.5, 1.0],
-            ),
-          ),
-          child: SafeArea(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(vertical: 24.h),
-              child: Column(
-                children: [
-                  SizedBox(height: 40.h),
-
-                  // ─── ICON ─────────────────────────────────────────────────
-                  Container(
-                    width: 72.r,
-                    height: 72.r,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: const LinearGradient(
-                        colors: [AppColors.primary, AppColors.primaryDark],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.4),
-                          blurRadius: 24,
-                          spreadRadius: 4,
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      Icons.lock_reset_rounded,
-                      color: AppColors.textWhite,
-                      size: 36.r,
-                    ),
-                  )
-                      .animate()
-                      .scale(
-                        begin: const Offset(0.5, 0.5),
-                        end: const Offset(1, 1),
-                        curve: Curves.elasticOut,
-                        duration: 700.ms,
-                      )
-                      .fadeIn(duration: 400.ms),
-
-                  SizedBox(height: 32.h),
-
-                  // ─── GLASS CARD ───────────────────────────────────────────
-                  Container(
-                    margin: EdgeInsets.symmetric(horizontal: 24.w),
-                    padding: EdgeInsets.all(24.r),
-                    decoration: BoxDecoration(
-                      color: AppColors.backgroundWhite.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(24.r),
-                      border: Border.all(
-                        color: AppColors.backgroundWhite.withValues(alpha: 0.15),
-                        width: 1,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.textPrimary.withValues(alpha: 0.3),
-                          blurRadius: 32,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Back button
-                        GestureDetector(
-                          onTap: () => Navigator.of(context).pop(),
-                          child: Container(
-                            width: 36.r,
-                            height: 36.r,
-                            decoration: BoxDecoration(
-                              color: AppColors.backgroundWhite.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(10.r),
-                              border: Border.all(
-                                color: AppColors.backgroundWhite.withValues(alpha: 0.15),
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.arrow_back_ios_new,
-                              color: AppColors.textWhite,
-                              size: 16.r,
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          SizedBox(height: 48.h),
+                          Icon(Icons.lock_reset, size: 48.r, color: AppColors.primary),
+                          SizedBox(height: 16.h),
+                          Text(
+                            'Forgot password?',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 24.sp,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.black,
+                              letterSpacing: -0.5,
                             ),
                           ),
-                        ),
-
-                        SizedBox(height: 20.h),
-
-                        Text(
-                          'Forgot password?',
-                          style: TextStyle(
-                            fontSize: 22.sp,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textWhite,
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          "No worries! Enter your email and we'll\nsend you a reset link.",
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            color: AppColors.textWhite.withValues(alpha: 0.6),
-                            height: 1.5,
-                          ),
-                        ),
-
-                        SizedBox(height: 28.h),
-
-                        // EMAIL FIELD
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          decoration: BoxDecoration(
-                            color: AppColors.backgroundWhite.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(14.r),
-                            border: Border.all(
-                              color: _emailFocused
-                                  ? AppColors.primary
-                                  : AppColors.backgroundWhite.withValues(alpha: 0.15),
-                              width: _emailFocused ? 1.5 : 1,
+                          SizedBox(height: 8.h),
+                          Text(
+                            "Enter your email and we'll send you a reset link.",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              color: const Color(0xFF8A8A8E),
                             ),
                           ),
-                          child: TextField(
+                          SizedBox(height: 32.h),
+                          TextFormField(
                             controller: _emailController,
-                            focusNode: _emailFocus,
                             keyboardType: TextInputType.emailAddress,
-                            style:
-                                TextStyle(color: AppColors.textWhite, fontSize: 15.sp),
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              color: Colors.black,
+                            ),
                             decoration: InputDecoration(
                               hintText: 'Email address',
                               hintStyle: TextStyle(
-                                color: AppColors.textWhite.withValues(alpha: 0.4),
-                                fontSize: 15.sp,
+                                fontSize: 16.sp,
+                                color: const Color(0xFFC7C7CC),
                               ),
-                              prefixIcon: Icon(
+                              prefixIcon: const Icon(
                                 Icons.email_outlined,
-                                color: AppColors.textWhite.withValues(alpha: 0.5),
-                                size: 20.r,
+                                color: Color(0xFF8A8A8E),
                               ),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 16.w,
-                                vertical: 16.h,
+                              filled: true,
+                              fillColor: const Color(0xFFF2F2F7),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.r),
+                                borderSide: BorderSide.none,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.r),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.r),
+                                borderSide: const BorderSide(
+                                  color: AppColors.primary,
+                                  width: 2,
+                                ),
+                              ),
+                              errorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.r),
+                                borderSide: const BorderSide(
+                                  color: Colors.red,
+                                  width: 1,
+                                ),
+                              ),
+                              focusedErrorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.r),
+                                borderSide: const BorderSide(
+                                  color: Colors.red,
+                                  width: 2,
+                                ),
+                              ),
+                              errorStyle: TextStyle(
+                                color: Colors.red,
+                                fontSize: 12.sp,
                               ),
                             ),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) return "Please enter your email address";
+                              if (!RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(value)) {
+                                return "Please enter a valid email";
+                              }
+                              return null;
+                            },
                           ),
-                        ),
-
-                        SizedBox(height: 28.h),
-
-                        // SEND RESET LINK BUTTON
-                        BlocBuilder<AuthBloc, AuthState>(
-                          builder: (context, state) {
-                            final isLoading = state is AuthLoading;
-                            return GestureDetector(
-                              onTap: isLoading ? null : _resetPassword,
-                              child: Container(
-                                height: 52.h,
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [
-                                      AppColors.primary,
-                                      AppColors.primaryDark,
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(14.r),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.primary
-                                          .withValues(alpha: 0.4),
-                                      blurRadius: 16,
-                                      offset: const Offset(0, 4),
+                          SizedBox(height: 24.h),
+                          BlocBuilder<AuthBloc, AuthState>(
+                            builder: (context, state) {
+                              final isLoading = state is AuthLoading;
+                              return SizedBox(
+                                height: 56.h,
+                                child: FilledButton(
+                                  onPressed: isLoading ? null : _resetPassword,
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(28.r),
                                     ),
-                                  ],
-                                ),
-                                child: Center(
+                                  ),
                                   child: isLoading
                                       ? SizedBox(
-                                          width: 22.r,
-                                          height: 22.r,
-                                          child:
-                                              const CircularProgressIndicator(
-                                            color: AppColors.textWhite,
-                                            strokeWidth: 2,
+                                          width: 24.r,
+                                          height: 24.r,
+                                          child: const CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2.5,
                                           ),
                                         )
                                       : Text(
                                           'Send Reset Link',
                                           style: TextStyle(
                                             fontSize: 16.sp,
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.textWhite,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
                                           ),
                                         ),
                                 ),
-                              ),
-                            );
-                          },
-                        ),
-
-                        SizedBox(height: 24.h),
-
-                        // BACK TO SIGN IN LINK
-                        Center(
-                          child: GestureDetector(
-                            onTap: () => Navigator.of(context).pop(),
+                              );
+                            },
+                          ),
+                          SizedBox(height: 16.h),
+                          TextButton(
+                            onPressed: () => context.pop(),
+                            style: TextButton.styleFrom(
+                              foregroundColor: const Color(0xFF8A8A8E),
+                            ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(
-                                  Icons.arrow_back,
-                                  size: 16.r,
-                                  color: AppColors.textWhite.withValues(alpha: 0.5),
-                                ),
-                                SizedBox(width: 6.w),
+                                Icon(Icons.arrow_back, size: 16.r),
+                                SizedBox(width: 8.w),
                                 Text(
                                   'Back to Sign In',
                                   style: TextStyle(
                                     fontSize: 14.sp,
-                                    color: AppColors.textWhite.withValues(alpha: 0.6),
-                                    fontWeight: FontWeight.w500,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  )
-                      .animate(delay: 200.ms)
-                      .fadeIn(duration: 500.ms)
-                      .slideY(
-                        begin: 0.1,
-                        end: 0,
-                        curve: Curves.easeOutCubic,
+                          const Spacer(),
+                        ],
                       ),
-
-                  SizedBox(height: 24.h),
-                ],
-              ),
-            ),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),

@@ -1,11 +1,13 @@
+import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
-import 'package:vitasense/core/theme/app_text_styles.dart';
-import 'package:vitasense/features/auth/data/auth_repository.dart';
 
 class UserOnboardingScreen extends StatefulWidget {
   const UserOnboardingScreen({super.key});
@@ -16,29 +18,31 @@ class UserOnboardingScreen extends StatefulWidget {
 
 class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
   final PageController _pageController = PageController();
-  final AuthRepository _authRepository = AuthRepository();
 
   int _currentStep = 0;
-
-  // Collected data
-  final List<String> _accomplishments = [];
-  bool? _usedOtherApps;
-  String? _gender;
-  int _age = 25;
-  int _height = 170;
-  int _weight = 70;
-  int _targetWeight = 70;
-  bool _sensitiveData = true;
-  bool _tos = true;
-  bool _useCm = true;
-  bool _useKg = true;
-  String? _goal;
-  String? _pace;
-  String? _activity;
-  final List<String> _allergies = [];
-  final List<String> _cuisines = [];
-  List<String> _healthConditions = ['none'];
   bool _isLoading = false;
+
+  String? _gender;
+  String _heightUnit = 'cm';
+  int _heightCm = 175;
+  int _heightFt = 5;
+  int _heightIn = 9;
+
+  String _weightUnit = 'kg';
+  int _weightKg = 70;
+  int _weightLbs = 154;
+
+  int _age = 25;
+  String? _goal;
+  String? _activity;
+  final List<String> _dietary = [];
+  final List<String> _allergies = [];
+  final List<String> _healthConditions = [];
+  final List<String> _kitchenStaples = [];
+  String? _cookingFrequency;
+  int _rating = 0;
+
+  static const int _totalPages = 22;
 
   @override
   void dispose() {
@@ -47,7 +51,7 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
   }
 
   void _nextStep() {
-    if (_currentStep < 14) {
+    if (_currentStep < _totalPages - 1) {
       _pageController.animateToPage(
         _currentStep + 1,
         duration: const Duration(milliseconds: 300),
@@ -59,45 +63,60 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
 
   void _previousStep() {
     if (_currentStep > 0) {
+      if (_currentStep == 19) {
+        _pageController.animateToPage(
+          17,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+        );
+        setState(() => _currentStep = 17);
+        return;
+      }
+      if (_currentStep == 20) {
+        return; // od planu w dol nie wracamy do ladowania
+      }
+
       _pageController.animateToPage(
         _currentStep - 1,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutCubic,
       );
       setState(() => _currentStep--);
+    } else {
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go('/landing');
+      }
     }
   }
 
   Future<void> _completeOnboarding() async {
     setState(() => _isLoading = true);
+    
+    int finalHeightCm = _heightUnit == 'cm' ? _heightCm : ((_heightFt * 12 + _heightIn) * 2.54).round();
+    int finalWeightKg = _weightUnit == 'kg' ? _weightKg : (_weightLbs * 0.453592).round();
+
+    final data = {
+      'gender': _gender,
+      'height_cm': finalHeightCm,
+      'weight_kg': finalWeightKg,
+      'age': _age,
+      'goal': _goal,
+      'activity_level': _activity,
+      'dietary_preferences': _dietary,
+      'allergies': _allergies,
+      'health_conditions': _healthConditions,
+      'kitchen_staples': _kitchenStaples,
+      'cooking_frequency': _cookingFrequency,
+    };
+
     try {
-      await _authRepository.updateProfile({
-        'accomplishments': _accomplishments,
-        'used_other_apps': _usedOtherApps,
-        'gender': _gender,
-        'age': _age,
-        'weight_kg': _useKg ? _weight : _weight * 0.453592,
-        'height_cm': _useCm ? _height : _height * 2.54,
-        'target_weight_kg': _useKg ? _targetWeight : _targetWeight * 0.453592,
-        'goal_type': _goal,
-        'goal_pace': _pace,
-        'activity_level': _activity,
-        'allergies': _allergies,
-        'favorite_cuisines': _cuisines,
-        'health_conditions': _healthConditions,
-      });
-      await _authRepository.calculateTargets();
-      await _authRepository.completeOnboarding();
-      if (mounted) context.go(AppRoutes.paywall);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('onboarding_data', jsonEncode(data));
+      if (mounted) context.go(AppRoutes.login);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+      debugPrint("Error saving onboarding data: $e");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -105,218 +124,91 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    bool hideTopBar = _currentStep == 19 || _currentStep == 21; 
+
     return Scaffold(
-      backgroundColor: AppColors.backgroundWhite,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
-            // ─── PROGRESS BAR ──────────────────────────────────────────────
-            Padding(
-              padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 0),
-              child: Row(
-                children: [
-                  if (_currentStep > 0)
+            if (!hideTopBar)
+              Padding(
+                padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 0),
+                child: Row(
+                  children: [
                     GestureDetector(
                       onTap: _previousStep,
                       child: Container(
-                        width: 44.r,
-                        height: 44.r,
-                        margin: EdgeInsets.only(right: 16.w),
-                        decoration: const BoxDecoration(
-                          color: AppColors.borderLight,
-                          shape: BoxShape.circle,
+                        width: 36.r,
+                        height: 36.r,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF2F2F7),
+                          borderRadius: BorderRadius.circular(8.r),
                         ),
                         child: Center(
                           child: Icon(
                             Icons.arrow_back_ios_new,
-                            color: AppColors.textPrimary,
-                            size: 18.r,
+                            color: Colors.black,
+                            size: 16.r,
                           ),
                         ),
                       ),
                     ),
-                  Expanded(
-                    child: TweenAnimationBuilder<double>(
-                      tween: Tween(
-                        begin: 0,
-                        end: (_currentStep + 1) / 15,
+                    SizedBox(width: 16.w),
+                    Expanded(
+                      child: Container(
+                        height: 2.h,
+                        color: const Color(0xFFE5E5EA),
+                        alignment: Alignment.centerLeft,
+                        child: TweenAnimationBuilder<double>(
+                          tween: Tween(
+                            begin: 0,
+                            end: (_currentStep + 1) / _totalPages,
+                          ),
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOutCubic,
+                          builder: (context, value, child) {
+                            return FractionallySizedBox(
+                              widthFactor: value,
+                              child: Container(
+                                color: AppColors.primary,
+                              ),
+                            );
+                          },
+                        ),
                       ),
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeOutCubic,
-                      builder: (context, value, _) {
-                        return LinearProgressIndicator(
-                          value: value,
-                          color: AppColors.primary,
-                          backgroundColor: AppColors.borderLight,
-                          minHeight: 4.h,
-                          borderRadius: BorderRadius.circular(2.r),
-                        );
-                      },
                     ),
-                  ),
-                  SizedBox(width: 16.w),
-                  Text(
-                    '${_currentStep + 1}/15',
-                    style: TextStyle(
-                      fontSize: 13.sp,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
-            // ─── PAGES ─────────────────────────────────────────────────────
             Expanded(
               child: PageView(
                 controller: _pageController,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  _AccomplishStep(
-                    selected: _accomplishments,
-                    onToggle: (v) {
-                      setState(() {
-                        _accomplishments.contains(v)
-                            ? _accomplishments.remove(v)
-                            : _accomplishments.add(v);
-                      });
-                    },
-                    onNext: _accomplishments.isNotEmpty ? _nextStep : null,
-                  ),
-                  _NutritionAppsStep(
-                    selected: _usedOtherApps,
-                    onSelected: (v) => setState(() => _usedOtherApps = v),
-                    onNext: _usedOtherApps != null ? _nextStep : null,
-                  ),
-                  _MotivationStep(
-                    onNext: _nextStep,
-                  ),
-                  _GenderStep(
-                    selected: _gender,
-                    onSelected: (v) => setState(() => _gender = v),
-                    onNext: _gender != null ? _nextStep : null,
-                  ),
-                  _AgeStep(
-                    age: _age,
-                    onDecrement: () {
-                      if (_age > 10) setState(() => _age--);
-                    },
-                    onIncrement: () {
-                      if (_age < 120) setState(() => _age++);
-                    },
-                    onNext: _nextStep,
-                  ),
-                  _HeightStep(
-                    height: _height,
-                    useCm: _useCm,
-                    onToggleUnit: () {
-                      setState(() {
-                        if (_useCm) {
-                          _height = (_height / 2.54).round();
-                        } else {
-                          _height = (_height * 2.54).round();
-                        }
-                        _useCm = !_useCm;
-                      });
-                    },
-                    onChanged: (v) => setState(() => _height = v),
-                    onNext: _nextStep,
-                  ),
-                  _WeightStep(
-                    weight: _weight,
-                    useKg: _useKg,
-                    onToggleUnit: () {
-                      setState(() {
-                        if (_useKg) {
-                          _weight = (_weight * 2.20462).round();
-                          _targetWeight = (_targetWeight * 2.20462).round();
-                        } else {
-                          _weight = (_weight / 2.20462).round();
-                          _targetWeight = (_targetWeight / 2.20462).round();
-                        }
-                        _useKg = !_useKg;
-                      });
-                    },
-                    onChanged: (v) => setState(() => _weight = v),
-                    onNext: _nextStep,
-                  ),
-                  _GoalStep(
-                    selected: _goal,
-                    onSelected: (v) => setState(() => _goal = v),
-                    onNext: _goal != null ? _nextStep : null,
-                  ),
-                  _PaceStep(
-                    selected: _pace,
-                    onSelected: (v) => setState(() => _pace = v),
-                    onNext: _pace != null ? _nextStep : null,
-                  ),
-                  _ActivityStep(
-                    selected: _activity,
-                    onSelected: (v) => setState(() => _activity = v),
-                    onNext: _activity != null ? _nextStep : null,
-                  ),
-                  _TargetWeightStep(
-                    targetWeight: _targetWeight,
-                    currentWeight: _weight,
-                    goal: _goal,
-                    useKg: _useKg,
-                    onChanged: (v) => setState(() => _targetWeight = v),
-                    onNext: _nextStep,
-                  ),
-                  _GoalProjectionStep(
-                    targetWeight: _targetWeight,
-                    currentWeight: _weight,
-                    pace: _pace,
-                    goal: _goal,
-                    useKg: _useKg,
-                    onNext: _nextStep,
-                  ),
-                  _PreferencesStep(
-                    allergies: _allergies,
-                    cuisines: _cuisines,
-                    onToggleAllergy: (v) {
-                      setState(() {
-                        _allergies.contains(v)
-                            ? _allergies.remove(v)
-                            : _allergies.add(v);
-                      });
-                    },
-                    onToggleCuisine: (v) {
-                      setState(() {
-                        _cuisines.contains(v)
-                            ? _cuisines.remove(v)
-                            : _cuisines.add(v);
-                      });
-                    },
-                    onNext: _nextStep,
-                  ),
-                  _HealthConditionsStep(
-                    selected: _healthConditions,
-                    onToggle: (v) {
-                      setState(() {
-                        if (v == 'none') {
-                          _healthConditions = ['none'];
-                        } else {
-                          _healthConditions.remove('none');
-                          _healthConditions.contains(v)
-                              ? _healthConditions.remove(v)
-                              : _healthConditions.add(v);
-                          if (_healthConditions.isEmpty) {
-                            _healthConditions = ['none'];
-                          }
-                        }
-                      });
-                    },
-                    onNext: _nextStep,
-                  ),
-                  _AlmostDoneStep(
-                    sensitiveData: _sensitiveData,
-                    tos: _tos,
-                    onSensitiveDataChanged: (v) => setState(() => _sensitiveData = v ?? false),
-                    onTosChanged: (v) => setState(() => _tos = v ?? false),
-                    onComplete: _isLoading ? null : _completeOnboarding,
-                    isLoading: _isLoading,
-                  ),
+                  _Step1(onNext: _nextStep),
+                  _Step2(onNext: _nextStep),
+                  _Step3(selected: _gender, onSelected: (v) => setState(() => _gender = v), onNext: _gender != null ? _nextStep : null),
+                  _Step4(unit: _heightUnit, heightCm: _heightCm, heightFt: _heightFt, heightIn: _heightIn, onUnitChanged: (v) => setState(() => _heightUnit = v), onCmChanged: (v) => setState(() => _heightCm = v), onFtChanged: (v) => setState(() => _heightFt = v), onInChanged: (v) => setState(() => _heightIn = v), onNext: _nextStep),
+                  _Step5(unit: _weightUnit, weightKg: _weightKg, weightLbs: _weightLbs, onUnitChanged: (v) => setState(() => _weightUnit = v), onKgChanged: (v) => setState(() => _weightKg = v), onLbsChanged: (v) => setState(() => _weightLbs = v), onNext: _nextStep),
+                  _Step6(age: _age, onAgeChanged: (v) => setState(() => _age = v), onNext: _nextStep),
+                  _Step7(gender: _gender, heightUnit: _heightUnit, heightCm: _heightCm, heightFt: _heightFt, heightIn: _heightIn, weightUnit: _weightUnit, weightKg: _weightKg, weightLbs: _weightLbs, age: _age, onNext: _nextStep),
+                  _Step8(selected: _goal, onSelected: (v) => setState(() => _goal = v), onNext: _goal != null ? _nextStep : null),
+                  _Step9(goal: _goal, onNext: _nextStep),
+                  _Step10(selected: _activity, onSelected: (v) => setState(() => _activity = v), onNext: _activity != null ? _nextStep : null),
+                  _Step11(selected: _dietary, onToggle: (v) { setState(() { if (v == 'No restrictions') { _dietary.clear(); _dietary.add(v); } else { _dietary.remove('No restrictions'); _dietary.contains(v) ? _dietary.remove(v) : _dietary.add(v); } }); }, onNext: _dietary.isNotEmpty ? _nextStep : null),
+                  _Step12(selected: _allergies, onToggle: (v) { setState(() { if (v == 'None') { _allergies.clear(); _allergies.add(v); } else { _allergies.remove('None'); _allergies.contains(v) ? _allergies.remove(v) : _allergies.add(v); } }); }, onNext: _nextStep),
+                  _Step13(selected: _healthConditions, onToggle: (v) { setState(() { if (v == 'None') { _healthConditions.clear(); _healthConditions.add(v); } else { _healthConditions.remove('None'); _healthConditions.contains(v) ? _healthConditions.remove(v) : _healthConditions.add(v); } }); }, onNext: _healthConditions.isNotEmpty ? _nextStep : null),
+                  _Step14(onNext: _nextStep),
+                  _Step15(selected: _kitchenStaples, onToggle: (v) { setState(() { _kitchenStaples.contains(v) ? _kitchenStaples.remove(v) : _kitchenStaples.add(v); }); }, onNext: _kitchenStaples.isNotEmpty ? _nextStep : null),
+                  _Step16(selected: _cookingFrequency, onSelected: (v) => setState(() => _cookingFrequency = v), onNext: _cookingFrequency != null ? _nextStep : null),
+                  _Step17(onNext: _nextStep),
+                  _Step18(onNext: _nextStep),
+                  _Step19(rating: _rating, onRatingChanged: (v) => setState(() => _rating = v), onNext: _nextStep),
+                  _Step20(onNext: _nextStep),
+                  _Step21(gender: _gender, heightUnit: _heightUnit, heightCm: _heightCm, heightFt: _heightFt, heightIn: _heightIn, weightUnit: _weightUnit, weightKg: _weightKg, weightLbs: _weightLbs, age: _age, goal: _goal, activity: _activity, dietary: _dietary, onNext: _nextStep),
+                  _Step22(onNext: _completeOnboarding, isLoading: _isLoading),
                 ],
               ),
             ),
@@ -327,1260 +219,55 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// STEP 1: ACCOMPLISH
-// ─────────────────────────────────────────────────────────────────────────────
-class _AccomplishStep extends StatelessWidget {
-  const _AccomplishStep({
-    required this.selected,
-    required this.onToggle,
-    required this.onNext,
-  });
-
-  final List<String> selected;
-  final ValueChanged<String> onToggle;
-  final VoidCallback? onNext;
+class _Heading extends StatelessWidget {
+  final String text;
+  final TextAlign textAlign;
+  const _Heading(this.text, {this.textAlign = TextAlign.left});
 
   @override
   Widget build(BuildContext context) {
-    final options = [
-      ('🍎 Eat and live healthier', 'healthier'),
-      ('⚡ Boost my energy and mood', 'energy'),
-      ('💪 Stay motivated and consistent', 'motivated'),
-      ('🧘 Feel better about my body', 'body'),
-      ('🥗 Cook smarter with what I have', 'cook'),
-      ('❤️ Eat for my health condition', 'condition'),
-    ];
-
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("What would you like to accomplish?", style: AppTextStyles.headingLarge),
-          SizedBox(height: 8.h),
-          Text("Choose all that apply", style: AppTextStyles.bodyMedium),
-          SizedBox(height: 32.h),
-          ...options.map(
-            (o) => Padding(
-              padding: EdgeInsets.only(bottom: 12.h),
-              child: _MultiSelectCard(
-                label: o.$1,
-                selected: selected.contains(o.$2),
-                onTap: () => onToggle(o.$2),
-              ),
-            ),
-          ),
-          SizedBox(height: 24.h),
-          _ContinueButton(onPressed: onNext),
-          SizedBox(height: 16.h),
-        ],
-      ),
-    ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.05, end: 0);
-  }
-}
-
-class _MultiSelectCard extends StatelessWidget {
-  const _MultiSelectCard({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: double.infinity,
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 18.h),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.primaryLight : AppColors.borderLight,
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ),
-            if (selected)
-              Icon(Icons.check_circle, color: AppColors.primary, size: 24.r)
-            else
-              Icon(Icons.circle_outlined, color: AppColors.textMuted, size: 24.r),
-          ],
-        ),
+    return Text(
+      text,
+      textAlign: textAlign,
+      style: TextStyle(
+        fontSize: 28.sp,
+        fontWeight: FontWeight.w800,
+        color: Colors.black,
+        letterSpacing: -0.5,
       ),
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// STEP 2: NUTRITION APPS
-// ─────────────────────────────────────────────────────────────────────────────
-class _NutritionAppsStep extends StatelessWidget {
-  const _NutritionAppsStep({
-    required this.selected,
-    required this.onSelected,
-    required this.onNext,
-  });
-
-  final bool? selected;
-  final ValueChanged<bool> onSelected;
-  final VoidCallback? onNext;
+class _Subtitle extends StatelessWidget {
+  final String text;
+  final TextAlign textAlign;
+  const _Subtitle(this.text, {this.textAlign = TextAlign.left});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("Have you tried other nutrition apps?", style: AppTextStyles.headingLarge),
-          SizedBox(height: 48.h),
-          _BinaryCard(
-            label: '👍 Yes - I have',
-            selected: selected == true,
-            onTap: () => onSelected(true),
-          ),
-          SizedBox(height: 16.h),
-          _BinaryCard(
-            label: '👎 No - first time',
-            selected: selected == false,
-            onTap: () => onSelected(false),
-          ),
-          const Spacer(),
-          _ContinueButton(onPressed: onNext),
-        ],
-      ),
-    ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.05, end: 0);
-  }
-}
-
-class _BinaryCard extends StatelessWidget {
-  const _BinaryCard({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: double.infinity,
-        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.textPrimary : AppColors.borderLight,
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w600,
-            color: selected ? AppColors.textWhite : AppColors.textPrimary,
-          ),
-          textAlign: TextAlign.center,
-        ),
+    return Text(
+      text,
+      textAlign: textAlign,
+      style: TextStyle(
+        fontSize: 15.sp,
+        color: const Color(0xFF8A8A8E),
+        fontWeight: FontWeight.w400,
       ),
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// STEP 3: MOTIVATION
-// ─────────────────────────────────────────────────────────────────────────────
-class _MotivationStep extends StatelessWidget {
-  const _MotivationStep({
-    required this.onNext,
-  });
-
-  final VoidCallback onNext;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("VitaSense users reach their goals 2x faster", style: AppTextStyles.headingLarge),
-          SizedBox(height: 48.h),
-          Container(
-            padding: EdgeInsets.all(24.r),
-            decoration: BoxDecoration(
-              color: AppColors.borderLight,
-              borderRadius: BorderRadius.circular(24.r),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text("avg results", style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
-                    SizedBox(height: 8.h),
-                    Container(
-                      width: 60.w,
-                      height: 80.h,
-                      decoration: BoxDecoration(
-                        color: AppColors.borderMedium,
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(8.r)),
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    Text("Without", style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.w600)),
-                  ],
-                ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text("2X", style: AppTextStyles.headingMedium.copyWith(color: AppColors.primary)),
-                    SizedBox(height: 8.h),
-                    Container(
-                      width: 60.w,
-                      height: 160.h,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(8.r)),
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    Text("With VitaSense", style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.w600)),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 32.h),
-          Text(
-            "We track your pantry and personalize every meal to your health goals.",
-            style: AppTextStyles.bodyMedium,
-            textAlign: TextAlign.center,
-          ),
-          const Spacer(),
-          _ContinueButton(onPressed: onNext),
-        ],
-      ),
-    ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.05, end: 0);
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// STEP 4: GENDER
-// ─────────────────────────────────────────────────────────────────────────────
-class _GenderStep extends StatelessWidget {
-  const _GenderStep({
-    required this.selected,
-    required this.onSelected,
-    required this.onNext,
-  });
-
-  final String? selected;
-  final ValueChanged<String> onSelected;
-  final VoidCallback? onNext;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("What's your gender?", style: AppTextStyles.headingLarge),
-          SizedBox(height: 8.h),
-          Text(
-            'This helps us calculate your metabolism',
-            style: AppTextStyles.bodyMedium,
-          ),
-          SizedBox(height: 48.h),
-          _GenderCard(
-            label: 'Male',
-            icon: Icons.male,
-            value: 'male',
-            selected: selected == 'male',
-            onTap: () => onSelected('male'),
-          ),
-          SizedBox(height: 12.h),
-          _GenderCard(
-            label: 'Female',
-            icon: Icons.female,
-            value: 'female',
-            selected: selected == 'female',
-            onTap: () => onSelected('female'),
-          ),
-          SizedBox(height: 12.h),
-          _GenderCard(
-            label: 'Other',
-            icon: Icons.person,
-            value: 'other',
-            selected: selected == 'other',
-            onTap: () => onSelected('other'),
-          ),
-          const Spacer(),
-          _ContinueButton(onPressed: onNext),
-        ],
-      ),
-    ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.05, end: 0);
-  }
-}
-
-class _GenderCard extends StatelessWidget {
-  const _GenderCard({
-    required this.label,
-    required this.icon,
-    required this.value,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final IconData icon;
-  final String value;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: double.infinity,
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 18.h),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.primary : AppColors.backgroundWhite,
-          border: selected ? Border.all(color: AppColors.primary) : null,
-          boxShadow: selected ? null : [
-            BoxShadow(
-              color: AppColors.textPrimary.withValues(alpha: 0.04),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: selected ? AppColors.textWhite : AppColors.textSecondary,
-              size: 24.r,
-            ),
-            SizedBox(width: 16.w),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w600,
-                color: selected ? AppColors.textWhite : AppColors.textPrimary,
-              ),
-            ),
-            const Spacer(),
-            if (selected)
-              Icon(Icons.check_circle, color: AppColors.textWhite, size: 20.r),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// STEP 2: AGE
-// ─────────────────────────────────────────────────────────────────────────────
-class _AgeStep extends StatelessWidget {
-  const _AgeStep({
-    required this.age,
-    required this.onDecrement,
-    required this.onIncrement,
-    required this.onNext,
-  });
-
-  final int age;
-  final VoidCallback onDecrement;
-  final VoidCallback onIncrement;
-  final VoidCallback onNext;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('How old are you?', style: AppTextStyles.headingLarge),
-          SizedBox(height: 8.h),
-          Text(
-            'Age affects your calorie needs',
-            style: AppTextStyles.bodyMedium,
-          ),
-          SizedBox(height: 48.h),
-          Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                GestureDetector(
-                  onTap: onDecrement,
-                  child: Container(
-                    width: 48.r,
-                    height: 48.r,
-                    decoration: const BoxDecoration(
-                      color: AppColors.borderLight,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.remove,
-                      color: AppColors.textPrimary,
-                      size: 24.r,
-                    ),
-                  ),
-                ),
-                SizedBox(width: 32.w),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '$age',
-                      style: TextStyle(
-                        fontSize: 72.sp,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      'years old',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(width: 32.w),
-                GestureDetector(
-                  onTap: onIncrement,
-                  child: Container(
-                    width: 48.r,
-                    height: 48.r,
-                    decoration: const BoxDecoration(
-                      color: AppColors.borderLight,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.add,
-                      color: AppColors.textPrimary,
-                      size: 24.r,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Spacer(),
-          _ContinueButton(onPressed: onNext),
-        ],
-      ),
-    ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.05, end: 0);
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// STEP 3: HEIGHT
-// ─────────────────────────────────────────────────────────────────────────────
-class _HeightStep extends StatelessWidget {
-  const _HeightStep({
-    required this.height,
-    required this.useCm,
-    required this.onToggleUnit,
-    required this.onChanged,
-    required this.onNext,
-  });
-
-  final int height;
-  final bool useCm;
-  final VoidCallback onToggleUnit;
-  final ValueChanged<int> onChanged;
-  final VoidCallback onNext;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("What's your height?", style: AppTextStyles.headingLarge),
-          SizedBox(height: 48.h),
-          Center(child: _UnitToggleRow(useCm: useCm, onToggle: onToggleUnit)),
-          SizedBox(height: 32.h),
-          Center(
-            child: Column(
-              children: [
-                Text(
-                  useCm ? '$height' : '${height ~/ 12}\'${height % 12}"',
-                  style: TextStyle(
-                    fontSize: 72.sp,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                Text(
-                  useCm ? 'cm' : 'ft',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 48.h),
-          _RulerPicker(
-            key: ValueKey(useCm ? 'cm' : 'in'),
-            minValue: useCm ? 100 : 40,
-            maxValue: useCm ? 250 : 100,
-            initialValue: height,
-            onChanged: onChanged,
-          ),
-          const Spacer(),
-          _ContinueButton(onPressed: onNext),
-        ],
-      ),
-    ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.05, end: 0);
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// STEP 4: WEIGHT
-// ─────────────────────────────────────────────────────────────────────────────
-class _WeightStep extends StatelessWidget {
-  const _WeightStep({
-    required this.weight,
-    required this.useKg,
-    required this.onToggleUnit,
-    required this.onChanged,
-    required this.onNext,
-  });
-
-  final int weight;
-  final bool useKg;
-  final VoidCallback onToggleUnit;
-  final ValueChanged<int> onChanged;
-  final VoidCallback onNext;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("What's your current weight?", style: AppTextStyles.headingLarge),
-          SizedBox(height: 48.h),
-          Center(
-            child: _UnitToggleRow(
-              useCm: useKg,
-              labelA: 'kg',
-              labelB: 'lbs',
-              onToggle: onToggleUnit,
-            ),
-          ),
-          SizedBox(height: 32.h),
-          Center(
-            child: Column(
-              children: [
-                Text(
-                  '$weight',
-                  style: TextStyle(
-                    fontSize: 72.sp,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                Text(
-                  useKg ? 'kg' : 'lbs',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 48.h),
-          _RulerPicker(
-            key: ValueKey(useKg ? 'kg' : 'lbs'),
-            minValue: useKg ? 30 : 66,
-            maxValue: useKg ? 200 : 440,
-            initialValue: weight,
-            onChanged: onChanged,
-          ),
-          const Spacer(),
-          _ContinueButton(onPressed: onNext),
-        ],
-      ),
-    ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.05, end: 0);
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// STEP 5: GOAL
-// ─────────────────────────────────────────────────────────────────────────────
-class _GoalStep extends StatelessWidget {
-  const _GoalStep({
-    required this.selected,
-    required this.onSelected,
-    required this.onNext,
-  });
-
-  final String? selected;
-  final ValueChanged<String> onSelected;
-  final VoidCallback? onNext;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("What's your goal?", style: AppTextStyles.headingLarge),
-          SizedBox(height: 8.h),
-          Text("We'll personalize your meal plan", style: AppTextStyles.bodyMedium),
-          SizedBox(height: 32.h),
-          _GoalCard(
-            title: 'Lose Weight',
-            subtitle: 'Burn fat with smart meals',
-            icon: Icons.trending_down,
-            value: 'weight_loss',
-            selected: selected == 'weight_loss',
-            onTap: () => onSelected('weight_loss'),
-          ),
-          SizedBox(height: 12.h),
-          _GoalCard(
-            title: 'Gain Weight',
-            subtitle: 'Build mass with proper nutrition',
-            icon: Icons.trending_up,
-            value: 'weight_gain',
-            selected: selected == 'weight_gain',
-            onTap: () => onSelected('weight_gain'),
-          ),
-          SizedBox(height: 12.h),
-          _GoalCard(
-            title: 'Maintain Weight',
-            subtitle: 'Stay consistent and healthy',
-            icon: Icons.balance,
-            value: 'maintain',
-            selected: selected == 'maintain',
-            onTap: () => onSelected('maintain'),
-          ),
-          SizedBox(height: 12.h),
-          _GoalCard(
-            title: 'Build Muscle',
-            subtitle: 'High protein meals for growth',
-            icon: Icons.fitness_center,
-            value: 'muscle_gain',
-            selected: selected == 'muscle_gain',
-            onTap: () => onSelected('muscle_gain'),
-          ),
-          const Spacer(),
-          _ContinueButton(onPressed: onNext),
-        ],
-      ),
-    ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.05, end: 0);
-  }
-}
-
-class _GoalCard extends StatelessWidget {
-  const _GoalCard({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.value,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final String value;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.all(16.r),
-        decoration: BoxDecoration(
-          color: AppColors.backgroundWhite,
-          border: selected ? Border.all(color: AppColors.primary, width: 2) : null,
-          boxShadow: selected ? null : [
-            BoxShadow(
-              color: AppColors.textPrimary.withValues(alpha: 0.04),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44.r,
-              height: 44.r,
-              decoration: BoxDecoration(
-                color: selected ? AppColors.primaryLight : AppColors.borderLight,
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-              child: Icon(
-                icon,
-                color: selected ? AppColors.primary : AppColors.textSecondary,
-                size: 22.r,
-              ),
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (selected)
-              Icon(
-                Icons.check_circle_rounded,
-                color: AppColors.primary,
-                size: 20.r,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// STEP 6: PACE
-// ─────────────────────────────────────────────────────────────────────────────
-class _PaceStep extends StatelessWidget {
-  const _PaceStep({
-    required this.selected,
-    required this.onSelected,
-    required this.onNext,
-  });
-
-  final String? selected;
-  final ValueChanged<String> onSelected;
-  final VoidCallback? onNext;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'How fast do you want to reach your goal?',
-            style: AppTextStyles.headingLarge,
-          ),
-          SizedBox(height: 8.h),
-          Text('Slower is more sustainable', style: AppTextStyles.bodyMedium),
-          SizedBox(height: 32.h),
-          _PaceCard(
-            title: 'Slow & Steady',
-            value: 'slow',
-            speed: '~0.25kg/week',
-            description: 'More sustainable, easier to maintain',
-            selected: selected == 'slow',
-            onTap: () => onSelected('slow'),
-          ),
-          SizedBox(height: 12.h),
-          _PaceCard(
-            title: 'Moderate',
-            value: 'moderate',
-            speed: '~0.5kg/week',
-            description: 'Balanced approach, recommended',
-            selected: selected == 'moderate',
-            onTap: () => onSelected('moderate'),
-          ),
-          SizedBox(height: 12.h),
-          _PaceCard(
-            title: 'Fast',
-            value: 'fast',
-            speed: '~0.75kg/week',
-            description: 'Requires strict discipline',
-            selected: selected == 'fast',
-            onTap: () => onSelected('fast'),
-          ),
-          const Spacer(),
-          _ContinueButton(onPressed: onNext),
-        ],
-      ),
-    ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.05, end: 0);
-  }
-}
-
-class _PaceCard extends StatelessWidget {
-  const _PaceCard({
-    required this.title,
-    required this.value,
-    required this.speed,
-    required this.description,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String title;
-  final String value;
-  final String speed;
-  final String description;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.all(16.r),
-        decoration: BoxDecoration(
-          color: selected
-              ? AppColors.primaryLight.withValues(alpha: 0.3)
-              : AppColors.backgroundWhite,
-          border: selected ? Border.all(color: AppColors.primary, width: 2) : null,
-          boxShadow: selected ? null : [
-            BoxShadow(
-              color: AppColors.textPrimary.withValues(alpha: 0.04),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 15.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      Text(
-                        speed,
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (selected)
-                  Icon(
-                    Icons.check_circle_rounded,
-                    color: AppColors.primary,
-                    size: 20.r,
-                  ),
-              ],
-            ),
-            SizedBox(height: 4.h),
-            Text(
-              description,
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// STEP 7: ACTIVITY
-// ─────────────────────────────────────────────────────────────────────────────
-class _ActivityStep extends StatelessWidget {
-  const _ActivityStep({
-    required this.selected,
-    required this.onSelected,
-    required this.onNext,
-  });
-
-  final String? selected;
-  final ValueChanged<String> onSelected;
-  final VoidCallback? onNext;
-
-  @override
-  Widget build(BuildContext context) {
-    final options = [
-      (
-        'Sedentary',
-        'sedentary',
-        Icons.chair_outlined,
-        'Desk job, little exercise'
-      ),
-      (
-        'Lightly Active',
-        'light',
-        Icons.directions_walk,
-        'Light exercise 1–3x/week'
-      ),
-      (
-        'Moderately Active',
-        'moderate',
-        Icons.directions_run,
-        'Moderate exercise 3–5x/week'
-      ),
-      (
-        'Very Active',
-        'active',
-        Icons.fitness_center,
-        'Hard exercise 6–7x/week'
-      ),
-      (
-        'Extremely Active',
-        'very_active',
-        Icons.sports,
-        'Physical job + daily training'
-      ),
-    ];
-
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('How active are you?', style: AppTextStyles.headingLarge),
-          SizedBox(height: 8.h),
-          Text(
-            'This affects your daily calorie target',
-            style: AppTextStyles.bodyMedium,
-          ),
-          SizedBox(height: 24.h),
-          ...options.map(
-            (o) => Padding(
-              padding: EdgeInsets.only(bottom: 10.h),
-              child: _GoalCard(
-                title: o.$1,
-                subtitle: o.$4,
-                icon: o.$3,
-                value: o.$2,
-                selected: selected == o.$2,
-                onTap: () => onSelected(o.$2),
-              ),
-            ),
-          ),
-          const Spacer(),
-          _ContinueButton(onPressed: onNext),
-        ],
-      ),
-    ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.05, end: 0);
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// STEP 8: PREFERENCES
-// ─────────────────────────────────────────────────────────────────────────────
-class _PreferencesStep extends StatelessWidget {
-  const _PreferencesStep({
-    required this.allergies,
-    required this.cuisines,
-    required this.onToggleAllergy,
-    required this.onToggleCuisine,
-    required this.onNext,
-  });
-
-  final List<String> allergies;
-  final List<String> cuisines;
-  final ValueChanged<String> onToggleAllergy;
-  final ValueChanged<String> onToggleCuisine;
-  final VoidCallback onNext;
-
-  @override
-  Widget build(BuildContext context) {
-    final allergyOptions = [
-      ('Gluten', 'gluten'),
-      ('Lactose', 'lactose'),
-      ('Nuts', 'nuts'),
-      ('Eggs', 'eggs'),
-      ('Fish', 'fish'),
-      ('Shellfish', 'shellfish'),
-      ('Soy', 'soy'),
-    ];
-
-    final cuisineOptions = [
-      ('🇵🇱 Polish', 'polish'),
-      ('🇮🇹 Italian', 'italian'),
-      ('🇯🇵 Japanese', 'japanese'),
-      ('🇨🇳 Chinese', 'chinese'),
-      ('🇲🇽 Mexican', 'mexican'),
-      ('🇮🇳 Indian', 'indian'),
-      ('🇬🇷 Greek', 'greek'),
-      ('🇹🇭 Thai', 'thai'),
-      ('🇺🇸 American', 'american'),
-    ];
-
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Any allergies or preferences?',
-            style: AppTextStyles.headingLarge,
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            "We'll avoid these in your meal suggestions",
-            style: AppTextStyles.bodyMedium,
-          ),
-          SizedBox(height: 24.h),
-
-          // ALLERGIES
-          Text(
-            'ALLERGIES',
-            style: AppTextStyles.captionBold.copyWith(letterSpacing: 1.2),
-          ),
-          SizedBox(height: 12.h),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: allergyOptions
-                .map(
-                  (a) => _SelectableChip(
-                    label: a.$1,
-                    value: a.$2,
-                    selected: allergies.contains(a.$2),
-                    onTap: () => onToggleAllergy(a.$2),
-                  ),
-                )
-                .toList(),
-          ),
-
-          SizedBox(height: 24.h),
-
-          // CUISINES
-          Text(
-            'FAVORITE CUISINES',
-            style: AppTextStyles.captionBold.copyWith(letterSpacing: 1.2),
-          ),
-          SizedBox(height: 12.h),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: cuisineOptions
-                .map(
-                  (c) => _SelectableChip(
-                    label: c.$1,
-                    value: c.$2,
-                    selected: cuisines.contains(c.$2),
-                    onTap: () => onToggleCuisine(c.$2),
-                  ),
-                )
-                .toList(),
-          ),
-
-          SizedBox(height: 40.h),
-
-          _ContinueButton(onPressed: onNext),
-
-          SizedBox(height: 16.h),
-        ],
-      ),
-    ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.05, end: 0);
-  }
-}
-
-class _SelectableChip extends StatelessWidget {
-  const _SelectableChip({
-    required this.label,
-    required this.value,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final String value;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.primaryLight : AppColors.backgroundWhite,
-          border: selected ? Border.all(color: AppColors.primary) : null,
-          boxShadow: selected ? null : [
-            BoxShadow(
-              color: AppColors.textPrimary.withValues(alpha: 0.04),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-          borderRadius: BorderRadius.circular(20.r),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13.sp,
-            color: selected ? AppColors.primary : AppColors.textPrimary,
-            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// STEP 9: HEALTH CONDITIONS
-// ─────────────────────────────────────────────────────────────────────────────
-class _HealthConditionsStep extends StatelessWidget {
-  const _HealthConditionsStep({
-    required this.selected,
-    required this.onToggle,
-    required this.onNext,
-  });
-
-  final List<String> selected;
-  final ValueChanged<String> onToggle;
-  final VoidCallback? onNext;
-
-  @override
-  Widget build(BuildContext context) {
-    const conditions = [
-      ('Post-surgery recovery', 'post_surgery'),
-      ('Diabetes', 'diabetes'),
-      ('Thyroid issues', 'thyroid'),
-      ('Celiac disease', 'celiac'),
-      ('IBS', 'ibs'),
-      ('Heart condition', 'heart'),
-      ('Hypertension', 'hypertension'),
-      ('Pregnancy', 'pregnancy'),
-      ('None of the above', 'none'),
-    ];
-
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Any health conditions?', style: AppTextStyles.headingLarge),
-          SizedBox(height: 8.h),
-          Text(
-            "We'll personalize your meals accordingly",
-            style: AppTextStyles.bodyMedium,
-          ),
-          SizedBox(height: 32.h),
-
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: conditions.map((c) {
-              final isSelected = selected.contains(c.$2);
-              return GestureDetector(
-                onTap: () => onToggle(c.$2),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
-                  decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primaryLight : AppColors.backgroundWhite,
-                    border: Border.all(
-                      color:
-                          isSelected ? AppColors.primary : AppColors.border,
-                    ),
-                    borderRadius: BorderRadius.circular(20.r),
-                  ),
-                  child: Text(
-                    c.$1,
-                    style: TextStyle(
-                      fontSize: 13.sp,
-                      color: isSelected
-                          ? AppColors.primary
-                          : AppColors.textPrimary,
-                      fontWeight: isSelected
-                          ? FontWeight.w600
-                          : FontWeight.w400,
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-
-          const Spacer(),
-          _ContinueButton(onPressed: onNext),
-        ],
-      ),
-    ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.05, end: 0);
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// SHARED WIDGETS
-// ─────────────────────────────────────────────────────────────────────────────
-class _ContinueButton extends StatelessWidget {
-  const _ContinueButton({required this.onPressed});
-
+class _CtaButton extends StatelessWidget {
   final VoidCallback? onPressed;
+  final String label;
+  final bool isLoading;
+
+  const _CtaButton({
+    required this.onPressed,
+    required this.label,
+    this.isLoading = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1588,57 +275,79 @@ class _ContinueButton extends StatelessWidget {
       width: double.infinity,
       height: 56.h,
       child: FilledButton(
-        onPressed: onPressed,
+        onPressed: isLoading ? null : onPressed,
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.primary,
-          disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.4),
+          disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(100.r),
+            borderRadius: BorderRadius.circular(28.r),
           ),
         ),
-        child: Text(
-          'Continue',
-          style: TextStyle(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textWhite,
-          ),
-        ),
+        child: isLoading
+            ? SizedBox(
+                width: 24.r,
+                height: 24.r,
+                child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+              )
+            : Text(
+                label,
+                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
       ),
     );
   }
 }
 
-// removed _StepButton
+class _OptionCard extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  final IconData? icon;
+  final bool selected;
+  final VoidCallback onTap;
 
-class _UnitToggleRow extends StatelessWidget {
-  const _UnitToggleRow({
-    required this.useCm,
-    required this.onToggle,
-    this.labelA = 'cm',
-    this.labelB = 'ft',
+  const _OptionCard({
+    required this.title,
+    this.subtitle,
+    this.icon,
+    required this.selected,
+    required this.onTap,
   });
-
-  final bool useCm;
-  final VoidCallback onToggle;
-  final String labelA;
-  final String labelB;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onToggle,
+      onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(4.r),
+        margin: EdgeInsets.only(bottom: 12.h),
+        padding: EdgeInsets.all(16.r),
         decoration: BoxDecoration(
-          color: AppColors.borderLight,
-          borderRadius: BorderRadius.circular(12.r),
+          color: selected ? AppColors.primary : const Color(0xFFF2F2F7),
+          borderRadius: BorderRadius.circular(14.r),
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            _ToggleOption(label: labelA, selected: useCm),
-            _ToggleOption(label: labelB, selected: !useCm),
+            if (icon != null) ...[
+              Icon(icon, color: selected ? Colors.white : Colors.black, size: 20.r),
+              SizedBox(width: 12.w),
+            ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w500, color: selected ? Colors.white : Colors.black),
+                  ),
+                  if (subtitle != null) ...[
+                    SizedBox(height: 4.h),
+                    Text(
+                      subtitle!,
+                      style: TextStyle(fontSize: 14.sp, color: selected ? Colors.white.withValues(alpha: 0.7) : const Color(0xFF8A8A8E)),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -1646,263 +355,58 @@ class _UnitToggleRow extends StatelessWidget {
   }
 }
 
-class _ToggleOption extends StatelessWidget {
-  const _ToggleOption({required this.label, required this.selected});
-
-  final String label;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
-      decoration: BoxDecoration(
-        color: selected ? AppColors.backgroundWhite : Colors.transparent,
-        borderRadius: BorderRadius.circular(8.r),
-        boxShadow: selected
-            ? [
-                BoxShadow(
-                  color: AppColors.textPrimary.withValues(alpha: 0.06),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                )
-              ]
-            : null,
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 14.sp,
-          fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-          color: selected ? AppColors.textPrimary : AppColors.textMuted,
-        ),
-      ),
-    );
-  }
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
-// EXTRA COMPONENTS (RULER, TARGET WEIGHT, ALMOST DONE)
+// KROK 1: KITCHEN / MEALS
 // ─────────────────────────────────────────────────────────────────────────────
-
-class _TargetWeightStep extends StatelessWidget {
-  const _TargetWeightStep({
-    required this.targetWeight,
-    required this.currentWeight,
-    required this.goal,
-    required this.useKg,
-    required this.onChanged,
-    required this.onNext,
-  });
-
-  final int targetWeight;
-  final int currentWeight;
-  final String? goal;
-  final bool useKg;
-  final ValueChanged<int> onChanged;
+class _Step1 extends StatelessWidget {
   final VoidCallback onNext;
-
-  String get _label {
-    int diff = (targetWeight - currentWeight).abs();
-    String unit = useKg ? 'kg' : 'lbs';
-    if (goal == 'weight_loss') return 'Lose $diff $unit';
-    if (goal == 'weight_gain') return 'Gain $diff $unit';
-    return 'Maintain';
-  }
+  const _Step1({required this.onNext});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
+      padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 24.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("What is your target weight?", style: AppTextStyles.headingLarge),
-          SizedBox(height: 48.h),
-          Center(
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-              decoration: BoxDecoration(
-                color: AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(100.r),
-              ),
-              child: Text(
-                _label,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
-                ),
-              ),
-            ),
-          ),
+          const _Heading("Your kitchen.\nYour meals."),
+          SizedBox(height: 40.h),
+          const _InfoRow(icon: Icons.kitchen, title: "Cook what you have", subtitle: "No wasted groceries"),
           SizedBox(height: 24.h),
-          Center(
-            child: Column(
-              children: [
-                Text(
-                  '$targetWeight',
-                  style: TextStyle(
-                    fontSize: 72.sp,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                Text(
-                  useKg ? 'kg' : 'lbs',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 48.h),
-          _RulerPicker(
-            key: ValueKey(useKg ? 'kg' : 'lbs'),
-            minValue: useKg ? 30 : 66,
-            maxValue: useKg ? 200 : 440,
-            initialValue: targetWeight,
-            onChanged: onChanged,
-          ),
+          const _InfoRow(icon: Icons.favorite_border, title: "Eat for your goals", subtitle: "Every meal personalized"),
+          SizedBox(height: 24.h),
+          const _InfoRow(icon: Icons.check_circle_outline, title: "Zero guesswork", subtitle: "Know exactly what to cook"),
           const Spacer(),
-          _ContinueButton(onPressed: onNext),
+          _CtaButton(onPressed: onNext, label: "Let's Start"),
         ],
       ),
-    ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.05, end: 0);
+    ).animate().fadeIn(duration: 300.ms);
   }
 }
 
-class _AlmostDoneStep extends StatelessWidget {
-  const _AlmostDoneStep({
-    required this.sensitiveData,
-    required this.tos,
-    required this.onSensitiveDataChanged,
-    required this.onTosChanged,
-    required this.onComplete,
-    required this.isLoading,
-  });
-
-  final bool sensitiveData;
-  final bool tos;
-  final ValueChanged<bool?> onSensitiveDataChanged;
-  final ValueChanged<bool?> onTosChanged;
-  final VoidCallback? onComplete;
-  final bool isLoading;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("A few last things", style: AppTextStyles.headingLarge),
-          SizedBox(height: 8.h),
-          Text("Almost done!", style: AppTextStyles.bodyMedium),
-          SizedBox(height: 32.h),
-          _CheckboxRow(
-            value: sensitiveData,
-            onChanged: onSensitiveDataChanged,
-            title: 'Sensitive Data Processing',
-            subtitle: 'VitaSense processes your health data for personalization.',
-          ),
-          SizedBox(height: 24.h),
-          _CheckboxRow(
-            value: tos,
-            onChanged: onTosChanged,
-            title: 'Terms of Service and Privacy Policy',
-            subtitle: 'I agree to the Terms of Service and Privacy Policy.',
-          ),
-          const Spacer(),
-          SizedBox(
-            width: double.infinity,
-            height: 56.h,
-            child: FilledButton(
-              onPressed: (sensitiveData && tos) ? onComplete : null,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.4),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(100.r),
-                ),
-              ),
-              child: isLoading
-                  ? SizedBox(
-                      width: 22.r,
-                      height: 22.r,
-                      child: const CircularProgressIndicator(
-                        color: AppColors.textWhite,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : Text(
-                      'Accept & Continue',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textWhite,
-                      ),
-                    ),
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.05, end: 0);
-  }
-}
-
-class _CheckboxRow extends StatelessWidget {
-  const _CheckboxRow({
-    required this.value,
-    required this.onChanged,
-    required this.title,
-    required this.subtitle,
-  });
-
-  final bool value;
-  final ValueChanged<bool?> onChanged;
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
   final String title;
   final String subtitle;
+  const _InfoRow({required this.icon, required this.title, required this.subtitle});
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          width: 24.w,
-          height: 24.h,
-          child: Checkbox(
-            value: value,
-            onChanged: onChanged,
-            activeColor: AppColors.primary,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.r)),
-          ),
+        Container(
+          width: 40.r, height: 40.r,
+          decoration: const BoxDecoration(color: Color(0xFFF2F2F7), shape: BoxShape.circle),
+          child: Icon(icon, color: Colors.black, size: 20.r),
         ),
-        SizedBox(width: 12.w),
+        SizedBox(width: 16.w),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
+              Text(title, style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: Colors.black)),
               SizedBox(height: 4.h),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  fontSize: 13.sp,
-                  color: AppColors.textSecondary,
-                ),
-              ),
+              Text(subtitle, style: TextStyle(fontSize: 15.sp, color: const Color(0xFF8A8A8E))),
             ],
           ),
         ),
@@ -1911,255 +415,1517 @@ class _CheckboxRow extends StatelessWidget {
   }
 }
 
-class _GoalProjectionStep extends StatelessWidget {
-  const _GoalProjectionStep({
-    required this.targetWeight,
-    required this.currentWeight,
-    required this.pace,
-    required this.goal,
-    required this.useKg,
-    required this.onNext,
-  });
-
-  final int targetWeight;
-  final int currentWeight;
-  final String? pace;
-  final String? goal;
-  final bool useKg;
+// ─────────────────────────────────────────────────────────────────────────────
+// KROK 2: DID YOU KNOW?
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step2 extends StatelessWidget {
   final VoidCallback onNext;
+  const _Step2({required this.onNext});
 
   @override
   Widget build(BuildContext context) {
-    final double weeklyRate = pace == 'slow' ? 0.25 : pace == 'fast' ? 0.75 : 0.5;
-    final int diff = (targetWeight - currentWeight).abs();
-    final bool alreadyThere = diff == 0 || goal == 'maintain';
-    final int weeksToGoal = alreadyThere ? 0 : (diff / weeklyRate).ceil();
-    final DateTime targetDate = DateTime.now().add(Duration(days: weeksToGoal * 7));
-    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-    final String formattedDate = '${months[targetDate.month - 1]} ${targetDate.day}, ${targetDate.year}';
-    final String weeklyLabel = '${weeklyRate.toString().replaceAll(RegExp(r'\.?0+$'), '')} ${useKg ? 'kg' : 'lbs'} / week';
+    return Column(
+      children: [
+        Expanded(
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text("🗑️", style: TextStyle(fontSize: 72.sp)),
+                  SizedBox(height: 24.h),
+                  const _Heading("67% of people waste food every week.", textAlign: TextAlign.center),
+                  SizedBox(height: 12.h),
+                  const _Subtitle("VitaSense helps you cook what you have — nothing goes to waste.", textAlign: TextAlign.center),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.fromLTRB(24.w, 12.h, 24.w, 32.h),
+          child: _CtaButton(onPressed: onNext, label: "That's me"),
+        ),
+      ],
+    ).animate().fadeIn(duration: 300.ms);
+  }
+}
 
+// ─────────────────────────────────────────────────────────────────────────────
+// KROK 3: GENDER
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step3 extends StatelessWidget {
+  final String? selected;
+  final ValueChanged<String> onSelected;
+  final VoidCallback? onNext;
+
+  const _Step3({required this.selected, required this.onSelected, required this.onNext});
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
+      padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 24.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            alreadyThere ? "You're already there! 🎉" : "You're on track! 🎯",
-            style: AppTextStyles.headingLarge,
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            'Based on your goals and pace',
-            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-          ),
+          const _Heading("Tell us about you"),
           SizedBox(height: 40.h),
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(28.r),
-            decoration: BoxDecoration(
-              color: AppColors.primaryLight,
-              borderRadius: BorderRadius.circular(24.r),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.flag_rounded, color: AppColors.primary, size: 22.r),
-                    SizedBox(width: 8.w),
-                    Text(
-                      'Goal date',
-                      style: TextStyle(fontSize: 13.sp, color: AppColors.textSecondary),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => onSelected('Male'),
+                  child: Container(
+                    height: 140.h,
+                    decoration: BoxDecoration(
+                      color: selected == 'Male' ? AppColors.primary : const Color(0xFFF2F2F7),
+                      borderRadius: BorderRadius.circular(14.r),
                     ),
-                  ],
-                ),
-                SizedBox(height: 16.h),
-                if (alreadyThere)
-                  Text(
-                    'Right now! 🏆',
-                    style: TextStyle(fontSize: 28.sp, fontWeight: FontWeight.w700, color: AppColors.primary),
-                  )
-                else ...[
-                  Text(
-                    formattedDate,
-                    style: TextStyle(fontSize: 28.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    'in $weeksToGoal weeks',
-                    style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600, color: AppColors.primary),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          SizedBox(height: 16.h),
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(20.r),
-            decoration: BoxDecoration(
-              color: AppColors.backgroundWhite,
-              borderRadius: BorderRadius.circular(16.r),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.textPrimary.withValues(alpha: 0.04),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.local_fire_department_rounded, color: AppColors.primary, size: 20.r),
-                    SizedBox(width: 8.w),
-                    Text(
-                      'Weekly target',
-                      style: TextStyle(fontSize: 13.sp, color: AppColors.textSecondary),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text("👨", style: TextStyle(fontSize: 36.sp)),
+                        SizedBox(height: 16.h),
+                        Text("Male", style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w500, color: selected == 'Male' ? Colors.white : Colors.black)),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-                SizedBox(height: 8.h),
-                Text(
-                  alreadyThere ? 'Maintenance mode' : weeklyLabel,
-                  style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+              ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => onSelected('Female'),
+                  child: Container(
+                    height: 140.h,
+                    decoration: BoxDecoration(
+                      color: selected == 'Female' ? AppColors.primary : const Color(0xFFF2F2F7),
+                      borderRadius: BorderRadius.circular(14.r),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text("👩", style: TextStyle(fontSize: 36.sp)),
+                        SizedBox(height: 16.h),
+                        Text("Female", style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w500, color: selected == 'Female' ? Colors.white : Colors.black)),
+                      ],
+                    ),
+                  ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
           const Spacer(),
-          _ContinueButton(onPressed: onNext),
+          _CtaButton(onPressed: onNext, label: "Continue"),
         ],
       ),
-    ).animate().fadeIn(duration: 300.ms).slideX(begin: 0.05, end: 0);
+    ).animate().fadeIn(duration: 300.ms);
   }
 }
 
-class _RulerPicker extends StatefulWidget {
-  final int minValue;
-  final int maxValue;
-  final int initialValue;
-  final ValueChanged<int> onChanged;
+// ─────────────────────────────────────────────────────────────────────────────
+// KROK 4: HEIGHT
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step4 extends StatelessWidget {
+  final String unit;
+  final int heightCm;
+  final int heightFt;
+  final int heightIn;
+  final ValueChanged<String> onUnitChanged;
+  final ValueChanged<int> onCmChanged;
+  final ValueChanged<int> onFtChanged;
+  final ValueChanged<int> onInChanged;
+  final VoidCallback onNext;
 
-  const _RulerPicker({
-    super.key,
-    required this.minValue,
-    required this.maxValue,
-    required this.initialValue,
-    required this.onChanged,
+  const _Step4({
+    required this.unit,
+    required this.heightCm,
+    required this.heightFt,
+    required this.heightIn,
+    required this.onUnitChanged,
+    required this.onCmChanged,
+    required this.onFtChanged,
+    required this.onInChanged,
+    required this.onNext,
   });
 
   @override
-  State<_RulerPicker> createState() => _RulerPickerState();
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 24.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _Heading("How tall are you?"),
+          SizedBox(height: 8.h),
+          const _Subtitle("This helps us calculate your daily calorie needs."),
+          SizedBox(height: 32.h),
+          Row(
+            children: [
+              _UnitTab(title: "cm", isSelected: unit == 'cm', onTap: () => onUnitChanged('cm')),
+              SizedBox(width: 16.w),
+              _UnitTab(title: "ft/in", isSelected: unit == 'ft', onTap: () => onUnitChanged('ft')),
+            ],
+          ),
+          SizedBox(height: 24.h),
+          Container(
+            height: 200.h,
+            decoration: BoxDecoration(color: const Color(0xFFF2F2F7), borderRadius: BorderRadius.circular(14.r)),
+            child: unit == 'cm'
+                ? CupertinoPicker(
+                    scrollController: FixedExtentScrollController(initialItem: heightCm - 140),
+                    itemExtent: 40.h,
+                    selectionOverlay: CupertinoPickerDefaultSelectionOverlay(background: const Color(0xFFE5E5EA).withValues(alpha: 0.5)),
+                    onSelectedItemChanged: (i) => onCmChanged(i + 140),
+                    children: List.generate(81, (i) => Center(child: Text("${i + 140}", style: TextStyle(fontSize: 22.sp, color: Colors.black, fontWeight: FontWeight.w600)))),
+                  )
+                : Row(
+                    children: [
+                      Expanded(
+                        child: CupertinoPicker(
+                          scrollController: FixedExtentScrollController(initialItem: heightFt - 4),
+                          itemExtent: 40.h,
+                          selectionOverlay: CupertinoPickerDefaultSelectionOverlay(background: const Color(0xFFE5E5EA).withValues(alpha: 0.5)),
+                          onSelectedItemChanged: (i) => onFtChanged(i + 4),
+                          children: List.generate(4, (i) => Center(child: Text("${i + 4} ft", style: TextStyle(fontSize: 22.sp, color: Colors.black, fontWeight: FontWeight.w600)))),
+                        ),
+                      ),
+                      Expanded(
+                        child: CupertinoPicker(
+                          scrollController: FixedExtentScrollController(initialItem: heightIn),
+                          itemExtent: 40.h,
+                          selectionOverlay: CupertinoPickerDefaultSelectionOverlay(background: const Color(0xFFE5E5EA).withValues(alpha: 0.5)),
+                          onSelectedItemChanged: (i) => onInChanged(i),
+                          children: List.generate(12, (i) => Center(child: Text("$i in", style: TextStyle(fontSize: 22.sp, color: Colors.black, fontWeight: FontWeight.w600)))),
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+          const Spacer(),
+          _CtaButton(onPressed: onNext, label: "Continue"),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
 }
 
-class _RulerPickerState extends State<_RulerPicker> {
-  late ScrollController _scrollController;
-  final double _itemWidth = 14.w;
-  late int _currentValue;
+class _UnitTab extends StatelessWidget {
+  final String title;
+  final bool isSelected;
+  final VoidCallback onTap;
+  const _UnitTab({required this.title, required this.isSelected, required this.onTap});
 
   @override
-  void initState() {
-    super.initState();
-    _currentValue = widget.initialValue;
-    if (_currentValue < widget.minValue) _currentValue = widget.minValue;
-    if (_currentValue > widget.maxValue) _currentValue = widget.maxValue;
-    
-    double initialOffset = (_currentValue - widget.minValue) * _itemWidth;
-    _scrollController = ScrollController(initialScrollOffset: initialOffset);
-    _scrollController.addListener(_onScroll);
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 8.h),
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: isSelected ? AppColors.primary : Colors.transparent, width: 2)),
+        ),
+        child: Text(
+          title,
+          style: TextStyle(
+            fontSize: 16.sp,
+            fontWeight: FontWeight.bold,
+            color: isSelected ? AppColors.primary : const Color(0xFF8A8A8E),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KROK 5: WEIGHT
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step5 extends StatelessWidget {
+  final String unit;
+  final int weightKg;
+  final int weightLbs;
+  final ValueChanged<String> onUnitChanged;
+  final ValueChanged<int> onKgChanged;
+  final ValueChanged<int> onLbsChanged;
+  final VoidCallback onNext;
+
+  const _Step5({
+    required this.unit,
+    required this.weightKg,
+    required this.weightLbs,
+    required this.onUnitChanged,
+    required this.onKgChanged,
+    required this.onLbsChanged,
+    required this.onNext,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 24.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _Heading("How much do you weigh?"),
+          SizedBox(height: 8.h),
+          const _Subtitle("This helps us calculate your daily calorie needs."),
+          SizedBox(height: 32.h),
+          Row(
+            children: [
+              _UnitTab(title: "kg", isSelected: unit == 'kg', onTap: () => onUnitChanged('kg')),
+              SizedBox(width: 16.w),
+              _UnitTab(title: "lbs", isSelected: unit == 'lbs', onTap: () => onUnitChanged('lbs')),
+            ],
+          ),
+          SizedBox(height: 24.h),
+          Container(
+            height: 200.h,
+            decoration: BoxDecoration(color: const Color(0xFFF2F2F7), borderRadius: BorderRadius.circular(14.r)),
+            child: unit == 'kg'
+                ? CupertinoPicker(
+                    scrollController: FixedExtentScrollController(initialItem: weightKg - 40),
+                    itemExtent: 40.h,
+                    selectionOverlay: CupertinoPickerDefaultSelectionOverlay(background: const Color(0xFFE5E5EA).withValues(alpha: 0.5)),
+                    onSelectedItemChanged: (i) => onKgChanged(i + 40),
+                    children: List.generate(161, (i) => Center(child: Text("${i + 40}", style: TextStyle(fontSize: 22.sp, color: Colors.black, fontWeight: FontWeight.w600)))),
+                  )
+                : CupertinoPicker(
+                    scrollController: FixedExtentScrollController(initialItem: weightLbs - 88),
+                    itemExtent: 40.h,
+                    selectionOverlay: CupertinoPickerDefaultSelectionOverlay(background: const Color(0xFFE5E5EA).withValues(alpha: 0.5)),
+                    onSelectedItemChanged: (i) => onLbsChanged(i + 88),
+                    children: List.generate(353, (i) => Center(child: Text("${i + 88}", style: TextStyle(fontSize: 22.sp, color: Colors.black, fontWeight: FontWeight.w600)))),
+                  ),
+          ),
+          const Spacer(),
+          _CtaButton(onPressed: onNext, label: "Continue"),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KROK 6: AGE
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step6 extends StatelessWidget {
+  final int age;
+  final ValueChanged<int> onAgeChanged;
+  final VoidCallback onNext;
+
+  const _Step6({required this.age, required this.onAgeChanged, required this.onNext});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 24.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _Heading("How old are you?"),
+          SizedBox(height: 8.h),
+          const _Subtitle("Age affects your metabolism and calorie needs."),
+          SizedBox(height: 32.h),
+          Container(
+            height: 200.h,
+            decoration: BoxDecoration(color: const Color(0xFFF2F2F7), borderRadius: BorderRadius.circular(14.r)),
+            child: CupertinoPicker(
+              scrollController: FixedExtentScrollController(initialItem: age - 16),
+              itemExtent: 40.h,
+              selectionOverlay: CupertinoPickerDefaultSelectionOverlay(background: const Color(0xFFE5E5EA).withValues(alpha: 0.5)),
+              onSelectedItemChanged: (i) => onAgeChanged(i + 16),
+              children: List.generate(65, (i) => Center(child: Text("${i + 16}", style: TextStyle(fontSize: 22.sp, color: Colors.black, fontWeight: FontWeight.w600)))),
+            ),
+          ),
+          const Spacer(),
+          _CtaButton(onPressed: onNext, label: "Continue"),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KROK 7: MOTIVATION BMR
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step7 extends StatelessWidget {
+  final String? gender;
+  final String heightUnit;
+  final int heightCm;
+  final int heightFt;
+  final int heightIn;
+  final String weightUnit;
+  final int weightKg;
+  final int weightLbs;
+  final int age;
+  final VoidCallback onNext;
+
+  const _Step7({
+    required this.gender, required this.heightUnit, required this.heightCm, required this.heightFt, required this.heightIn,
+    required this.weightUnit, required this.weightKg, required this.weightLbs, required this.age, required this.onNext,
+  });
+
+  int _calculateBmr() {
+    double h = heightUnit == 'cm' ? heightCm.toDouble() : (heightFt * 12 + heightIn) * 2.54;
+    double w = weightUnit == 'kg' ? weightKg.toDouble() : weightLbs * 0.453592;
+    double bmr = (10 * w) + (6.25 * h) - (5 * age);
+    if (gender == 'Male') {
+      bmr += 5;
+    } else {
+      bmr -= 161;
+    }
+    return bmr.round();
   }
 
-  void _onScroll() {
-    double offset = _scrollController.offset;
-    int newValue = widget.minValue + (offset / _itemWidth).round();
-    if (newValue < widget.minValue) newValue = widget.minValue;
-    if (newValue > widget.maxValue) newValue = widget.maxValue;
-    if (newValue != _currentValue) {
-      setState(() => _currentValue = newValue);
-      widget.onChanged(newValue);
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: 24.w),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 40.h),
+                Text("${_calculateBmr()}", style: TextStyle(fontSize: 64.sp, fontWeight: FontWeight.w800, color: Colors.black, height: 1.0)),
+                SizedBox(height: 4.h),
+                Text("kcal / day", style: TextStyle(fontSize: 16.sp, color: const Color(0xFF8A8A8E))),
+                SizedBox(height: 24.h),
+                const _Heading("Based on your measurements,"),
+                SizedBox(height: 8.h),
+                const _Subtitle("We'll fine-tune this with your goals next."),
+                SizedBox(height: 24.h),
+                Container(
+                  padding: EdgeInsets.all(20.r),
+                  decoration: BoxDecoration(color: const Color(0xFFF2F2F7), borderRadius: BorderRadius.circular(16.r)),
+                  child: Column(
+                    children: [
+                      _buildRow("Height", heightUnit == 'cm' ? "$heightCm cm" : "$heightFt ft $heightIn in"),
+                      const Divider(color: Color(0xFFE5E5EA), height: 32, thickness: 1),
+                      _buildRow("Weight", weightUnit == 'kg' ? "$weightKg kg" : "$weightLbs lbs"),
+                      const Divider(color: Color(0xFFE5E5EA), height: 32, thickness: 1),
+                      _buildRow("Age", "$age years"),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 24.h),
+              ],
+            ),
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.fromLTRB(24.w, 12.h, 24.w, 32.h),
+          child: _CtaButton(onPressed: onNext, label: "Let's continue"),
+        ),
+      ],
+    ).animate().fadeIn(duration: 300.ms);
+  }
+
+  Widget _buildRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: TextStyle(fontSize: 15.sp, color: const Color(0xFF8A8A8E))),
+        Text(value, style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600, color: Colors.black)),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KROK 8: GOAL
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step8 extends StatelessWidget {
+  final String? selected;
+  final ValueChanged<String> onSelected;
+  final VoidCallback? onNext;
+
+  const _Step8({required this.selected, required this.onSelected, required this.onNext});
+
+  @override
+  Widget build(BuildContext context) {
+    final options = [
+      ("Lose weight", "Burn fat and get leaner", Icons.trending_down),
+      ("Gain muscle", "Build strength and volume", Icons.fitness_center),
+      ("Eat healthier", "Focus on nutrition and balance", Icons.restaurant_menu),
+      ("Boost energy", "Feel active all day", Icons.bolt),
+      ("Manage a condition", "Tailored to your health needs", Icons.health_and_safety),
+    ];
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 24.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _Heading("What's your goal?"),
+          SizedBox(height: 24.h),
+          Expanded(
+            child: ListView(
+              children: options.map((e) => _OptionCard(title: e.$1, subtitle: e.$2, icon: e.$3, selected: selected == e.$1, onTap: () => onSelected(e.$1))).toList(),
+            ),
+          ),
+          _CtaButton(onPressed: onNext, label: "Continue"),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KROK 9: MOTIVATION GOAL
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step9 extends StatelessWidget {
+  final String? goal;
+  final VoidCallback onNext;
+
+  const _Step9({required this.goal, required this.onNext});
+
+  (String, String) _getContent() {
+    switch (goal) {
+      case 'Lose weight': return ("🔥", "Smart food choices burn more fat than any workout.");
+      case 'Gain muscle': return ("💪", "Protein timing matters more than most people think.");
+      case 'Eat healthier': return ("🥗", "80% of how you feel is what you eat.");
+      case 'Boost energy': return ("⚡", "The right breakfast changes your entire day.");
+      case 'Manage a condition': return ("🫀", "Food is medicine. Let's use it right.");
+      default: return ("🌟", "Every great journey starts with a simple choice.");
     }
   }
 
   @override
+  Widget build(BuildContext context) {
+    final content = _getContent();
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 24.h),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Spacer(),
+          Text(content.$1, style: TextStyle(fontSize: 80.sp)),
+          SizedBox(height: 32.h),
+          Text(content.$2, textAlign: TextAlign.center, style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.w800, color: Colors.black, letterSpacing: -0.5)),
+          SizedBox(height: 16.h),
+          const _Subtitle("VitaSense builds your plan around this.", textAlign: TextAlign.center),
+          const Spacer(),
+          _CtaButton(onPressed: onNext, label: "Got it"),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KROK 10: ACTIVITY
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step10 extends StatelessWidget {
+  final String? selected;
+  final ValueChanged<String> onSelected;
+  final VoidCallback? onNext;
+
+  const _Step10({required this.selected, required this.onSelected, required this.onNext});
+
+  @override
+  Widget build(BuildContext context) {
+    final options = [
+      ("Sedentary", "desk job, mostly sitting"),
+      ("Lightly active", "walks, light exercise 1–2 days"),
+      ("Moderately active", "gym 3–5 days/week"),
+      ("Very active", "daily intense training"),
+    ];
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 24.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _Heading("How active are you?"),
+          SizedBox(height: 24.h),
+          Expanded(
+            child: ListView(
+              children: options.map((e) => _OptionCard(title: e.$1, subtitle: e.$2, selected: selected == e.$1, onTap: () => onSelected(e.$1))).toList(),
+            ),
+          ),
+          _CtaButton(onPressed: onNext, label: "Continue"),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KROK 11: DIETARY
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step11 extends StatelessWidget {
+  final List<String> selected;
+  final ValueChanged<String> onToggle;
+  final VoidCallback? onNext;
+
+  const _Step11({required this.selected, required this.onToggle, required this.onNext});
+
+  @override
+  Widget build(BuildContext context) {
+    final options = [
+      ("✅", "No restrictions"), ("🥦", "Vegetarian"), ("🌱", "Vegan"), ("🌾", "Gluten-free"),
+      ("🥛", "Dairy-free"), ("🥩", "Keto"), ("☪️", "Halal"), ("🦴", "Paleo")
+    ];
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 24.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _Heading("Any dietary preferences?"),
+          SizedBox(height: 8.h),
+          const _Subtitle("Select all that apply"),
+          SizedBox(height: 24.h),
+          Expanded(
+            child: GridView.count(
+              crossAxisCount: 3,
+              crossAxisSpacing: 12.w,
+              mainAxisSpacing: 12.h,
+              childAspectRatio: 1.0,
+              children: options.map((e) {
+                final isSel = selected.contains(e.$2);
+                return GestureDetector(
+                  onTap: () => onToggle(e.$2),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isSel ? AppColors.primary : const Color(0xFFF2F2F7),
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(e.$1, style: TextStyle(fontSize: 36.sp)),
+                        SizedBox(height: 8.h),
+                        Text(
+                          e.$2,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.bold,
+                            color: isSel ? Colors.white : Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          _CtaButton(onPressed: onNext, label: "Continue"),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KROK 12: ALLERGIES
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step12 extends StatefulWidget {
+  final List<String> selected;
+  final ValueChanged<String> onToggle;
+  final VoidCallback? onNext;
+
+  const _Step12({required this.selected, required this.onToggle, required this.onNext});
+
+  @override
+  State<_Step12> createState() => _Step12State();
+}
+
+class _Step12State extends State<_Step12> {
+  String _searchQuery = '';
+
+  final _allOptions = [
+    ("✋", "None"), ("🌾", "Gluten"), ("🥛", "Milk/Dairy"), ("🥚", "Eggs"),
+    ("🐟", "Fish"), ("🦐", "Shellfish"), ("🥜", "Peanuts"), ("🌰", "Tree Nuts"),
+    ("🫘", "Soy"), ("🫙", "Sesame"), ("🥬", "Celery"), ("🌿", "Mustard"),
+    ("🍷", "Sulphites"), ("🫘", "Lupin"), ("🦑", "Molluscs"), ("🍓", "Strawberries"),
+    ("🍊", "Citrus"), ("🥝", "Kiwi"), ("🍑", "Peach"), ("🍎", "Apple"),
+    ("🍌", "Banana"), ("🥭", "Mango"), ("🥑", "Avocado"), ("🍅", "Tomato"),
+    ("🍫", "Chocolate"), ("🌽", "Corn"), ("🍞", "Yeast"), ("🪵", "Cinnamon"),
+    ("🥩", "Pork"), ("🐄", "Beef")
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final filteredOptions = _allOptions.where((e) {
+      if (_searchQuery.isEmpty) return true;
+      return e.$2.toLowerCase().contains(_searchQuery.toLowerCase());
+    }).toList();
+
+    return Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _Heading("Any food allergies?"),
+              SizedBox(height: 8.h),
+              const _Subtitle("Select all that apply — we'll never suggest these."),
+              SizedBox(height: 16.h),
+              TextField(
+                onChanged: (val) => setState(() => _searchQuery = val),
+                decoration: InputDecoration(
+                  hintText: 'Search allergens...',
+                  prefixIcon: Icon(Icons.search, color: const Color(0xFF8A8A8E), size: 20.r),
+                  filled: true,
+                  fillColor: const Color(0xFFF2F2F7),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14.r),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              SizedBox(height: 24.h),
+            ],
+          ),
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: 24.w),
+            child: GridView.count(
+              padding: EdgeInsets.only(bottom: 16.h),
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 3,
+              crossAxisSpacing: 12.w,
+              mainAxisSpacing: 12.h,
+              childAspectRatio: 1.0,
+              children: filteredOptions.map((e) {
+                final isSel = widget.selected.contains(e.$2);
+                return GestureDetector(
+                  onTap: () => widget.onToggle(e.$2),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isSel ? AppColors.primary : const Color(0xFFF2F2F7),
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(e.$1, style: TextStyle(fontSize: 36.sp)),
+                        SizedBox(height: 8.h),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 4.w),
+                          child: Text(
+                            e.$2,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.bold,
+                              color: isSel ? Colors.white : Colors.black,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.fromLTRB(24.w, 12.h, 24.w, 32.h),
+          child: _CtaButton(onPressed: widget.onNext, label: "Continue"),
+        ),
+      ],
+    ).animate().fadeIn(duration: 300.ms);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KROK 13: HEALTH CONDITIONS
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step13 extends StatelessWidget {
+  final List<String> selected;
+  final ValueChanged<String> onToggle;
+  final VoidCallback? onNext;
+
+  const _Step13({required this.selected, required this.onToggle, required this.onNext});
+
+  @override
+  Widget build(BuildContext context) {
+    final options = [
+      ("✋", "None"), ("💉", "Diabetes"), ("❤️", "Hypertension"), ("⚠️", "High cholesterol"),
+      ("🫁", "IBS"), ("🩹", "Post-surgery recovery"), ("🫀", "Heart disease"), ("➕", "Other")
+    ];
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 24.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _Heading("Any health conditions?"),
+          SizedBox(height: 8.h),
+          const _Subtitle("This helps us tailor your meals safely."),
+          SizedBox(height: 24.h),
+          Expanded(
+            child: GridView.count(
+              crossAxisCount: 3,
+              crossAxisSpacing: 12.w,
+              mainAxisSpacing: 12.h,
+              childAspectRatio: 1.0,
+              children: options.map((e) {
+                final isSel = selected.contains(e.$2);
+                return GestureDetector(
+                  onTap: () => onToggle(e.$2),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isSel ? AppColors.primary : const Color(0xFFF2F2F7),
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(e.$1, style: TextStyle(fontSize: 36.sp)),
+                        SizedBox(height: 8.h),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 4.w),
+                          child: Text(
+                            e.$2,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              fontWeight: FontWeight.bold,
+                              color: isSel ? Colors.white : Colors.black,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          _CtaButton(onPressed: onNext, label: "Continue"),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KROK 14: VIRTUAL FRIDGE INTRO
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step14 extends StatelessWidget {
+  final VoidCallback onNext;
+  const _Step14({required this.onNext});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 24.h),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Spacer(),
+          Text("🍽️", style: TextStyle(fontSize: 80.sp)),
+          SizedBox(height: 32.h),
+          const _Heading("What's in your kitchen?", textAlign: TextAlign.center),
+          SizedBox(height: 16.h),
+          const _Subtitle("Tell us what you usually have at home. We'll only suggest meals you can actually make.", textAlign: TextAlign.center),
+          SizedBox(height: 40.h),
+          _buildFeature("✅", "No shopping needed"),
+          SizedBox(height: 12.h),
+          _buildFeature("✅", "Zero food waste"),
+          SizedBox(height: 12.h),
+          _buildFeature("✅", "Cook what you have"),
+          const Spacer(),
+          _CtaButton(onPressed: onNext, label: "Continue"),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
+
+  Widget _buildFeature(String icon, String text) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(icon, style: TextStyle(fontSize: 16.sp)),
+        SizedBox(width: 8.w),
+        Text(text, style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: const Color(0xFF8A8A8E))),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KROK 15: KITCHEN STAPLES
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step15 extends StatelessWidget {
+  final List<String> selected;
+  final ValueChanged<String> onToggle;
+  final VoidCallback? onNext;
+
+  const _Step15({required this.selected, required this.onToggle, required this.onNext});
+
+  @override
+  Widget build(BuildContext context) {
+    final options = [
+      ("🥩", "Proteins"), ("🥬", "Leafy Greens"), ("🥔", "Root Veggies"), ("🍚", "Grains"),
+      ("🥚", "Eggs & Dairy"), ("🍝", "Pasta"), ("🍎", "Fruits"), ("🌿", "Spices & Herbs")
+    ];
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 24.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _Heading("What's usually in your kitchen?"),
+          SizedBox(height: 24.h),
+          Expanded(
+            child: GridView.count(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12.w,
+              mainAxisSpacing: 12.h,
+              childAspectRatio: 1.1,
+              children: options.map((e) {
+                final isSel = selected.contains(e.$2);
+                return GestureDetector(
+                  onTap: () => onToggle(e.$2),
+                  child: Container(
+                    decoration: BoxDecoration(color: isSel ? AppColors.primary : const Color(0xFFF2F2F7), borderRadius: BorderRadius.circular(14.r)),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(e.$1, style: TextStyle(fontSize: 36.sp)),
+                        SizedBox(height: 12.h),
+                        Text(e.$2, style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold, color: isSel ? Colors.white : Colors.black)),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          _CtaButton(onPressed: onNext, label: "Find My Meals"),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KROK 16: COOKING FREQUENCY
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step16 extends StatelessWidget {
+  final String? selected;
+  final ValueChanged<String> onSelected;
+  final VoidCallback? onNext;
+
+  const _Step16({required this.selected, required this.onSelected, required this.onNext});
+
+  @override
+  Widget build(BuildContext context) {
+    final options = [
+      ("Rarely", "mostly takeout or delivery"),
+      ("A few times a week", "when I have time"),
+      ("Almost daily", "I enjoy cooking"),
+      ("I meal prep", "batch cooking on weekends"),
+    ];
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 24.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _Heading("How often do you cook?"),
+          SizedBox(height: 24.h),
+          Expanded(
+            child: ListView(
+              children: options.map((e) => _OptionCard(title: e.$1, subtitle: e.$2, selected: selected == e.$1, onTap: () => onSelected(e.$1))).toList(),
+            ),
+          ),
+          _CtaButton(onPressed: onNext, label: "Continue"),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KROK 17: SOCIAL PROOF
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step17 extends StatelessWidget {
+  final VoidCallback onNext;
+  const _Step17({required this.onNext});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 24.h),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Spacer(),
+          const _Heading("You're in good company.", textAlign: TextAlign.center),
+          SizedBox(height: 16.h),
+          const _Subtitle("Join thousands already eating smarter.", textAlign: TextAlign.center),
+          SizedBox(height: 40.h),
+          Text("12,400+", style: TextStyle(fontSize: 48.sp, fontWeight: FontWeight.w800, color: AppColors.primary, height: 1.0)),
+          SizedBox(height: 4.h),
+          Text("people using VitaSense", style: TextStyle(fontSize: 16.sp, color: const Color(0xFF8A8A8E))),
+          SizedBox(height: 40.h),
+          const _ReviewCard(name: "Anna K.", text: "Finally an app that uses what I already have at home. Love it!"),
+          SizedBox(height: 12.h),
+          const _ReviewCard(name: "Tomasz W.", text: "Lost 4kg in 6 weeks just by following the meal suggestions."),
+          const Spacer(),
+          _CtaButton(onPressed: onNext, label: "Continue"),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
+}
+
+class _ReviewCard extends StatelessWidget {
+  final String name;
+  final String text;
+  const _ReviewCard({required this.name, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(color: const Color(0xFFF2F2F7), borderRadius: BorderRadius.circular(14.r)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(name, style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold, color: Colors.black)),
+              SizedBox(width: 8.w),
+              ...List.generate(5, (_) => Icon(Icons.star, color: Colors.amber, size: 14.r)),
+            ],
+          ),
+          SizedBox(height: 8.h),
+          Text(text, style: TextStyle(fontSize: 13.sp, color: const Color(0xFF8A8A8E))),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KROK 18: NOTIFICATIONS
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step18 extends StatelessWidget {
+  final VoidCallback onNext;
+  const _Step18({required this.onNext});
+
+  Future<void> _requestNotification() async {
+    await Permission.notification.request();
+    onNext();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 24.h),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Spacer(),
+          Text("🔔", style: TextStyle(fontSize: 72.sp)),
+          SizedBox(height: 32.h),
+          const _Heading("Don't miss your meals.", textAlign: TextAlign.center),
+          SizedBox(height: 16.h),
+          const _Subtitle("We'll remind you when it's time to eat and help you stay on track.", textAlign: TextAlign.center),
+          const Spacer(),
+          _CtaButton(onPressed: _requestNotification, label: "Allow Notifications"),
+          SizedBox(height: 16.h),
+          TextButton(
+            onPressed: onNext,
+            child: Text("Not now", style: TextStyle(fontSize: 16.sp, color: const Color(0xFF8A8A8E))),
+          )
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KROK 19: RATE US
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step19 extends StatelessWidget {
+  final int rating;
+  final ValueChanged<int> onRatingChanged;
+  final VoidCallback onNext;
+
+  const _Step19({required this.rating, required this.onRatingChanged, required this.onNext});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 24.h),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Spacer(),
+          Text("⭐", style: TextStyle(fontSize: 72.sp)),
+          SizedBox(height: 32.h),
+          const _Heading("Enjoying VitaSense?", textAlign: TextAlign.center),
+          SizedBox(height: 16.h),
+          const _Subtitle("Your rating helps us improve and reach more people.", textAlign: TextAlign.center),
+          SizedBox(height: 40.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(5, (index) {
+              return GestureDetector(
+                onTap: () => onRatingChanged(index + 1),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  child: Icon(
+                    Icons.star,
+                    size: 48.r,
+                    color: index < rating ? Colors.amber : const Color(0xFFE5E5EA),
+                  ),
+                ),
+              );
+            }),
+          ),
+          const Spacer(),
+          _CtaButton(onPressed: rating > 0 ? onNext : null, label: "Submit Rating"),
+          SizedBox(height: 16.h),
+          TextButton(
+            onPressed: onNext,
+            child: Text("Skip", style: TextStyle(fontSize: 16.sp, color: const Color(0xFF8A8A8E))),
+          )
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KROK 20: LOADING SCREEN
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step20 extends StatefulWidget {
+  final VoidCallback onNext;
+  const _Step20({required this.onNext});
+
+  @override
+  State<_Step20> createState() => _Step20State();
+}
+
+class _Step20State extends State<_Step20> with SingleTickerProviderStateMixin {
+  late AnimationController _animController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(vsync: this, duration: const Duration(milliseconds: 800))..repeat(reverse: true);
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) widget.onNext();
+    });
+  }
+
+  @override
   void dispose() {
-    _scrollController.dispose();
+    _animController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 80.h,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          double centerOffset = constraints.maxWidth / 2 - (_itemWidth / 2);
-          return NotificationListener<ScrollNotification>(
-            onNotification: (scrollNotification) {
-              if (scrollNotification is ScrollEndNotification) {
-                double offset = _scrollController.offset;
-                double targetOffset = (offset / _itemWidth).round() * _itemWidth;
-                Future.microtask(() {
-                  if (_scrollController.hasClients) {
-                    _scrollController.animateTo(
-                      targetOffset,
-                      duration: const Duration(milliseconds: 200),
-                      curve: Curves.easeOut,
-                    );
-                  }
-                });
-              }
-              return true;
-            },
-            child: ListView.builder(
-              controller: _scrollController,
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              itemCount: widget.maxValue - widget.minValue + 1,
-              padding: EdgeInsets.symmetric(horizontal: centerOffset),
-              itemBuilder: (context, index) {
-                int value = widget.minValue + index;
-                bool isFifth = value % 5 == 0;
-                bool isSelected = value == _currentValue;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 24.h),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Spacer(),
+          ScaleTransition(
+            scale: Tween<double>(begin: 0.95, end: 1.05).animate(_animController),
+            child: Text("⚡", style: TextStyle(fontSize: 64.sp)),
+          ),
+          SizedBox(height: 32.h),
+          const _Heading("Setting up your plan...", textAlign: TextAlign.center),
+          SizedBox(height: 16.h),
+          const _Subtitle("Customizing your meal suggestions.", textAlign: TextAlign.center),
+          SizedBox(height: 32.h),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 40.w),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8.r),
+              child: SizedBox(
+                height: 6.h,
+                child: const LinearProgressIndicator(color: AppColors.primary, backgroundColor: Color(0xFFE5E5EA)),
+              ),
+            ),
+          ),
+          SizedBox(height: 32.h),
+          const _AnimatedListItem(text: "✓ Calculating your calories", delay: 600),
+          const _AnimatedListItem(text: "✓ Matching your preferences", delay: 1200),
+          const _AnimatedListItem(text: "✓ Filtering allergens", delay: 1800),
+          const _AnimatedListItem(text: "✓ Building your meal plan", delay: 2400),
+          const Spacer(),
+        ],
+      ),
+    );
+  }
+}
 
-                double height = isFifth ? 40.h : 20.h;
-                
-                return SizedBox(
-                  width: _itemWidth,
-                  child: Stack(
-                    alignment: Alignment.bottomCenter,
-                    clipBehavior: Clip.none,
-                    children: [
-                      if (isFifth)
-                        Positioned(
-                          top: 0,
-                          child: Text(
-                            '$value',
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
-                              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+class _AnimatedListItem extends StatelessWidget {
+  final String text;
+  final int delay;
+  const _AnimatedListItem({required this.text, required this.delay});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 12.h),
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0.0, end: 1.0),
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeIn,
+        builder: (context, val, child) {
+          return Opacity(opacity: val, child: Text(text, style: TextStyle(fontSize: 15.sp, color: Colors.black, fontWeight: FontWeight.w600)));
+        },
+      ).animate(delay: delay.ms),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KROK 21: PLAN SUMMARY
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step21 extends StatelessWidget {
+  final String? gender;
+  final String heightUnit;
+  final int heightCm;
+  final int heightFt;
+  final int heightIn;
+  final String weightUnit;
+  final int weightKg;
+  final int weightLbs;
+  final int age;
+  final String? goal;
+  final String? activity;
+  final List<String> dietary;
+  final VoidCallback onNext;
+
+  const _Step21({
+    required this.gender, required this.heightUnit, required this.heightCm, required this.heightFt, required this.heightIn,
+    required this.weightUnit, required this.weightKg, required this.weightLbs, required this.age,
+    required this.goal, required this.activity, required this.dietary, required this.onNext,
+  });
+
+  int _calculateCalories() {
+    double h = heightUnit == 'cm' ? heightCm.toDouble() : (heightFt * 12 + heightIn) * 2.54;
+    double w = weightUnit == 'kg' ? weightKg.toDouble() : weightLbs * 0.453592;
+    double bmr = (10 * w) + (6.25 * h) - (5 * age);
+    if (gender == 'Male') {
+      bmr += 5;
+    } else {
+      bmr -= 161;
+    }
+    
+    double m = 1.2;
+    if (activity == 'Lightly active') m = 1.375;
+    if (activity == 'Moderately active') m = 1.55;
+    if (activity == 'Very active') m = 1.725;
+
+    double tdee = bmr * m;
+    if (goal == 'Lose weight') tdee -= 500;
+    if (goal == 'Gain muscle') tdee += 500;
+
+    return tdee.round();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 24.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _Heading("Here's your plan."),
+          SizedBox(height: 32.h),
+          Container(
+            padding: EdgeInsets.all(20.r),
+            decoration: BoxDecoration(color: const Color(0xFFF2F2F7), borderRadius: BorderRadius.circular(16.r)),
+            child: Column(
+              children: [
+                _SummaryRow(label: "Goal", value: goal ?? "-"),
+                const Divider(color: Color(0xFFE5E5EA), height: 32, thickness: 1),
+                _SummaryRow(label: "Activity", value: activity ?? "-"),
+                const Divider(color: Color(0xFFE5E5EA), height: 32, thickness: 1),
+                _SummaryRow(label: "Dietary", value: dietary.isEmpty ? "None" : dietary.join(", ")),
+                const Divider(color: Color(0xFFE5E5EA), height: 32, thickness: 1),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: 2, child: Text("Daily Calories", style: TextStyle(fontSize: 15.sp, color: const Color(0xFF8A8A8E)))),
+                    Expanded(flex: 3, child: Text("${_calculateCalories()} kcal", style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w800, color: AppColors.primary), textAlign: TextAlign.right)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Center(child: Text("Meals are suggestions. Consult a doctor for medical decisions.", style: TextStyle(fontSize: 11.sp, color: const Color(0xFF8A8A8E)), textAlign: TextAlign.center)),
+          const Spacer(),
+          _CtaButton(onPressed: onNext, label: "See My Meal Plan"),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
+}
+
+class _SummaryRow extends StatelessWidget {
+  final String label;
+  final String value;
+  const _SummaryRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(flex: 2, child: Text(label, style: TextStyle(fontSize: 15.sp, color: const Color(0xFF8A8A8E)))),
+        Expanded(flex: 3, child: Text(value, style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600, color: Colors.black), textAlign: TextAlign.right)),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KROK 22: PAYWALL
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step22 extends StatefulWidget {
+  final VoidCallback onNext;
+  final bool isLoading;
+
+  const _Step22({required this.onNext, required this.isLoading});
+
+  @override
+  State<_Step22> createState() => _Step22State();
+}
+
+class _Step22State extends State<_Step22> {
+  String _selectedPlan = 'yearly';
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 24.h),
+      child: SafeArea(
+        child: Column(
+          children: [
+            Align(
+              alignment: Alignment.centerRight,
+              child: GestureDetector(
+                onTap: () {},
+                child: Text("Restore", style: TextStyle(fontSize: 14.sp, color: const Color(0xFF8A8A8E))),
+              ),
+            ),
+            SizedBox(height: 24.h),
+            Text(
+              "Start your 3-day FREE trial to continue.",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 26.sp, fontWeight: FontWeight.w800, color: Colors.black, height: 1.2),
+            ),
+            SizedBox(height: 32.h),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _buildTimelineStep(
+                      icon: Icons.lock_open,
+                      color: AppColors.primary,
+                      title: "Today",
+                      subtitle: "Unlock all features — meals, pantry matching, and AI suggestions.",
+                      isLast: false,
+                    ),
+                    _buildTimelineStep(
+                      icon: Icons.notifications,
+                      color: Colors.orange,
+                      title: "In 2 Days — Reminder",
+                      subtitle: "We'll remind you before your trial ends.",
+                      isLast: false,
+                    ),
+                    _buildTimelineStep(
+                      icon: Icons.workspace_premium,
+                      color: Colors.black,
+                      title: "In 3 Days — Billing Starts",
+                      subtitle: "You'll be charged unless you cancel anytime before.",
+                      isLast: true,
+                    ),
+                    SizedBox(height: 32.h),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _selectedPlan = 'monthly'),
+                            child: Container(
+                              height: 130.h,
+                              padding: EdgeInsets.all(16.r),
+                              decoration: BoxDecoration(
+                                color: _selectedPlan == 'monthly' ? Colors.white : const Color(0xFFF2F2F7),
+                                border: _selectedPlan == 'monthly' ? Border.all(color: Colors.black, width: 2) : Border.all(color: Colors.transparent, width: 2),
+                                borderRadius: BorderRadius.circular(14.r),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text("Monthly", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: Colors.black)),
+                                  SizedBox(height: 8.h),
+                                  Text("\$9.99/mo", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: Colors.black)),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      Container(
-                        width: isSelected ? 3.w : 2.w,
-                        height: height,
-                        decoration: BoxDecoration(
-                          color: isSelected ? AppColors.primary : AppColors.borderMedium,
-                          borderRadius: BorderRadius.circular(2.r),
+                        SizedBox(width: 16.w),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _selectedPlan = 'yearly'),
+                            child: Container(
+                              height: 130.h,
+                              decoration: BoxDecoration(
+                                color: _selectedPlan == 'yearly' ? Colors.white : const Color(0xFFF2F2F7),
+                                border: _selectedPlan == 'yearly' ? Border.all(color: Colors.black, width: 2) : Border.all(color: Colors.transparent, width: 2),
+                                borderRadius: BorderRadius.circular(14.r),
+                              ),
+                              child: Stack(
+                                children: [
+                                  Align(
+                                    alignment: Alignment.topCenter,
+                                    child: Container(
+                                      width: double.infinity,
+                                      padding: EdgeInsets.symmetric(vertical: 6.h),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black,
+                                        borderRadius: BorderRadius.only(topLeft: Radius.circular(10.r), topRight: Radius.circular(10.r)),
+                                      ),
+                                      child: Text(
+                                        "3 DAYS FREE",
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(color: Colors.white, fontSize: 11.sp, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ),
+                                  if (_selectedPlan == 'yearly')
+                                    Positioned(
+                                      top: 40.h,
+                                      right: 12.w,
+                                      child: Icon(Icons.check_circle, color: Colors.black, size: 20.r),
+                                    ),
+                                  Center(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        SizedBox(height: 16.h),
+                                        Text("Yearly", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: Colors.black)),
+                                        SizedBox(height: 8.h),
+                                        Text("\$29.99", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: Colors.black)),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+                      ],
+                    ),
+                    SizedBox(height: 24.h),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.check, color: const Color(0xFF8A8A8E), size: 16.r),
+                        SizedBox(width: 8.w),
+                        Text("No Payment Due Now", style: TextStyle(color: const Color(0xFF8A8A8E), fontSize: 14.sp)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
-          );
-        },
+            SizedBox(height: 16.h),
+            SizedBox(
+              width: double.infinity,
+              height: 56.h,
+              child: FilledButton(
+                onPressed: widget.isLoading ? null : widget.onNext,
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  disabledBackgroundColor: Colors.black.withValues(alpha: 0.5),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
+                ),
+                child: widget.isLoading
+                    ? SizedBox(width: 24.r, height: 24.r, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                    : Text(
+                        "Start My 3-Day Free Trial",
+                        style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              _selectedPlan == 'yearly'
+                  ? "3 days free, then \$29.99/year. Auto-renews unless cancelled."
+                  : "3 days free, then \$9.99/month. Auto-renews unless cancelled.",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 11.sp, color: const Color(0xFF8A8A8E)),
+            ),
+            SizedBox(height: 16.h),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text("Terms", style: TextStyle(fontSize: 12.sp, color: const Color(0xFF8A8A8E))),
+                Text(" · ", style: TextStyle(fontSize: 12.sp, color: const Color(0xFF8A8A8E))),
+                Text("Privacy", style: TextStyle(fontSize: 12.sp, color: const Color(0xFF8A8A8E))),
+                Text(" · ", style: TextStyle(fontSize: 12.sp, color: const Color(0xFF8A8A8E))),
+                Text("Restore", style: TextStyle(fontSize: 12.sp, color: const Color(0xFF8A8A8E))),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
+
+  Widget _buildTimelineStep({required IconData icon, required Color color, required String title, required String subtitle, required bool isLast}) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Column(
+            children: [
+              Container(
+                width: 40.r,
+                height: 40.r,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                child: Icon(icon, color: Colors.white, size: 20.r),
+              ),
+              if (!isLast) Expanded(child: Container(width: 2.w, color: const Color(0xFFE5E5EA))),
+            ],
+          ),
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 24.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 8.h),
+                  Text(title, style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: Colors.black)),
+                  SizedBox(height: 4.h),
+                  Text(subtitle, style: TextStyle(fontSize: 14.sp, color: const Color(0xFF8A8A8E), height: 1.3)),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

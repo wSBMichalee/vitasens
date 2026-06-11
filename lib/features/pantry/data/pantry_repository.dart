@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vitasense/features/pantry/data/models/ingredient_model.dart';
+import 'package:vitasense/core/services/cache_service.dart';
 
 class PantryRepository {
   final SupabaseClient _supabase;
@@ -8,13 +9,17 @@ class PantryRepository {
       : _supabase = supabase ?? Supabase.instance.client;
 
   Future<List<IngredientModel>> getIngredients() async {
-    final response = await _supabase.functions.invoke(
-      'manage-pantry',
-      body: {'action': 'list'},
+    return CacheService().fetchWithStaleWhileRevalidate(
+      key: 'pantry_ingredients',
+      fetchFuture: () async {
+        final response = await _supabase.functions.invoke(
+          'manage-pantry',
+          body: {'action': 'list'},
+        );
+        final List<dynamic> data = response.data['data'] ?? [];
+        return data.map((json) => IngredientModel.fromJson(json as Map<String, dynamic>)).toList();
+      },
     );
-
-    final List<dynamic> data = response.data['data'] ?? [];
-    return data.map((json) => IngredientModel.fromJson(json as Map<String, dynamic>)).toList();
   }
 
   Future<List<IngredientModel>> getExpiring({int days = 3}) async {
@@ -34,6 +39,7 @@ class PantryRepository {
       'manage-pantry',
       body: {'action': 'delete', 'id': id},
     );
+    CacheService().invalidate('pantry_ingredients');
   }
 
   Future<void> addIngredient({
@@ -56,5 +62,6 @@ class PantryRepository {
         if (expiryDate != null) 'expiry_date': expiryDate.toIso8601String(),
       },
     );
+    CacheService().invalidate('pantry_ingredients');
   }
 }

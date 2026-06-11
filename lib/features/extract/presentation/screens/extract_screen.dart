@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -33,8 +34,45 @@ class _ExtractView extends StatefulWidget {
   State<_ExtractView> createState() => _ExtractViewState();
 }
 
-class _ExtractViewState extends State<_ExtractView> {
+class _ExtractViewState extends State<_ExtractView> with WidgetsBindingObserver {
   final TextEditingController _urlController = TextEditingController();
+  static const MethodChannel _shareChannel = MethodChannel('com.vitasense/share');
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _checkSharedUrl();
+  }
+
+  Future<void> _checkSharedUrl() async {
+    try {
+      final String? sharedUrl = await _shareChannel.invokeMethod('getSharedUrl');
+      if (sharedUrl != null && sharedUrl.isNotEmpty) {
+        final RegExp urlRegExp = RegExp(r'(https?:\/\/[^\s]+)');
+        final match = urlRegExp.firstMatch(sharedUrl);
+        final url = match?.group(0) ?? sharedUrl;
+
+        if (url.contains('tiktok.com') || url.contains('youtube.com') || url.contains('instagram.com') || url.contains('youtu.be')) {
+          if (mounted) {
+            setState(() {
+              _urlController.text = url;
+            });
+            _extractUrl();
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error getting shared URL: $e');
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkSharedUrl();
+    }
+  }
 
   void _extractUrl() {
     final url = _urlController.text.trim();
@@ -46,6 +84,7 @@ class _ExtractViewState extends State<_ExtractView> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _urlController.dispose();
     super.dispose();
   }

@@ -7,7 +7,9 @@ import 'package:vitasense/features/water/bloc/water_event.dart';
 import 'package:vitasense/features/water/bloc/water_state.dart';
 
 class WaterCard extends StatelessWidget {
-  const WaterCard({super.key});
+  const WaterCard({super.key, this.dailyWaterTarget});
+  
+  final int? dailyWaterTarget;
 
   void _showAddWaterSheet(BuildContext context) {
     showModalBottomSheet(
@@ -54,11 +56,10 @@ class WaterCard extends StatelessWidget {
     return BlocBuilder<WaterBloc, WaterState>(
       builder: (context, state) {
         int consumed = 0;
-        int goal = 2500;
+        int goal = dailyWaterTarget ?? 2500;
         
         if (state is WaterLoaded) {
           consumed = state.consumedMl;
-          goal = state.goalMl;
         }
 
         final double progress = (consumed / goal).clamp(0.0, 1.0);

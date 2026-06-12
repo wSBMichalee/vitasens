@@ -21,6 +21,24 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
+  void _showSnackBar(String message, {bool success = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.white),
+        ),
+        backgroundColor: success ? AppColors.success : AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.all(16.r),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
@@ -43,91 +61,89 @@ class _SignupScreenState extends State<SignupScreen> {
                   child: IntrinsicHeight(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          SizedBox(height: 48.h),
-                          Icon(Icons.eco, size: 36.r, color: AppColors.primary),
-                          SizedBox(height: 8.h),
-                          Text(
-                            'VitaSense',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 24.sp,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.black,
-                              letterSpacing: -0.5,
+                      children: [
+                        SizedBox(height: 48.h),
+                        Icon(Icons.eco, size: 36.r, color: AppColors.primary),
+                        SizedBox(height: 8.h),
+                        Text(
+                          'VitaSense',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 24.sp,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.black,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        SizedBox(height: 32.h),
+                        Text(
+                          'Create account',
+                          style: TextStyle(
+                            fontSize: 24.sp,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.black,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        Text(
+                          'Join thousands eating smarter.',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: const Color(0xFF8A8A8E),
+                          ),
+                        ),
+                        SizedBox(height: 40.h),
+                        Text(
+                          'Continue with',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            color: const Color(0xFF8A8A8E),
+                          ),
+                        ),
+                        SizedBox(height: 12.h),
+                        _buildSocialButton(
+                          label: 'Continue with Apple',
+                          iconWidget: Icon(Icons.apple, color: Colors.white, size: 24.r),
+                          backgroundColor: Colors.black,
+                          textColor: Colors.white,
+                          onTap: () => context.read<AuthBloc>().add(const SignInWithAppleRequested()),
+                        ),
+                        SizedBox(height: 8.h),
+                        _buildSocialButton(
+                          label: 'Continue with Google',
+                          iconWidget: _buildGoogleIcon(),
+                          backgroundColor: Colors.white,
+                          textColor: Colors.black,
+                          borderColor: const Color(0xFFE5E5EA),
+                          onTap: () => context.read<AuthBloc>().add(const SignInWithGoogleRequested()),
+                        ),
+                        const Spacer(),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Already have an account? ",
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                color: const Color(0xFF8A8A8E),
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 32.h),
-                          Text(
-                            'Create account',
-                            style: TextStyle(
-                              fontSize: 24.sp,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.black,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                          Text(
-                            'Join thousands eating smarter.',
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              color: const Color(0xFF8A8A8E),
-                            ),
-                          ),
-                          SizedBox(height: 24.h),
-                          SizedBox(height: 16.h),
-                          Text(
-                            'or continue with',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                              color: const Color(0xFF8A8A8E),
-                            ),
-                          ),
-                          SizedBox(height: 12.h),
-                          _buildSocialButton(
-                            label: 'Continue with Apple',
-                            iconWidget: Icon(Icons.apple, color: Colors.white, size: 24.r),
-                            backgroundColor: Colors.black,
-                            textColor: Colors.white,
-                            onTap: () => context.read<AuthBloc>().add(const SignInWithAppleRequested()),
-                          ),
-                          SizedBox(height: 8.h),
-                          _buildSocialButton(
-                            label: 'Continue with Google',
-                            iconWidget: _buildGoogleIcon(),
-                            backgroundColor: Colors.white,
-                            textColor: Colors.black,
-                            borderColor: const Color(0xFFE5E5EA),
-                            onTap: () => context.read<AuthBloc>().add(const SignInWithGoogleRequested()),
-                          ),
-                          const Spacer(),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                "Already have an account? ",
+                            GestureDetector(
+                              onTap: () => context.pop(), // pop to login
+                              child: Text(
+                                'Sign in',
                                 style: TextStyle(
                                   fontSize: 14.sp,
-                                  color: const Color(0xFF8A8A8E),
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              GestureDetector(
-                                onTap: () => context.pop(), // pop to login
-                                child: Text(
-                                  'Sign in',
-                                  style: TextStyle(
-                                    fontSize: 14.sp,
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 32.h),
-                        ],
-                      ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 32.h),
+                      ],
                     ),
                   ),
                 ),

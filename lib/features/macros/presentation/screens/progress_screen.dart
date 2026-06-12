@@ -39,9 +39,21 @@ class _ProgressView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: BlocBuilder<MacrosBloc, MacrosState>(
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFF0FFF4),
+              Color(0xFFFFFFFF),
+            ],
+            stops: [0.0, 0.4],
+          ),
+        ),
+        child: SafeArea(
+          child: BlocBuilder<MacrosBloc, MacrosState>(
           builder: (context, state) {
             if (state is MacrosLoading || state is MacrosInitial) {
               return _buildShimmer();
@@ -54,6 +66,7 @@ class _ProgressView extends StatelessWidget {
             }
             return const SizedBox.shrink();
           },
+        ),
         ),
       ),
     );

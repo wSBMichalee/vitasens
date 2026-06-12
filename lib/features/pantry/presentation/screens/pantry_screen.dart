@@ -68,10 +68,22 @@ class _PantryViewState extends State<_PantryView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: BlocConsumer<PantryBloc, PantryState>(
-          listener: (context, state) {
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFF0FFF4),
+              Color(0xFFFFFFFF),
+            ],
+            stops: [0.0, 0.4],
+          ),
+        ),
+        child: SafeArea(
+          child: BlocConsumer<PantryBloc, PantryState>(
+            listener: (context, state) {
             if (state is PantryError) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -93,6 +105,7 @@ class _PantryViewState extends State<_PantryView> {
             }
             return const SizedBox.shrink();
           },
+        ),
         ),
       ),
     );

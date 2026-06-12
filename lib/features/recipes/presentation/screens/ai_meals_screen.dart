@@ -52,10 +52,22 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFF0FFF4),
+              Color(0xFFFFFFFF),
+            ],
+            stops: [0.0, 0.4],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
             // ── AppHeader: wariant main, spinner jako action podczas ładowania ────
             BlocBuilder<RecipesBloc, RecipesState>(
               builder: (context, state) {
@@ -257,6 +269,7 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

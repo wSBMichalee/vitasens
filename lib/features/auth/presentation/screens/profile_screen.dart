@@ -56,9 +56,21 @@ class _ProfileView extends StatelessWidget {
     print('goalPace: ${user.goalPace}, activityLevel: ${user.activityLevel}');
     
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFF0FFF4),
+              Color(0xFFFFFFFF),
+            ],
+            stops: [0.0, 0.4],
+          ),
+        ),
+        child: CustomScrollView(
+          slivers: [
           // ── HERO SLIVER APP BAR ────────────────────────────────────
           _ProfileSliverAppBar(user: user),
 
@@ -90,6 +102,7 @@ class _ProfileView extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

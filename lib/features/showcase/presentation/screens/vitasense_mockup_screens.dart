@@ -320,18 +320,30 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
       child: BlocProvider<DailyLogBloc>(
         create: (_) => DailyLogBloc()..add(LoadDailyLog(_selectedDate)),
         child: Scaffold(
-          backgroundColor: AppColors.background,
-        body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+          backgroundColor: Colors.transparent,
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFFF0FFF4),  // bardzo delikatna zielona mgiełka u góry
+                Color(0xFFFFFFFF),  // czysta biel na dole
+              ],
+              stops: [0.0, 0.4],
+            ),
+          ),
+          child: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               // ── HEADER ──────────────────────────────────────────────────
               AppHeader(
                 title: 'Today\'s Progress',
                 subtitle: 'Hello, ${widget.userName}',
                 variant: AppHeaderVariant.main,
-                backgroundColor: AppColors.primary,
-                textColor: AppColors.textWhite,
+                backgroundColor: Colors.white,
+                textColor: AppColors.textPrimary,
                 actions: [
                   Container(
                     height: 36.r,
@@ -490,6 +502,7 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
             ],
           ),
         ),
+      ),
       ),
       ),
     );

@@ -28,7 +28,6 @@ import 'package:vitasense/features/detect/presentation/screens/scanning_screen.d
 import 'package:vitasense/features/detect/presentation/screens/food_detected_screen.dart';
 import 'package:vitasense/features/recipes/presentation/screens/ai_meals_screen.dart';
 import 'package:vitasense/features/recipes/presentation/screens/recipe_detail_screen.dart';
-import 'package:vitasense/features/macros/presentation/screens/progress_screen.dart';
 import 'package:vitasense/features/auth/presentation/screens/profile_screen.dart';
 import 'package:vitasense/features/subscription/presentation/screens/settings_screen.dart';
 import 'package:vitasense/features/shopping/presentation/screens/shopping_list_screen.dart';
@@ -38,7 +37,9 @@ import 'package:vitasense/features/extract/presentation/screens/extract_screen.d
 import 'package:vitasense/features/recipes/presentation/screens/create_recipe_screen.dart';
 import 'package:vitasense/features/macros/presentation/screens/progress_history_screen.dart';
 import 'package:vitasense/features/voice/presentation/screens/voice_log_screen.dart';
-import 'package:vitasense/features/showcase/presentation/screens/vitasense_mockup_screens.dart';
+import 'package:vitasense/features/showcase/presentation/screens/problem_fatigue_screen.dart';
+import 'package:vitasense/features/showcase/presentation/screens/feature_matcher_screen.dart';
+import 'package:vitasense/features/showcase/presentation/screens/results_analysis_screen.dart';
 import 'package:vitasense/features/recipes/presentation/screens/saved_recipes_screen.dart';
 
 // ─── STAŁE NAZWY TRAS ─────────────────────────────────────────────────────────

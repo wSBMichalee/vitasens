@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:vitasense/features/auth/bloc/auth_bloc.dart';
 import 'package:vitasense/features/auth/bloc/auth_state.dart';
-import 'package:vitasense/features/showcase/presentation/screens/vitasense_mockup_screens.dart';
+import 'package:vitasense/features/macros/presentation/screens/home_screen_content.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});

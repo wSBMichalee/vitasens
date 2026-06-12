@@ -416,7 +416,7 @@ class _DailyTargetsCardState extends State<_DailyTargetsCard> {
               ),
               SizedBox(height: 6.h),
               Text(
-                '${_consumedCalories} / $dailyTarget kcal',
+                '$_consumedCalories / $dailyTarget kcal',
                 style: TextStyle(
                   color: Colors.grey,
                   fontSize: 10.sp,
@@ -629,7 +629,7 @@ class _MyGoalsCard extends StatelessWidget {
       builder: (_) => _EditGoalSheet(type: type, user: user),
     ).then((_) {
       if (context.mounted) {
-        context.read<AuthBloc>().add(AppStarted());
+        context.read<AuthBloc>().add(const AppStarted());
       }
     });
   }
@@ -1421,7 +1421,7 @@ class _PersonalInfoCard extends StatelessWidget {
       builder: (_) => _EditTagsSheet(type: type, user: user),
     ).then((_) {
       if (context.mounted) {
-        context.read<AuthBloc>().add(AppStarted());
+        context.read<AuthBloc>().add(const AppStarted());
       }
     });
   }
@@ -1507,8 +1507,9 @@ class _EditTagsSheetState extends State<_EditTagsSheet> {
   @override
   void initState() {
     super.initState();
-    if (widget.type == 'allergies') _tags = List.from(widget.user.allergies ?? []);
-    else if (widget.type == 'health_conditions') _tags = List.from(widget.user.healthConditions ?? []);
+    if (widget.type == 'allergies') {
+      _tags = List.from(widget.user.allergies ?? []);
+    } else if (widget.type == 'health_conditions') _tags = List.from(widget.user.healthConditions ?? []);
     else _tags = List.from(widget.user.dietaryPreferences ?? []);
   }
 
@@ -1597,7 +1598,7 @@ class _EditTagsSheetState extends State<_EditTagsSheet> {
               spacing: 8.w,
               runSpacing: 8.h,
               children: _tags.map((t) => Chip(
-                label: Text(t, style: TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.w500)),
+                label: Text(t, style: const TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.w500)),
                 backgroundColor: AppColors.primaryLight.withValues(alpha: 0.5),
                 deleteIconColor: AppColors.primaryDark,
                 onDeleted: () => setState(() => _tags.remove(t)),

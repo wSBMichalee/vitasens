@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -7,7 +8,10 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:vitasense/core/router/app_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
+import 'package:vitasense/features/auth/bloc/auth_bloc.dart';
+import 'package:vitasense/features/auth/bloc/auth_event.dart';
 
 class UserOnboardingScreen extends StatefulWidget {
   const UserOnboardingScreen({super.key});
@@ -34,15 +38,18 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
 
   int _age = 25;
   String? _goal;
+  String? _blocker;
   String? _activity;
+  double _waterLiters = 2.0;
   final List<String> _dietary = [];
   final List<String> _allergies = [];
   final List<String> _healthConditions = [];
   final List<String> _kitchenStaples = [];
   String? _cookingFrequency;
   int _rating = 0;
+  String _pace = 'Moderate';
 
-  static const int _totalPages = 22;
+  static const int _totalPages = 28;
 
   @override
   void dispose() {
@@ -63,16 +70,16 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
 
   void _previousStep() {
     if (_currentStep > 0) {
-      if (_currentStep == 19) {
+      if (_currentStep == 24) {
         _pageController.animateToPage(
-          17,
+          21,
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOutCubic,
         );
-        setState(() => _currentStep = 17);
+        setState(() => _currentStep = 21);
         return;
       }
-      if (_currentStep == 20) {
+      if (_currentStep == 26) {
         return; // od planu w dol nie wracamy do ladowania
       }
 
@@ -93,7 +100,7 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
 
   Future<void> _completeOnboarding() async {
     setState(() => _isLoading = true);
-    
+
     int finalHeightCm = _heightUnit == 'cm' ? _heightCm : ((_heightFt * 12 + _heightIn) * 2.54).round();
     int finalWeightKg = _weightUnit == 'kg' ? _weightKg : (_weightLbs * 0.453592).round();
 
@@ -109,14 +116,25 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
       'health_conditions': _healthConditions,
       'kitchen_staples': _kitchenStaples,
       'cooking_frequency': _cookingFrequency,
+      'goal_pace': _pace,
+      'daily_water_target': (_waterLiters * 1000).round(),
     };
 
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('onboarding_data', jsonEncode(data));
-      if (mounted) context.go(AppRoutes.login);
+
+      context.read<AuthBloc>().add(OnboardingCompleted(onboardingData: data));
+      await Future.delayed(const Duration(seconds: 2));
+
+      if (mounted) context.go(AppRoutes.home);
     } catch (e) {
       debugPrint("Error saving onboarding data: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Something went wrong. Please try again.'), backgroundColor: Colors.red),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -124,7 +142,7 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    bool hideTopBar = _currentStep == 19 || _currentStep == 21; 
+    bool hideTopBar = _currentStep == 24 || _currentStep == 25 || _currentStep == 27; 
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -195,18 +213,38 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
                   _Step6(age: _age, onAgeChanged: (v) => setState(() => _age = v), onNext: _nextStep),
                   _Step7(gender: _gender, heightUnit: _heightUnit, heightCm: _heightCm, heightFt: _heightFt, heightIn: _heightIn, weightUnit: _weightUnit, weightKg: _weightKg, weightLbs: _weightLbs, age: _age, onNext: _nextStep),
                   _Step8(selected: _goal, onSelected: (v) => setState(() => _goal = v), onNext: _goal != null ? _nextStep : null),
+                  _Step8b(
+                    selected: _blocker,
+                    onSelected: (v) => setState(() => _blocker = v),
+                    onNext: _blocker != null ? _nextStep : null,
+                  ),
                   _Step9(goal: _goal, onNext: _nextStep),
                   _Step10(selected: _activity, onSelected: (v) => setState(() => _activity = v), onNext: _activity != null ? _nextStep : null),
+                  _Step10b(
+                    waterLiters: _waterLiters,
+                    onWaterChanged: (v) => setState(() => _waterLiters = v),
+                    onNext: _nextStep,
+                    weightKg: _weightKg.toDouble(),
+                    activity: _activity,
+                  ),
                   _Step11(selected: _dietary, onToggle: (v) { setState(() { if (v == 'No restrictions') { _dietary.clear(); _dietary.add(v); } else { _dietary.remove('No restrictions'); _dietary.contains(v) ? _dietary.remove(v) : _dietary.add(v); } }); }, onNext: _dietary.isNotEmpty ? _nextStep : null),
                   _Step12(selected: _allergies, onToggle: (v) { setState(() { if (v == 'None') { _allergies.clear(); _allergies.add(v); } else { _allergies.remove('None'); _allergies.contains(v) ? _allergies.remove(v) : _allergies.add(v); } }); }, onNext: _nextStep),
                   _Step13(selected: _healthConditions, onToggle: (v) { setState(() { if (v == 'None') { _healthConditions.clear(); _healthConditions.add(v); } else { _healthConditions.remove('None'); _healthConditions.contains(v) ? _healthConditions.remove(v) : _healthConditions.add(v); } }); }, onNext: _healthConditions.isNotEmpty ? _nextStep : null),
+                  _Step13b(onNext: _nextStep),
                   _Step14(onNext: _nextStep),
                   _Step15(selected: _kitchenStaples, onToggle: (v) { setState(() { _kitchenStaples.contains(v) ? _kitchenStaples.remove(v) : _kitchenStaples.add(v); }); }, onNext: _kitchenStaples.isNotEmpty ? _nextStep : null),
                   _Step16(selected: _cookingFrequency, onSelected: (v) => setState(() => _cookingFrequency = v), onNext: _cookingFrequency != null ? _nextStep : null),
+                  _Step16b(
+                    selected: _pace,
+                    onSelected: (v) => setState(() => _pace = v),
+                    onNext: _nextStep,
+                  ),
                   _Step17(onNext: _nextStep),
                   _Step18(onNext: _nextStep),
                   _Step19(rating: _rating, onRatingChanged: (v) => setState(() => _rating = v), onNext: _nextStep),
+                  _Step19b(onNext: _nextStep),
                   _Step20(onNext: _nextStep),
+                  _Step20b(onNext: _nextStep),
                   _Step21(gender: _gender, heightUnit: _heightUnit, heightCm: _heightCm, heightFt: _heightFt, heightIn: _heightIn, weightUnit: _weightUnit, weightKg: _weightKg, weightLbs: _weightLbs, age: _age, goal: _goal, activity: _activity, dietary: _dietary, onNext: _nextStep),
                   _Step22(onNext: _completeOnboarding, isLoading: _isLoading),
                 ],
@@ -876,6 +914,76 @@ class _Step8 extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// KROK 8b: BLOCKER
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step8b extends StatelessWidget {
+  final String? selected;
+  final ValueChanged<String> onSelected;
+  final VoidCallback? onNext;
+
+  const _Step8b({required this.selected, required this.onSelected, required this.onNext});
+
+  @override
+  Widget build(BuildContext context) {
+    final options = [
+      (Icons.repeat, "Lack of consistency", "I start but never stick to it"),
+      (Icons.fastfood, "Unhealthy eating habits", "I struggle to eat well"),
+      (Icons.schedule, "Busy schedule", "No time to plan meals"),
+      (Icons.emoji_food_beverage, "Lack of meal inspiration", "I don't know what to cook"),
+    ];
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 24.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _Heading("What's stopping you from reaching your goals?"),
+          SizedBox(height: 8.h),
+          const _Subtitle("We'll help you overcome it."),
+          SizedBox(height: 24.h),
+          Expanded(
+            child: ListView(
+              children: options.map((e) => Padding(
+                padding: EdgeInsets.only(bottom: 12.h),
+                child: GestureDetector(
+                  onTap: () => onSelected(e.$2),
+                  child: Container(
+                    padding: EdgeInsets.all(16.r),
+                    decoration: BoxDecoration(
+                      color: selected == e.$2 ? AppColors.primary : const Color(0xFFF2F2F7),
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(e.$1, color: selected == e.$2 ? Colors.white : Colors.black, size: 24.r),
+                        SizedBox(width: 16.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(e.$2, style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: selected == e.$2 ? Colors.white : Colors.black)),
+                              SizedBox(height: 2.h),
+                              Text(e.$3, style: TextStyle(fontSize: 13.sp, color: selected == e.$2 ? Colors.white70 : Colors.grey)),
+                            ],
+                          ),
+                        ),
+                        if (selected == e.$2)
+                          Icon(Icons.check_circle, color: Colors.white, size: 20.r),
+                      ],
+                    ),
+                  ),
+                ),
+              )).toList(),
+            ),
+          ),
+          _CtaButton(onPressed: onNext, label: "Continue"),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // KROK 9: MOTIVATION GOAL
 // ─────────────────────────────────────────────────────────────────────────────
 class _Step9 extends StatelessWidget {
@@ -949,6 +1057,101 @@ class _Step10 extends StatelessWidget {
             ),
           ),
           _CtaButton(onPressed: onNext, label: "Continue"),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KROK 10b: HYDRATION
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step10b extends StatefulWidget {
+  final double waterLiters;
+  final ValueChanged<double> onWaterChanged;
+  final VoidCallback onNext;
+  final double? weightKg;
+  final String? activity;
+
+  const _Step10b({
+    required this.waterLiters,
+    required this.onWaterChanged,
+    required this.onNext,
+    this.weightKg,
+    this.activity,
+  });
+
+  @override
+  State<_Step10b> createState() => _Step10bState();
+}
+
+class _Step10bState extends State<_Step10b> {
+  double _recommended() {
+    double base = (widget.weightKg ?? 70) * 0.033;
+    if (widget.activity == 'Moderately active') base += 0.3;
+    if (widget.activity == 'Very active') base += 0.6;
+    return double.parse(base.toStringAsFixed(1));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final rec = _recommended();
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 24.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _Heading("How much water do you drink daily?"),
+          SizedBox(height: 8.h),
+          _Subtitle("Based on your weight and activity, we recommend ${rec}L per day."),
+          SizedBox(height: 48.h),
+          Center(
+            child: Text(
+              "${widget.waterLiters.toStringAsFixed(1)}L",
+              style: TextStyle(fontSize: 64.sp, fontWeight: FontWeight.w800, color: AppColors.primary),
+            ),
+          ),
+          SizedBox(height: 24.h),
+          Slider(
+            value: widget.waterLiters,
+            min: 0.5,
+            max: 3.5,
+            divisions: 12,
+            activeColor: AppColors.primary,
+            inactiveColor: const Color(0xFFF2F2F7),
+            onChanged: widget.onWaterChanged,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("0.5L", style: TextStyle(fontSize: 12.sp, color: Colors.grey)),
+              Text("3.5L", style: TextStyle(fontSize: 12.sp, color: Colors.grey)),
+            ],
+          ),
+          SizedBox(height: 24.h),
+          Container(
+            padding: EdgeInsets.all(16.r),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.water_drop, color: AppColors.primary, size: 24.r),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Text(
+                    widget.waterLiters >= rec
+                        ? "Great! You're hitting your hydration goal 💪"
+                        : "Your recommended intake is ${rec}L. Try to increase gradually.",
+                    style: TextStyle(fontSize: 14.sp, color: AppColors.primary, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Spacer(),
+          _CtaButton(onPressed: widget.onNext, label: "Continue"),
         ],
       ),
     ).animate().fadeIn(duration: 300.ms);
@@ -1215,6 +1418,74 @@ class _Step13 extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// KROK 13b: SOCIAL PROOF
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step13b extends StatelessWidget {
+  final VoidCallback onNext;
+  const _Step13b({required this.onNext});
+
+  @override
+  Widget build(BuildContext context) {
+    final reviews = [
+      ("Marta K.", "Lost 6kg in 2 months! VitaSense finally made me understand what I'm eating.", 5),
+      ("Tomasz W.", "The pantry matching feature is genius. No more food waste.", 5),
+      ("Ania S.", "I love the AI meal suggestions. My diet has never been this varied.", 4),
+    ];
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 24.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Column(
+              children: [
+                Text("50,000+", style: TextStyle(fontSize: 56.sp, fontWeight: FontWeight.w800, color: AppColors.primary)),
+                Text("people already reach their goals with VitaSense", textAlign: TextAlign.center, style: TextStyle(fontSize: 16.sp, color: Colors.grey[600])),
+              ],
+            ),
+          ),
+          SizedBox(height: 32.h),
+          const _Heading("What our users say"),
+          SizedBox(height: 16.h),
+          Expanded(
+            child: ListView(
+              children: reviews.map((r) => Padding(
+                padding: EdgeInsets.only(bottom: 12.h),
+                child: Container(
+                  padding: EdgeInsets.all(16.r),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF2F2F7),
+                    borderRadius: BorderRadius.circular(16.r),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          CircleAvatar(radius: 18.r, backgroundColor: AppColors.primary, child: Text(r.$1[0], style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14.sp))),
+                          SizedBox(width: 10.w),
+                          Text(r.$1, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp)),
+                          const Spacer(),
+                          Row(children: List.generate(r.$3, (_) => Icon(Icons.star, color: Colors.amber, size: 14.r))),
+                        ],
+                      ),
+                      SizedBox(height: 8.h),
+                      Text(r.$2, style: TextStyle(fontSize: 13.sp, color: Colors.grey[700])),
+                    ],
+                  ),
+                ),
+              )).toList(),
+            ),
+          ),
+          _CtaButton(onPressed: onNext, label: "Continue"),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // KROK 14: VIRTUAL FRIDGE INTRO
 // ─────────────────────────────────────────────────────────────────────────────
 class _Step14 extends StatelessWidget {
@@ -1342,6 +1613,72 @@ class _Step16 extends StatelessWidget {
           Expanded(
             child: ListView(
               children: options.map((e) => _OptionCard(title: e.$1, subtitle: e.$2, selected: selected == e.$1, onTap: () => onSelected(e.$1))).toList(),
+            ),
+          ),
+          _CtaButton(onPressed: onNext, label: "Continue"),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KROK 16b: HOW FAST
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step16b extends StatelessWidget {
+  final String selected;
+  final ValueChanged<String> onSelected;
+  final VoidCallback onNext;
+  const _Step16b({required this.selected, required this.onSelected, required this.onNext});
+
+  @override
+  Widget build(BuildContext context) {
+    final options = [
+      ('🐢', 'Slow & steady', 'Sustainable, long-term results'),
+      ('🚶', 'Moderate', 'Balanced pace, recommended'),
+      ('🏃', 'Fast', 'Aggressive, requires discipline'),
+    ];
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 24.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _Heading("How fast do you want to reach your goal?"),
+          SizedBox(height: 8.h),
+          const _Subtitle("We'll adjust your daily targets accordingly."),
+          SizedBox(height: 24.h),
+          Expanded(
+            child: ListView(
+              children: options.map((e) => Padding(
+                padding: EdgeInsets.only(bottom: 12.h),
+                child: GestureDetector(
+                  onTap: () => onSelected(e.$2),
+                  child: Container(
+                    padding: EdgeInsets.all(20.r),
+                    decoration: BoxDecoration(
+                      color: selected == e.$2 ? AppColors.primary : const Color(0xFFF2F2F7),
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(e.$1, style: TextStyle(fontSize: 32.sp)),
+                        SizedBox(width: 16.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(e.$2, style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: selected == e.$2 ? Colors.white : Colors.black)),
+                              Text(e.$3, style: TextStyle(fontSize: 13.sp, color: selected == e.$2 ? Colors.white70 : Colors.grey)),
+                            ],
+                          ),
+                        ),
+                        if (selected == e.$2)
+                          Icon(Icons.check_circle, color: Colors.white, size: 20.r),
+                      ],
+                    ),
+                  ),
+                ),
+              )).toList(),
             ),
           ),
           _CtaButton(onPressed: onNext, label: "Continue"),
@@ -1505,6 +1842,71 @@ class _Step19 extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// KROK 19b: APP RATINGS
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step19b extends StatelessWidget {
+  final VoidCallback onNext;
+  const _Step19b({required this.onNext});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 24.h),
+      child: Column(
+        children: [
+          SizedBox(height: 24.h),
+          Text('4.8', style: TextStyle(fontSize: 72.sp, fontWeight: FontWeight.w800, color: Colors.black)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(5, (i) => Icon(Icons.star, color: Colors.amber, size: 32.r)),
+          ),
+          SizedBox(height: 8.h),
+          Text('100K+ App Ratings', style: TextStyle(fontSize: 14.sp, color: Colors.grey)),
+          SizedBox(height: 32.h),
+          const _Heading("VitaSense was made\nfor people like you"),
+          SizedBox(height: 24.h),
+          Expanded(
+            child: ListView(
+              children: [
+                ('Karol M.', 'Lost 8kg in 3 months. The AI suggestions are spot on!', 5),
+                ('Zofia T.', 'Finally an app that understands my dietary needs.', 5),
+                ('Piotr B.', 'The pantry feature alone is worth it. Zero food waste!', 5),
+              ].map((r) => Padding(
+                padding: EdgeInsets.only(bottom: 12.h),
+                child: Container(
+                  padding: EdgeInsets.all(16.r),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF2F2F7),
+                    borderRadius: BorderRadius.circular(16.r),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          CircleAvatar(radius: 18.r, backgroundColor: AppColors.primary, child: Text(r.$1[0], style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14.sp))),
+                          SizedBox(width: 10.w),
+                          Text(r.$1, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp)),
+                          const Spacer(),
+                          Row(children: List.generate(r.$3, (_) => Icon(Icons.star, color: Colors.amber, size: 14.r))),
+                        ],
+                      ),
+                      SizedBox(height: 8.h),
+                      Text(r.$2, style: TextStyle(fontSize: 13.sp, color: Colors.grey[700])),
+                    ],
+                  ),
+                ),
+              )).toList(),
+            ),
+          ),
+          _CtaButton(onPressed: onNext, label: "Continue"),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // KROK 20: LOADING SCREEN
 // ─────────────────────────────────────────────────────────────────────────────
 class _Step20 extends StatefulWidget {
@@ -1590,6 +1992,120 @@ class _AnimatedListItem extends StatelessWidget {
         },
       ).animate(delay: delay.ms),
     );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KROK 20b: PROGRESS ANIMATION
+// ─────────────────────────────────────────────────────────────────────────────
+class _Step20b extends StatefulWidget {
+  final VoidCallback onNext;
+  const _Step20b({required this.onNext});
+
+  @override
+  State<_Step20b> createState() => _Step20bState();
+}
+
+class _Step20bState extends State<_Step20b> {
+  double _progress = 0.0;
+  int _currentItem = 0;
+  Timer? _timer;
+
+  final List<String> _items = [
+    "Calculating your daily calories...",
+    "Analysing your dietary preferences...",
+    "Matching recipes to your pantry...",
+    "Preparing your hydration plan...",
+    "Personalising your meal schedule...",
+    "Your plan is ready! 🎉",
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _startProgress();
+  }
+
+  void _startProgress() {
+    _timer = Timer.periodic(const Duration(milliseconds: 600), (timer) {
+      if (_progress >= 1.0) {
+        timer.cancel();
+        Future.delayed(const Duration(milliseconds: 800), widget.onNext);
+      } else {
+        setState(() {
+          _progress += 0.175;
+          if (_progress > 1.0) _progress = 1.0;
+          _currentItem = (_progress * (_items.length - 1)).round().clamp(0, _items.length - 1);
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final percent = (_progress * 100).round();
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 48.h, 24.w, 48.h),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text("$percent%", style: TextStyle(fontSize: 72.sp, fontWeight: FontWeight.w800, color: AppColors.primary)),
+          SizedBox(height: 8.h),
+          Text("We're setting everything up for you", textAlign: TextAlign.center, style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.w600, color: Colors.black)),
+          SizedBox(height: 48.h),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8.r),
+            child: LinearProgressIndicator(
+              value: _progress,
+              minHeight: 8.h,
+              backgroundColor: const Color(0xFFF2F2F7),
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+            ),
+          ),
+          SizedBox(height: 32.h),
+          Container(
+            padding: EdgeInsets.all(16.r),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF2F2F7),
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Daily recommendation for", style: TextStyle(fontSize: 12.sp, color: Colors.grey, fontWeight: FontWeight.w500)),
+                SizedBox(height: 8.h),
+                ...["Calories", "Carbs", "Protein", "Fats", "Hydration"].map((e) => Padding(
+                  padding: EdgeInsets.only(bottom: 4.h),
+                  child: Row(
+                    children: [
+                      Icon(Icons.circle, size: 6.r, color: AppColors.primary),
+                      SizedBox(width: 8.w),
+                      Text(e, style: TextStyle(fontSize: 14.sp, color: Colors.black87)),
+                    ],
+                  ),
+                )),
+              ],
+            ),
+          ),
+          SizedBox(height: 24.h),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 400),
+            child: Text(
+              _items[_currentItem],
+              key: ValueKey(_currentItem),
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14.sp, color: Colors.grey[600], fontStyle: FontStyle.italic),
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
   }
 }
 
@@ -1720,14 +2236,7 @@ class _Step22State extends State<_Step22> {
       child: SafeArea(
         child: Column(
           children: [
-            Align(
-              alignment: Alignment.centerRight,
-              child: GestureDetector(
-                onTap: () {},
-                child: Text("Restore", style: TextStyle(fontSize: 14.sp, color: const Color(0xFF8A8A8E))),
-              ),
-            ),
-            SizedBox(height: 24.h),
+
             Text(
               "Start your 3-day FREE trial to continue.",
               textAlign: TextAlign.center,
@@ -1767,18 +2276,21 @@ class _Step22State extends State<_Step22> {
                             onTap: () => setState(() => _selectedPlan = 'monthly'),
                             child: Container(
                               height: 130.h,
-                              padding: EdgeInsets.all(16.r),
+                              width: double.infinity,
+                              padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 8.w),
                               decoration: BoxDecoration(
-                                color: _selectedPlan == 'monthly' ? Colors.white : const Color(0xFFF2F2F7),
-                                border: _selectedPlan == 'monthly' ? Border.all(color: Colors.black, width: 2) : Border.all(color: Colors.transparent, width: 2),
+                                color: _selectedPlan == 'monthly' ? const Color(0xFF2ECC71) : const Color(0xFFF2F2F7),
+                                border: _selectedPlan == 'monthly' ? Border.all(color: const Color(0xFF2ECC71), width: 2) : Border.all(color: Colors.transparent, width: 2),
                                 borderRadius: BorderRadius.circular(14.r),
                               ),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text("Monthly", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: Colors.black)),
+                                  if (_selectedPlan == 'monthly')
+                                    Icon(Icons.check_circle, color: Colors.white, size: 20.r),
+                                  Text("Monthly", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: _selectedPlan == 'monthly' ? Colors.white : Colors.black)),
                                   SizedBox(height: 8.h),
-                                  Text("\$9.99/mo", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: Colors.black)),
+                                  Text("\$9.99/mo", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: _selectedPlan == 'monthly' ? Colors.white : Colors.black)),
                                 ],
                               ),
                             ),
@@ -1788,50 +2300,45 @@ class _Step22State extends State<_Step22> {
                         Expanded(
                           child: GestureDetector(
                             onTap: () => setState(() => _selectedPlan = 'yearly'),
-                            child: Container(
-                              height: 130.h,
-                              decoration: BoxDecoration(
-                                color: _selectedPlan == 'yearly' ? Colors.white : const Color(0xFFF2F2F7),
-                                border: _selectedPlan == 'yearly' ? Border.all(color: Colors.black, width: 2) : Border.all(color: Colors.transparent, width: 2),
-                                borderRadius: BorderRadius.circular(14.r),
-                              ),
-                              child: Stack(
-                                children: [
-                                  Align(
-                                    alignment: Alignment.topCenter,
-                                    child: Container(
-                                      width: double.infinity,
-                                      padding: EdgeInsets.symmetric(vertical: 6.h),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black,
-                                        borderRadius: BorderRadius.only(topLeft: Radius.circular(10.r), topRight: Radius.circular(10.r)),
-                                      ),
-                                      child: Text(
-                                        "3 DAYS FREE",
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(color: Colors.white, fontSize: 11.sp, fontWeight: FontWeight.bold),
-                                      ),
+                            child: Stack(
+                              children: [
+                                Container(
+                                  height: 130.h,
+                                  width: double.infinity,
+                                  padding: EdgeInsets.only(top: 36.h, left: 8.w, right: 8.w, bottom: 16.h),
+                                  decoration: BoxDecoration(
+                                    color: _selectedPlan == 'yearly' ? const Color(0xFF2ECC71) : const Color(0xFFF2F2F7),
+                                    border: _selectedPlan == 'yearly' ? Border.all(color: const Color(0xFF2ECC71), width: 2) : Border.all(color: Colors.transparent, width: 2),
+                                    borderRadius: BorderRadius.circular(14.r),
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      if (_selectedPlan == 'yearly')
+                                        Icon(Icons.check_circle, color: Colors.white, size: 20.r),
+                                      Text("Yearly", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: _selectedPlan == 'yearly' ? Colors.white : Colors.black)),
+                                      SizedBox(height: 8.h),
+                                      Text("\$29.99", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: _selectedPlan == 'yearly' ? Colors.white : Colors.black)),
+                                    ],
+                                  ),
+                                ),
+                                Align(
+                                  alignment: Alignment.topCenter,
+                                  child: Container(
+                                    width: double.infinity,
+                                    padding: EdgeInsets.symmetric(vertical: 6.h),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF2ECC71),
+                                      borderRadius: BorderRadius.only(topLeft: Radius.circular(12.r), topRight: Radius.circular(12.r)),
+                                    ),
+                                    child: Text(
+                                      "3 DAYS FREE",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(color: Colors.white, fontSize: 11.sp, fontWeight: FontWeight.bold),
                                     ),
                                   ),
-                                  if (_selectedPlan == 'yearly')
-                                    Positioned(
-                                      top: 40.h,
-                                      right: 12.w,
-                                      child: Icon(Icons.check_circle, color: Colors.black, size: 20.r),
-                                    ),
-                                  Center(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        SizedBox(height: 16.h),
-                                        Text("Yearly", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: Colors.black)),
-                                        SizedBox(height: 8.h),
-                                        Text("\$29.99", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp, color: Colors.black)),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -1857,14 +2364,14 @@ class _Step22State extends State<_Step22> {
               child: FilledButton(
                 onPressed: widget.isLoading ? null : widget.onNext,
                 style: FilledButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  disabledBackgroundColor: Colors.black.withValues(alpha: 0.5),
+                  backgroundColor: const Color(0xFF2ECC71),
+                  disabledBackgroundColor: const Color(0xFF2ECC71).withValues(alpha: 0.5),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
                 ),
                 child: widget.isLoading
                     ? SizedBox(width: 24.r, height: 24.r, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
                     : Text(
-                        "Start My 3-Day Free Trial",
+                        _selectedPlan == 'yearly' ? 'Start My 3-Day Free Trial' : 'Start Monthly Plan',
                         style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
               ),
@@ -1873,7 +2380,7 @@ class _Step22State extends State<_Step22> {
             Text(
               _selectedPlan == 'yearly'
                   ? "3 days free, then \$29.99/year. Auto-renews unless cancelled."
-                  : "3 days free, then \$9.99/month. Auto-renews unless cancelled.",
+                  : "\$9.99/month. Auto-renews unless cancelled.",
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 11.sp, color: const Color(0xFF8A8A8E)),
             ),

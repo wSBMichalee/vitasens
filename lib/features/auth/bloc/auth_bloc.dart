@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
@@ -20,6 +21,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<SignInWithAppleRequested>(_onSignInWithAppleRequested);
     on<SignOutRequested>(_onSignOutRequested);
     on<ResetPasswordRequested>(_onResetPasswordRequested);
+    on<OnboardingCompleted>(_onOnboardingCompleted);
   }
 
   // ─── App Started ──────────────────────────────────────────────────────────────
@@ -159,6 +161,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(const AuthPasswordResetSent());
     } catch (e) {
       emit(AuthError(message: _parseError(e)));
+    }
+  }
+
+  // ─── Onboarding Completed ───────────────────────────────────────────────────────
+  Future<void> _onOnboardingCompleted(
+    OnboardingCompleted event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      await _authRepository.updateProfile(event.onboardingData);
+      await _authRepository.completeOnboarding();
+      await _authRepository.calculateTargets();
+      final profileData = await _authRepository.getUserProfile();
+      final user = UserModel.fromJson(profileData);
+      emit(AuthAuthenticated(user: user));
+    } catch (e) {
+      debugPrint('OnboardingCompleted error: $e');
     }
   }
 

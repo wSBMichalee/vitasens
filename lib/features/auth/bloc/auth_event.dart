@@ -59,3 +59,10 @@ class ResetPasswordRequested extends AuthEvent {
   @override
   List<Object?> get props => [email];
 }
+
+class OnboardingCompleted extends AuthEvent {
+  final Map<String, dynamic> onboardingData;
+  const OnboardingCompleted({required this.onboardingData});
+  @override
+  List<Object?> get props => [onboardingData];
+}

@@ -78,6 +78,8 @@ export class ProfileRepository {
     if (data.favorite_cuisines !== undefined) payload.favorite_cuisines = data.favorite_cuisines;
     if (data.accomplishments !== undefined)  payload.accomplishments  = data.accomplishments;
     if (data.used_other_apps !== undefined)  payload.used_other_apps  = data.used_other_apps;
+    if (data.dietary_preferences !== undefined) payload.dietary_preferences = data.dietary_preferences;
+    if (data.daily_water_target !== undefined)  payload.daily_water_target  = data.daily_water_target;
 
     const { data: result, error } = await supabase
       .from('profiles')
@@ -86,7 +88,8 @@ export class ProfileRepository {
       .select()
       .single();
 
-    if (error || !result) throw new NotFoundError('Nie znaleziono profilu do aktualizacji.');
+    if (error) throw new Error(`Błąd aktualizacji profilu: ${error.message}`);
+    if (!result) throw new NotFoundError('Nie znaleziono profilu do aktualizacji.');
     return result;
   }
 

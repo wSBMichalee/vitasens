@@ -170,14 +170,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     try {
+      debugPrint('OnboardingCompleted: starting with data: ${event.onboardingData}');
       await _authRepository.updateProfile(event.onboardingData);
+      debugPrint('OnboardingCompleted: updateProfile done');
       await _authRepository.completeOnboarding();
+      debugPrint('OnboardingCompleted: completeOnboarding done');
       await _authRepository.calculateTargets();
+      debugPrint('OnboardingCompleted: calculateTargets done');
       final profileData = await _authRepository.getUserProfile();
+      debugPrint('OnboardingCompleted: getUserProfile done: $profileData');
       final user = UserModel.fromJson(profileData);
       emit(AuthAuthenticated(user: user));
-    } catch (e) {
-      debugPrint('OnboardingCompleted error: $e');
+      debugPrint('OnboardingCompleted: success');
+    } catch (e, stack) {
+      debugPrint('OnboardingCompleted ERROR: $e');
+      debugPrint('Stack: $stack');
     }
   }
 

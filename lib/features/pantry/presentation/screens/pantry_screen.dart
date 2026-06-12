@@ -8,6 +8,7 @@ import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
 import 'package:vitasense/core/widgets/app_header.dart';
+import 'package:vitasense/core/widgets/gradient_scaffold.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_bloc.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_event.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_state.dart';
@@ -67,23 +68,10 @@ class _PantryViewState extends State<_PantryView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFF0FFF4),
-              Color(0xFFFFFFFF),
-            ],
-            stops: [0.0, 0.4],
-          ),
-        ),
-        child: SafeArea(
-          child: BlocConsumer<PantryBloc, PantryState>(
-            listener: (context, state) {
+    return GradientScaffold(
+      body: SafeArea(
+        child: BlocConsumer<PantryBloc, PantryState>(
+          listener: (context, state) {
             if (state is PantryError) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -105,7 +93,6 @@ class _PantryViewState extends State<_PantryView> {
             }
             return const SizedBox.shrink();
           },
-        ),
         ),
       ),
     );
@@ -162,12 +149,11 @@ class _PantryViewState extends State<_PantryView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ── AppHeader: wariant main, przycisk + jako action ───────────────
-        AppHeader(
-          title: 'Pantry',
-          subtitle: '$count ingredient${count == 1 ? '' : 's'} available',
-          variant: AppHeaderVariant.main,
-          backgroundColor: AppColors.primary,
-          textColor: AppColors.textWhite,
+        AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          title: Text("Pantry", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 22.sp)),
           actions: [
             AppHeaderIconButton(
               icon: Icons.add,

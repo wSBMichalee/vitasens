@@ -104,19 +104,41 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
     int finalHeightCm = _heightUnit == 'cm' ? _heightCm : ((_heightFt * 12 + _heightIn) * 2.54).round();
     int finalWeightKg = _weightUnit == 'kg' ? _weightKg : (_weightLbs * 0.453592).round();
 
+    // Mapowanie UI → baza
+    String? mappedGender;
+    if (_gender == 'Male') mappedGender = 'male';
+    else if (_gender == 'Female') mappedGender = 'female';
+    else mappedGender = 'other';
+
+    String? mappedGoal;
+    if (_goal == 'Lose weight') mappedGoal = 'weight_loss';
+    else if (_goal == 'Gain weight' || _goal == 'Build muscle') mappedGoal = 'muscle_gain';
+    else if (_goal == 'Eat healthier' || _goal == 'General Health') mappedGoal = 'general_health';
+    else mappedGoal = 'general_health';
+
+    String? mappedActivity;
+    if (_activity == 'Sedentary') mappedActivity = 'sedentary';
+    else if (_activity == 'Lightly active') mappedActivity = 'light';
+    else if (_activity == 'Moderately active') mappedActivity = 'moderate';
+    else if (_activity == 'Very active') mappedActivity = 'active';
+    else mappedActivity = 'moderate';
+
+    String mappedPace;
+    if (_pace == 'Slow & steady') mappedPace = 'slow';
+    else if (_pace == 'Fast') mappedPace = 'fast';
+    else mappedPace = 'moderate';
+
     final data = {
-      'gender': _gender,
+      'gender': mappedGender,
       'height_cm': finalHeightCm,
       'weight_kg': finalWeightKg,
       'age': _age,
-      'goal': _goal,
-      'activity_level': _activity,
+      'goal_type': mappedGoal,
+      'activity_level': mappedActivity,
       'dietary_preferences': _dietary,
       'allergies': _allergies,
       'health_conditions': _healthConditions,
-      'kitchen_staples': _kitchenStaples,
-      'cooking_frequency': _cookingFrequency,
-      'goal_pace': _pace,
+      'goal_pace': mappedPace,
       'daily_water_target': (_waterLiters * 1000).round(),
     };
 

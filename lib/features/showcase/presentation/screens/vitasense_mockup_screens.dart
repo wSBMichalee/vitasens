@@ -12,9 +12,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/widgets/app_header.dart';
+import 'package:vitasense/features/auth/data/models/user_model.dart';
 import 'package:vitasense/features/water/bloc/water_bloc.dart';
 import 'package:vitasense/features/water/bloc/water_event.dart';
 import 'package:vitasense/features/water/presentation/widgets/water_card.dart';
+import 'package:vitasense/core/widgets/gradient_scaffold.dart';
 
 class MockupAiMealsScreen extends StatelessWidget {
   const MockupAiMealsScreen({super.key});
@@ -303,8 +305,9 @@ class MockupAiMealsScreen extends StatelessWidget {
 }
 
 class MockupHomeScreen extends StatefulWidget {
-  const MockupHomeScreen({super.key, this.userName = 'there'});
+  const MockupHomeScreen({super.key, this.userName = 'there', this.user});
   final String userName;
+  final UserModel? user;
 
   @override
   State<MockupHomeScreen> createState() => _MockupHomeScreenState();
@@ -319,24 +322,13 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
       create: (context) => WaterBloc()..add(LoadWater()),
       child: BlocProvider<DailyLogBloc>(
         create: (_) => DailyLogBloc()..add(LoadDailyLog(_selectedDate)),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFFF0FFF4),  // bardzo delikatna zielona mgiełka u góry
-                Color(0xFFFFFFFF),  // czysta biel na dole
-              ],
-              stops: [0.0, 0.4],
-            ),
-          ),
-          child: SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+        child: GradientScaffold(
+          body: SafeArea(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
               // ── HEADER ──────────────────────────────────────────────────
               AppHeader(
                 title: 'Today\'s Progress',
@@ -403,27 +395,28 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
                     padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 0),
                     child: _ProgressCard(
                       kcalConsumed: kcalConsumed,
-                      kcalGoal: 2500,
+                      kcalGoal: widget.user?.dailyCalorieTarget ?? 2000,
                       proteinConsumed: proteinConsumed,
-                      proteinGoal: 120,
+                      proteinGoal: widget.user?.dailyProteinTarget ?? 120,
                       carbsConsumed: carbsConsumed,
-                      carbsGoal: 180,
+                      carbsGoal: widget.user?.dailyCarbsTarget ?? 180,
                       fatConsumed: fatConsumed,
-                      fatGoal: 65,
+                      fatGoal: widget.user?.dailyFatTarget ?? 65,
                     ),
                   );
                 },
               ),
 
               // ── SCROLLABLE BODY ──────────────────────────────────────────
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 100.h),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 100.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                       // ── WATER CARD ──────────────────────────────────────────────
-                      const WaterCard(),
+                      WaterCard(
+                        dailyWaterTarget: widget.user?.dailyWaterTarget ?? 2000,
+                      ),
                       SizedBox(height: 20.h),
 
                       // ── AI INSIGHT CARD ───────────────────────────────────
@@ -498,11 +491,10 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
                     ],
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
       ),
       ),
     );

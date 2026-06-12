@@ -16,6 +16,7 @@ import 'package:vitasense/features/auth/data/auth_repository.dart';
 import 'package:vitasense/features/subscription/bloc/subscription_bloc.dart';
 import 'package:vitasense/features/subscription/bloc/subscription_event.dart';
 import 'package:vitasense/features/subscription/bloc/subscription_state.dart';
+import 'package:vitasense/core/widgets/gradient_scaffold.dart';
 
 // ─── ENTRY POINT ─────────────────────────────────────────────────────────────
 
@@ -55,24 +56,16 @@ class _ProfileView extends StatelessWidget {
   Widget build(BuildContext context) {
     print('goalPace: ${user.goalPace}, activityLevel: ${user.activityLevel}');
     
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFF0FFF4),
-              Color(0xFFFFFFFF),
-            ],
-            stops: [0.0, 0.4],
-          ),
-        ),
-        child: CustomScrollView(
-          slivers: [
-          // ── HERO SLIVER APP BAR ────────────────────────────────────
-          _ProfileSliverAppBar(user: user),
+    return GradientScaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: Text("Profile", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 22.sp)),
+        actions: const [],
+      ),
+      body: CustomScrollView(
+        slivers: [
 
           SliverToBoxAdapter(
             child: Padding(
@@ -96,13 +89,12 @@ class _ProfileView extends StatelessWidget {
                   const _MenuCard(),
                   SizedBox(height: 16.h),
                   const _SettingsMenuCard(),
-                  SizedBox(height: 100.h),
+                  SizedBox(height: 120.h),
                 ],
               ),
             ),
           ),
         ],
-      ),
       ),
     );
   }
@@ -256,14 +248,14 @@ class _DailyTargetsCardState extends State<_DailyTargetsCard> {
   @override
   void initState() {
     super.initState();
-    _fetchMonthlyCalories();
+    _fetchDailyCalories();
   }
 
-  Future<void> _fetchMonthlyCalories() async {
+  Future<void> _fetchDailyCalories() async {
     try {
       final now = DateTime.now();
-      final firstDay = DateTime(now.year, now.month, 1);
-      final lastDay = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+      final firstDay = DateTime(now.year, now.month, now.day);
+      final lastDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
       
       final response = await Supabase.instance.client
           .from('meal_logs')
@@ -290,14 +282,8 @@ class _DailyTargetsCardState extends State<_DailyTargetsCard> {
   }
 
   String _formatMacro(int dailyValue, void Function(String) setUnit) {
-    int monthlyValue = dailyValue * 30;
-    if (monthlyValue >= 1000) {
-      setUnit('kg');
-      return (monthlyValue / 1000).toStringAsFixed(1);
-    } else {
-      setUnit('g');
-      return monthlyValue.toString();
-    }
+    setUnit('g');
+    return dailyValue.toString();
   }
 
   @override
@@ -310,175 +296,162 @@ class _DailyTargetsCardState extends State<_DailyTargetsCard> {
     final carbsValue = _formatMacro(widget.user.dailyCarbsTarget ?? 0, (u) => carbsUnit = u);
     final fatValue = _formatMacro(widget.user.dailyFatTarget ?? 0, (u) => fatUnit = u);
     
-    final int monthlyTarget = (widget.user.dailyCalorieTarget ?? 0) * 30;
-    final double progress = monthlyTarget > 0 ? (_consumedCalories / monthlyTarget).clamp(0.0, 1.0) : 0.0;
+    final int dailyTarget = widget.user.dailyCalorieTarget ?? 0;
+    final double progress = dailyTarget > 0 ? (_consumedCalories / dailyTarget).clamp(0.0, 1.0) : 0.0;
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A2E),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20.r),
-      ),
-      child: Stack(
-        children: [
-          // Radial glow / noise texture overlay
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20.r),
-                gradient: RadialGradient(
-                  center: const Alignment(-0.5, -0.8),
-                  radius: 1.5,
-                  colors: [
-                    Colors.white.withValues(alpha: 0.08),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
-          Padding(
-            padding: EdgeInsets.all(20.r),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        ],
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(20.r),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Top row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'MONTHLY TARGETS',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.6),
-                            fontSize: 11.sp,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          'Your 30-day nutrition overview',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.5),
-                            fontSize: 11.sp,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(100.r),
-                          ),
-                          child: Text(
-                            '30 days',
-                            style: TextStyle(
-                              color: const Color(0xFF4CAF50),
-                              fontSize: 10.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 8.w),
-                        Icon(Icons.flag_rounded, color: Colors.white, size: 18.r),
-                      ],
-                    ),
-                  ],
-                ),
-                SizedBox(height: 24.h),
-                
-                // Hero Calories
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${(monthlyTarget / 1000).toStringAsFixed(1)}k',
+                      'DAILY TARGETS',
                       style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 42.sp,
-                        fontWeight: FontWeight.w800,
-                        height: 1.0,
-                      ),
-                    ),
-                    SizedBox(width: 6.w),
-                    Text(
-                      'kcal',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.7),
-                        fontSize: 16.sp,
+                        color: Colors.grey,
+                        fontSize: 11.sp,
                         fontWeight: FontWeight.w600,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      'Your daily nutrition overview',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 11.sp,
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 12.h),
-
-                // Progress Bar
-                if (!_loading) ...[
-                  Container(
-                    height: 4.h,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(2.r),
-                    ),
-                    child: FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: progress,
-                      child: Container(
-                        decoration: BoxDecoration(
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(100.r),
+                      ),
+                      child: Text(
+                        'Today',
+                        style: TextStyle(
                           color: const Color(0xFF4CAF50),
-                          borderRadius: BorderRadius.circular(2.r),
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                  ),
-                  SizedBox(height: 6.h),
-                  Text(
-                    '${_consumedCalories} / $monthlyTarget kcal',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.6),
-                      fontSize: 10.sp,
-                    ),
-                  ),
-                ],
-                SizedBox(height: 20.h),
-                
-                // Macro Tiles
-                Row(
-                  children: [
-                    _PremiumMacroTile(
-                      iconColor: Colors.blue,
-                      value: proteinValue,
-                      unit: proteinUnit,
-                      label: 'Protein',
-                    ),
-                    Container(width: 1, height: 40.h, color: Colors.white.withValues(alpha: 0.1)),
-                    _PremiumMacroTile(
-                      iconColor: const Color(0xFF4CAF50),
-                      value: carbsValue,
-                      unit: carbsUnit,
-                      label: 'Carbs',
-                    ),
-                    Container(width: 1, height: 40.h, color: Colors.white.withValues(alpha: 0.1)),
-                    _PremiumMacroTile(
-                      iconColor: Colors.orange,
-                      value: fatValue,
-                      unit: fatUnit,
-                      label: 'Fat',
-                    ),
+                    SizedBox(width: 8.w),
+                    Icon(Icons.flag_rounded, color: Colors.grey, size: 18.r),
                   ],
                 ),
               ],
             ),
-          ),
-        ],
+            SizedBox(height: 24.h),
+            
+            // Hero Calories
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Text(
+                  '$dailyTarget',
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 42.sp,
+                    fontWeight: FontWeight.w800,
+                    height: 1.0,
+                  ),
+                ),
+                SizedBox(width: 6.w),
+                Text(
+                  'kcal',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 12.h),
+
+            // Progress Bar
+            if (!_loading) ...[
+              Container(
+                height: 4.h,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(2.r),
+                ),
+                child: FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: progress,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4CAF50),
+                      borderRadius: BorderRadius.circular(2.r),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 6.h),
+              Text(
+                '${_consumedCalories} / $dailyTarget kcal',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 10.sp,
+                ),
+              ),
+            ],
+            SizedBox(height: 20.h),
+            
+            // Macro Tiles
+            Row(
+              children: [
+                _PremiumMacroTile(
+                  iconColor: Colors.blue,
+                  value: proteinValue,
+                  unit: proteinUnit,
+                  label: 'Protein',
+                ),
+                Container(width: 1, height: 40.h, color: Colors.grey.withValues(alpha: 0.2)),
+                _PremiumMacroTile(
+                  iconColor: const Color(0xFF4CAF50),
+                  value: carbsValue,
+                  unit: carbsUnit,
+                  label: 'Carbs',
+                ),
+                Container(width: 1, height: 40.h, color: Colors.grey.withValues(alpha: 0.2)),
+                _PremiumMacroTile(
+                  iconColor: Colors.orange,
+                  value: fatValue,
+                  unit: fatUnit,
+                  label: 'Fat',
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -519,7 +492,7 @@ class _PremiumMacroTile extends StatelessWidget {
               Text(
                 value,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppColors.textPrimary,
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w700,
                 ),
@@ -528,7 +501,7 @@ class _PremiumMacroTile extends StatelessWidget {
               Text(
                 unit,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6),
+                  color: Colors.grey,
                   fontSize: 12.sp,
                   fontWeight: FontWeight.w500,
                 ),
@@ -539,7 +512,7 @@ class _PremiumMacroTile extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
+              color: Colors.grey,
               fontSize: 11.sp,
               fontWeight: FontWeight.w500,
             ),

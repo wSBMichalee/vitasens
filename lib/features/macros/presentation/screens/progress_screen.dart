@@ -12,6 +12,7 @@ import 'package:vitasense/features/macros/bloc/macros_bloc.dart';
 import 'package:vitasense/features/macros/bloc/macros_event.dart';
 import 'package:vitasense/features/macros/bloc/macros_state.dart';
 import 'package:vitasense/features/macros/data/macros_repository.dart';
+import 'package:vitasense/core/widgets/gradient_scaffold.dart';
 
 class ProgressScreen extends StatelessWidget {
   const ProgressScreen({super.key});
@@ -38,22 +39,9 @@ class _ProgressView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFF0FFF4),
-              Color(0xFFFFFFFF),
-            ],
-            stops: [0.0, 0.4],
-          ),
-        ),
-        child: SafeArea(
-          child: BlocBuilder<MacrosBloc, MacrosState>(
+    return GradientScaffold(
+      body: SafeArea(
+        child: BlocBuilder<MacrosBloc, MacrosState>(
           builder: (context, state) {
             if (state is MacrosLoading || state is MacrosInitial) {
               return _buildShimmer();
@@ -66,7 +54,6 @@ class _ProgressView extends StatelessWidget {
             }
             return const SizedBox.shrink();
           },
-        ),
         ),
       ),
     );

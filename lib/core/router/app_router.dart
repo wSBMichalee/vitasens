@@ -293,14 +293,6 @@ final GoRouter appRouter = GoRouter(
         StatefulShellBranch(
           routes: [
             GoRoute(
-              path: AppRoutes.progress,
-              builder: (context, state) => const ProgressScreen(),
-            ),
-          ],
-        ),
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
               path: AppRoutes.profile,
               builder: (context, state) => const ProfileScreen(),
             ),
@@ -446,7 +438,6 @@ class _ScaffoldWithBottomNavState extends State<ScaffoldWithBottomNav>
     _NavItem(label: 'Home',     icon: Icons.home_outlined,         activeIcon: Icons.home_rounded,            route: AppRoutes.home),
     _NavItem(label: 'Pantry',   icon: Icons.shopping_bag_outlined, activeIcon: Icons.shopping_bag_rounded,    route: AppRoutes.pantry),
     _NavItem(label: 'AI Meals', icon: Icons.auto_awesome_outlined, activeIcon: Icons.auto_awesome,            route: AppRoutes.aiMeals),
-    _NavItem(label: 'Progress', icon: Icons.bar_chart_outlined,    activeIcon: Icons.bar_chart_rounded,       route: AppRoutes.progress),
     _NavItem(label: 'Profile',  icon: Icons.person_outline,        activeIcon: Icons.person_rounded,          route: AppRoutes.profile),
   ];
 
@@ -533,7 +524,6 @@ class _ScaffoldWithBottomNavState extends State<ScaffoldWithBottomNav>
           NativeGlassNavBarItem(label: 'Home',     symbol: 'house.fill'),
           NativeGlassNavBarItem(label: 'Pantry',   symbol: 'cart.fill'),
           NativeGlassNavBarItem(label: 'AI Meals', symbol: 'sparkles'),
-          NativeGlassNavBarItem(label: 'Progress', symbol: 'chart.bar.fill'),
           NativeGlassNavBarItem(label: 'Profile',  symbol: 'person.fill'),
         ],
         fallback: Padding(

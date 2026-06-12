@@ -16,26 +16,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-  bool _obscurePassword = true;
-
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
     super.dispose();
-  }
-
-  void _signIn() {
-    if (!_formKey.currentState!.validate()) return;
-    context.read<AuthBloc>().add(
-          SignInRequested(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-          ),
-        );
   }
 
   @override
@@ -76,10 +59,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: ConstrainedBox(
                   constraints: BoxConstraints(minHeight: constraints.maxHeight),
                   child: IntrinsicHeight(
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         SizedBox(height: 48.h),
                         Icon(Icons.eco, size: 36.r, color: AppColors.primary),
@@ -105,98 +86,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         SizedBox(height: 24.h),
-                        _buildTextField(
-                          controller: _emailController,
-                          hintText: 'Email address',
-                          icon: Icons.email_outlined,
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) return "Please enter your email address";
-                            if (!RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(value)) {
-                              return "Please enter a valid email";
-                            }
-                            return null;
-                          },
-                        ),
-                        SizedBox(height: 12.h),
-                        _buildTextField(
-                          controller: _passwordController,
-                          hintText: 'Password',
-                          icon: Icons.lock_outlined,
-                          obscureText: _obscurePassword,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) return "Please enter your password";
-                            return null;
-                          },
-                          suffixIcon: GestureDetector(
-                            onTap: () => setState(() => _obscurePassword = !_obscurePassword),
-                            child: Icon(
-                              _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                              color: const Color(0xFF8A8A8E),
-                              size: 20.r,
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: GestureDetector(
-                            onTap: () => context.push(AppRoutes.forgotPassword),
-                            child: Text(
-                              'Forgot password?',
-                              style: TextStyle(
-                                fontSize: 13.sp,
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 24.h),
-                        BlocBuilder<AuthBloc, AuthState>(
-                          builder: (context, state) {
-                            final isLoading = state is AuthLoading;
-                            return SizedBox(
-                              height: 56.h,
-                              child: FilledButton(
-                                onPressed: isLoading ? null : _signIn,
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
-                                  disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(28.r),
-                                  ),
-                                ),
-                                child: isLoading
-                                    ? SizedBox(
-                                        width: 24.r,
-                                        height: 24.r,
-                                        child: const CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2.5,
-                                        ),
-                                      )
-                                    : Text(
-                                        'Sign In',
-                                        style: TextStyle(
-                                          fontSize: 16.sp,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                              ),
-                            );
-                          },
-                        ),
-                        SizedBox(height: 16.h),
-                        Text(
-                          'or continue with',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 13.sp,
-                            color: const Color(0xFF8A8A8E),
-                          ),
-                        ),
                         SizedBox(height: 12.h),
                         _buildSocialButton(
                           label: 'Continue with Apple',
@@ -240,61 +129,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         SizedBox(height: 32.h),
                       ],
-                    ), // Column
-                  ), // Form
-                ), // IntrinsicHeight
-              ), // ConstrainedBox
-            ); // SingleChildScrollView
+                    ),
+                  ),
+                ),
+              );
             },
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hintText,
-    required IconData icon,
-    bool obscureText = false,
-    TextInputType? keyboardType,
-    Widget? suffixIcon,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      obscureText: obscureText,
-      keyboardType: keyboardType,
-      validator: validator,
-      style: TextStyle(fontSize: 15.sp, color: Colors.black),
-      decoration: InputDecoration(
-        hintText: hintText,
-        hintStyle: TextStyle(color: const Color(0xFF8A8A8E), fontSize: 15.sp),
-        prefixIcon: Icon(icon, color: const Color(0xFF8A8A8E), size: 20.r),
-        suffixIcon: suffixIcon,
-        fillColor: const Color(0xFFF2F2F7),
-        filled: true,
-        errorStyle: TextStyle(fontSize: 12.sp, color: Colors.red),
-        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14.r),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14.r),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14.r),
-          borderSide: BorderSide.none,
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14.r),
-          borderSide: const BorderSide(color: Colors.red, width: 1),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14.r),
-          borderSide: const BorderSide(color: Colors.red, width: 1),
         ),
       ),
     );

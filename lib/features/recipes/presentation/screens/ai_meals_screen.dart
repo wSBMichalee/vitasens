@@ -13,6 +13,7 @@ import 'package:vitasense/features/recipes/bloc/recipes_event.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_state.dart';
 import 'package:vitasense/features/shopping/bloc/shopping_bloc.dart';
 import 'package:vitasense/features/shopping/bloc/shopping_event.dart';
+import 'package:vitasense/core/widgets/gradient_scaffold.dart';
 
 const _defaultIngredients = [
   'chicken',
@@ -51,33 +52,19 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFF0FFF4),
-              Color(0xFFFFFFFF),
-            ],
-            stops: [0.0, 0.4],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
+    return GradientScaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
             // ── AppHeader: wariant main, spinner jako action podczas ładowania ────
             BlocBuilder<RecipesBloc, RecipesState>(
               builder: (context, state) {
                 final isLoading = state is RecipesLoading;
-                return AppHeader(
-                  title: 'AI Meals',
-                  subtitle: 'Based on your pantry',
-                  variant: AppHeaderVariant.main,
-                  backgroundColor: AppColors.primary,
-                  textColor: AppColors.textWhite,
+                return AppBar(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  scrolledUnderElevation: 0,
+                  title: Text("AI Meals", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 22.sp)),
                   actions: [
                     if (isLoading)
                       SizedBox(width: 20.r, height: 20.r, child: const CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary)),
@@ -86,10 +73,10 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
                       child: Container(
                         width: 40.r, height: 40.r,
                         decoration: BoxDecoration(
-                          color: AppColors.textWhite.withValues(alpha: 0.2),
+                          color: Colors.black.withValues(alpha: 0.05),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(Icons.bookmark_border, color: AppColors.textWhite, size: 20.r),
+                        child: Icon(Icons.bookmark_border, color: Colors.black, size: 20.r),
                       ),
                     ),
                     SizedBox(width: 8.w),
@@ -269,7 +256,6 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
             ),
           ],
         ),
-      ),
       ),
     );
   }

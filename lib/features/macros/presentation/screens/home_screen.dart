@@ -14,7 +14,8 @@ class HomeScreen extends StatelessWidget {
         final userName = state is AuthAuthenticated
             ? (state.user.fullName ?? 'there')
             : 'there';
-        return MockupHomeScreen(userName: userName);
+        final user = state is AuthAuthenticated ? state.user : null;
+        return MockupHomeScreen(userName: userName, user: user);
       },
     );
   }

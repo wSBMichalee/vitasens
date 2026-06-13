@@ -122,6 +122,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final user = UserModel.fromJson(profileData);
       emit(AuthAuthenticated(user: user));
     } catch (e) {
+      debugPrint('Google sign in error: $e');
       emit(AuthError(message: _parseError(e)));
     }
   }
@@ -138,6 +139,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final user = UserModel.fromJson(profileData);
       emit(AuthAuthenticated(user: user));
     } catch (e) {
+      debugPrint('Apple sign in error: $e');
       emit(AuthError(message: _parseError(e)));
     }
   }

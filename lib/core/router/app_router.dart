@@ -132,8 +132,8 @@ final GoRouter appRouter = GoRouter(
           location == AppRoutes.landing ||
           location == AppRoutes.login ||
           location == AppRoutes.signup) {
-        // Wymuszenie onboardingu do testów (usunę to zaraz po Waszych testach!)
-        return AppRoutes.userOnboarding;
+        // Wymuszenie Home Page'a do testów widoku!
+        return AppRoutes.home;
       }
     }
 

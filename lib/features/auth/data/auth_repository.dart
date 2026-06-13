@@ -66,7 +66,7 @@ class AuthRepository {
   }
 
   // ─── Sign In with Google ──────────────────────────────────────────────────────
-  Future<Map<String, dynamic>> signInWithGoogle() async {
+  Future<void> signInWithGoogle() async {
     final googleUser = await GoogleSignIn().signIn();
     if (googleUser == null) {
       throw Exception('Google sign in cancelled');
@@ -82,21 +82,10 @@ class AuthRepository {
       provider: OAuthProvider.google,
       idToken: googleIdToken,
     );
-
-    final response = await _client.functions.invoke(
-      'manage-auth',
-      body: {
-        'action': 'oauth_callback',
-        'provider': 'google',
-      },
-    );
-
-    final responseData = response.data as Map;
-    return Map<String, dynamic>.from(responseData['data'] as Map);
   }
 
   // ─── Sign In with Apple ───────────────────────────────────────────────────────
-  Future<Map<String, dynamic>> signInWithApple() async {
+  Future<void> signInWithApple() async {
     final credential = await SignInWithApple.getAppleIDCredential(
       scopes: [
         AppleIDAuthorizationScopes.email,
@@ -113,17 +102,6 @@ class AuthRepository {
       provider: OAuthProvider.apple,
       idToken: appleIdToken,
     );
-
-    final response = await _client.functions.invoke(
-      'manage-auth',
-      body: {
-        'action': 'oauth_callback',
-        'provider': 'apple',
-      },
-    );
-
-    final responseData = response.data as Map;
-    return Map<String, dynamic>.from(responseData['data'] as Map);
   }
 
   // ─── Get User Profile ─────────────────────────────────────────────────────────

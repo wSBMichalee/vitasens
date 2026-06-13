@@ -153,9 +153,17 @@ export class ProfileRepository {
 
   static async completeOnboarding(userId: string): Promise<void> {
     const supabase = getSupabaseAdmin();
+    const trialExpires = new Date();
+    trialExpires.setDate(trialExpires.getDate() + 3);
+    
     const { error } = await supabase
       .from('profiles')
-      .update({ onboarding_completed: true, updated_at: new Date().toISOString() })
+      .update({
+        onboarding_completed: true,
+        subscription_status: 'trialing',
+        trial_expires_at: trialExpires.toISOString(),
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', userId);
 
     if (error) throw new Error(`Błąd aktualizacji onboardingu: ${error.message}`);

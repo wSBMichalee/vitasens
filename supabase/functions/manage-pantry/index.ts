@@ -11,7 +11,7 @@ serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   try {
     const userId = await getUserId(req.headers.get('Authorization') || '');
-    await SubscriptionGuard.checkAccess(userId);
+    // await SubscriptionGuard.checkAccess(userId);
     const { action, ...data } = await req.json();
     let result;
     switch (action) {

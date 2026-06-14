@@ -22,6 +22,8 @@ import '../widgets/pantry_expiry_banner.dart';
 import '../widgets/pantry_search_bar.dart';
 import '../widgets/pantry_filter_chips.dart';
 import '../widgets/pantry_empty_state.dart';
+import '../widgets/pantry_storage_tabs.dart';
+
 
 
 
@@ -50,6 +52,17 @@ class _PantryView extends StatefulWidget {
 class _PantryViewState extends State<_PantryView> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  String _selectedStorage = 'fridge';
+
+  bool _isPantryCategory(String category) {
+    return category == 'grains' || category == 'other' || category == 'cereal' || category == 'chocolate' || category == 'drinks' || category == 'bread';
+  }
+
+  bool _belongsToStorage(IngredientModel ingredient, String storage) {
+    final isPantry = _isPantryCategory(ingredient.category.toLowerCase());
+    return storage == 'pantry' ? isPantry : !isPantry;
+  }
+
 
   @override
   void dispose() {
@@ -58,20 +71,25 @@ class _PantryViewState extends State<_PantryView> {
   }
 
   List<IngredientModel> _applyFilters(PantryLoaded state) {
-    List<IngredientModel> result;
+    // 1. Storage filter
+    List<IngredientModel> result = state.ingredients.where((i) => _belongsToStorage(i, _selectedStorage)).toList();
+
+    // 2. Selected filter (expiring/low_stock)
     switch (state.selectedFilter) {
       case 'expiring':
-        result = state.expiringSoon;
+        result = state.expiringSoon.where((i) => _belongsToStorage(i, _selectedStorage)).toList();
       case 'low_stock':
-        result =
-            state.ingredients.where((i) => i.quantity <= i.minimumQuantity).toList();
+        result = result.where((i) => i.quantity <= i.minimumQuantity).toList();
       default:
-        result = state.ingredients;
+        break; // already filtered by storage
     }
+
+    // 3. Search query
     final q = _searchQuery.trim().toLowerCase();
     if (q.isNotEmpty) {
       result = result.where((i) => i.name.toLowerCase().contains(q)).toList();
     }
+    
     return result;
   }
 
@@ -164,6 +182,11 @@ class _PantryViewState extends State<_PantryView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        PantryStorageTabs(
+                          selected: _selectedStorage,
+                          onSelected: (v) => setState(() => _selectedStorage = v),
+                        ),
+                        SizedBox(height: 12.h),
                         PantrySearchBar(
   controller: _searchController,
   searchQuery: _searchQuery,
@@ -182,10 +205,19 @@ class _PantryViewState extends State<_PantryView> {
                         const PantryPromoCard(),
                         SizedBox(height: 12.h),
                         const PantryQuickActions(),
-                        if (state.expiringSoon.isNotEmpty) ...[
-                          SizedBox(height: 20.h),
-                          PantryExpiryBanner(expiring: state.expiringSoon),
-                        ],
+                        Builder(builder: (context) {
+                          final expiringInStorage = state.expiringSoon.where((i) => _belongsToStorage(i, _selectedStorage)).toList();
+                          if (expiringInStorage.isNotEmpty) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(height: 20.h),
+                                PantryExpiryBanner(expiring: expiringInStorage),
+                              ]
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        }),
                         SizedBox(height: 20.h),
                         Text(
                           _sectionTitle(state.selectedFilter),
@@ -207,6 +239,7 @@ class _PantryViewState extends State<_PantryView> {
                   SliverFillRemaining(
                     hasScrollBody: false,
                     child: PantryEmptyState(
+  storageLabel: _selectedStorage == 'fridge' ? 'lodówka' : 'spiżarka',
   isFiltered: state.selectedFilter != 'all' || _searchQuery.isNotEmpty,
   onActionPressed: (state.selectedFilter != 'all' || _searchQuery.isNotEmpty)
       ? () {
@@ -269,13 +302,14 @@ class _PantryViewState extends State<_PantryView> {
   
 
   String _sectionTitle(String filter) {
+    final prefix = _selectedStorage == 'fridge' ? 'Lodówka' : 'Spiżarka';
     switch (filter) {
       case 'expiring':
-        return 'Expiring soon';
+        return '$prefix: Expiring soon';
       case 'low_stock':
-        return 'Low stock items';
+        return '$prefix: Low stock items';
       default:
-        return 'All ingredients';
+        return '$prefix: All ingredients';
     }
   }
 }

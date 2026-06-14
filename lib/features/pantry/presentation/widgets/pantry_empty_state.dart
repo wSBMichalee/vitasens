@@ -3,7 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 
 class PantryEmptyState extends StatelessWidget {
-  const PantryEmptyState({super.key, required this.isFiltered, required this.onActionPressed});
+  const PantryEmptyState({super.key, required this.isFiltered, required this.onActionPressed, required this.storageLabel});
+  final String storageLabel;
   final bool isFiltered;
   final VoidCallback onActionPressed;
 
@@ -27,7 +28,7 @@ class PantryEmptyState extends StatelessWidget {
             ),
             SizedBox(height: 20.h),
             Text(
-              isFiltered ? 'No ingredients found' : 'Your pantry is empty',
+              isFiltered ? 'No ingredients found' : 'Twoja $storageLabel jest pusta',
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.w700,
@@ -38,7 +39,7 @@ class PantryEmptyState extends StatelessWidget {
             Text(
               isFiltered
                   ? 'Try a different search or filter'
-                  : 'Add your first ingredient to get started',
+                  : storageLabel == 'lodówka' ? 'Dodaj swój pierwszy produkt z lodówki by zacząć' : 'Dodaj swój pierwszy produkt ze spiżarki by zacząć',
               style:
                   TextStyle(fontSize: 14.sp, color: AppColors.textSecondary),
               textAlign: TextAlign.center,

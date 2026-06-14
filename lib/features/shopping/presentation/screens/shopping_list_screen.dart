@@ -9,7 +9,9 @@ import 'package:vitasense/core/widgets/app_header.dart';
 import 'package:vitasense/features/shopping/bloc/shopping_bloc.dart';
 import 'package:vitasense/features/shopping/bloc/shopping_event.dart';
 import 'package:vitasense/features/shopping/bloc/shopping_state.dart';
-import 'package:vitasense/features/shopping/data/models/shopping_item_model.dart';
+import '../widgets/move_to_pantry_button.dart';
+import '../widgets/shopping_item_card.dart';
+import '../widgets/purchased_item_card.dart';
 
 class ShoppingListScreen extends StatelessWidget {
   const ShoppingListScreen({super.key});
@@ -302,7 +304,7 @@ class _ShoppingListViewState extends State<_ShoppingListView> {
                           // Move to pantry button (if purchased items exist)
                           if (state.purchasedItems.isNotEmpty)
                             SliverToBoxAdapter(
-                              child: _MoveToPantryButton(purchasedCount: state.purchasedItems.length),
+                              child: MoveToPantryButton(purchasedCount: state.purchasedItems.length),
                             ),
                           
                           // TO BUY list header
@@ -390,7 +392,7 @@ class _ShoppingListViewState extends State<_ShoppingListView> {
                           else
                             SliverList(
                               delegate: SliverChildBuilderDelegate(
-                                (context, index) => _ShoppingItemCard(item: state.items[index]),
+                                (context, index) => ShoppingItemCard(item: state.items[index]),
                                 childCount: state.items.length,
                               ),
                             ),
@@ -433,7 +435,7 @@ class _ShoppingListViewState extends State<_ShoppingListView> {
                           if (state.purchasedItems.isNotEmpty)
                             SliverList(
                               delegate: SliverChildBuilderDelegate(
-                                (context, index) => _PurchasedItemCard(item: state.purchasedItems[index]),
+                                (context, index) => PurchasedItemCard(item: state.purchasedItems[index]),
                                 childCount: state.purchasedItems.length,
                               ),
                             ),
@@ -476,224 +478,8 @@ class _ShoppingListViewState extends State<_ShoppingListView> {
   }
 }
 
-class _MoveToPantryButton extends StatelessWidget {
-  final int purchasedCount;
 
-  const _MoveToPantryButton({required this.purchasedCount});
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
-      padding: EdgeInsets.all(16.r),
-      decoration: BoxDecoration(
-        color: AppColors.primaryLight,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.15),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.kitchen, color: AppColors.primary, size: 20.r),
-          SizedBox(width: 8.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Move purchased to pantry',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
-                  ),
-                ),
-                Text(
-                  '$purchasedCount items ready',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(
-            height: 44.h,
-            child: FilledButton(
-              onPressed: () => context.read<ShoppingBloc>().add(const MoveAllToPantry()),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 0),
-              ),
-              child: const Text('MOVE'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
-class _ShoppingItemCard extends StatelessWidget {
-  final ShoppingItemModel item;
 
-  const _ShoppingItemCard({required this.item});
 
-  @override
-  Widget build(BuildContext context) {
-    return Dismissible(
-      key: Key(item.id),
-      direction: DismissDirection.endToStart,
-      onDismissed: (_) {
-        context.read<ShoppingBloc>().add(DeleteShoppingItem(item.id));
-      },
-      background: Container(
-        margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 4.h),
-        decoration: BoxDecoration(
-          color: AppColors.error,
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-        alignment: Alignment.centerRight,
-        padding: EdgeInsets.only(right: 20.w),
-        child: Icon(Icons.delete, color: AppColors.textWhite, size: 24.r),
-      ),
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 4.h),
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-        decoration: BoxDecoration(
-          color: AppColors.backgroundWhite,
-          borderRadius: BorderRadius.circular(12.r),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.textPrimary.withValues(alpha: 0.04),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            GestureDetector(
-              onTap: () => context.read<ShoppingBloc>().add(MarkItemPurchased(item.id)),
-              child: Container(
-                width: 24.r,
-                height: 24.r,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.border, width: 2),
-                ),
-              ),
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.name,
-                    style: TextStyle(
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  Text(
-                    '${item.quantity.toStringAsFixed(item.quantity.truncateToDouble() == item.quantity ? 0 : 1)} ${item.unit}',
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.drag_handle, color: AppColors.textMuted, size: 20.r),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PurchasedItemCard extends StatelessWidget {
-  final ShoppingItemModel item;
-
-  const _PurchasedItemCard({required this.item});
-
-  @override
-  Widget build(BuildContext context) {
-    return Dismissible(
-      key: Key(item.id),
-      direction: DismissDirection.endToStart,
-      onDismissed: (_) {
-        context.read<ShoppingBloc>().add(DeleteShoppingItem(item.id));
-      },
-      background: Container(
-        margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 4.h),
-        decoration: BoxDecoration(
-          color: AppColors.error,
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-        alignment: Alignment.centerRight,
-        padding: EdgeInsets.only(right: 20.w),
-        child: Icon(Icons.delete, color: AppColors.textWhite, size: 24.r),
-      ),
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 4.h),
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-        decoration: BoxDecoration(
-          color: AppColors.borderLight,
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 24.r,
-              height: 24.r,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primary,
-              ),
-              child: Icon(Icons.check, color: AppColors.textWhite, size: 16.r),
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.name,
-                    style: TextStyle(
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textMuted,
-                      decoration: TextDecoration.lineThrough,
-                    ),
-                  ),
-                  Text(
-                    '${item.quantity.toStringAsFixed(item.quantity.truncateToDouble() == item.quantity ? 0 : 1)} ${item.unit}',
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: AppColors.textMuted,
-                      decoration: TextDecoration.lineThrough,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.drag_handle, color: AppColors.textMuted, size: 20.r),
-          ],
-        ),
-      ),
-    );
-  }
-}

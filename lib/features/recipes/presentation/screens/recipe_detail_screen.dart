@@ -10,8 +10,13 @@ import 'package:vitasense/features/recipes/bloc/recipes_bloc.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_event.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_state.dart';
 import 'package:vitasense/features/recipes/data/recipes_repository.dart';
-import 'package:vitasense/features/shopping/bloc/shopping_bloc.dart';
-import 'package:vitasense/features/shopping/bloc/shopping_event.dart';
+
+import '../widgets/recipe_detail/recipe_info_chip.dart';
+import '../widgets/recipe_detail/recipe_ingredient_row.dart';
+import '../widgets/recipe_detail/recipe_substitutes_section.dart';
+import '../widgets/recipe_detail/recipe_nutrition_tile.dart';
+import '../widgets/recipe_detail/recipe_diet_tag.dart';
+
 
 class RecipeDetailScreen extends StatelessWidget {
   final Map<String, dynamic> recipe;
@@ -319,15 +324,15 @@ class _RecipeDetailViewState extends State<_RecipeDetailView> {
                           spacing: 8.w,
                           runSpacing: 8.h,
                           children: [
-                            _InfoChip(icon: Icons.timer_outlined, label: '$cookTimeMinutes MIN'),
-                            _InfoChip(icon: Icons.local_fire_department_outlined, label: '$calories KCAL'),
+                            InfoChip(icon: Icons.timer_outlined, label: '$cookTimeMinutes MIN'),
+                            InfoChip(icon: Icons.local_fire_department_outlined, label: '$calories KCAL'),
                             if (cookTimeMinutes <= 30)
-                              const _DietTag(label: 'QUICK', color: AppColors.primary),
+                              const DietTag(label: 'QUICK', color: AppColors.primary),
                             if (proteinG >= 25)
-                              const _DietTag(label: 'HIGH PROTEIN', color: AppColors.proteinColor),
+                              const DietTag(label: 'HIGH PROTEIN', color: AppColors.proteinColor),
                             if (carbsG <= 20)
-                              const _DietTag(label: 'LOW CARB', color: AppColors.carbsColor),
-                            ...dietTags.take(2).map((tag) => _DietTag(
+                              const DietTag(label: 'LOW CARB', color: AppColors.carbsColor),
+                            ...dietTags.take(2).map((tag) => DietTag(
                               label: tag.toString().toUpperCase(),
                               color: AppColors.secondary,
                             )),
@@ -361,7 +366,7 @@ class _RecipeDetailViewState extends State<_RecipeDetailView> {
                                 itemBuilder: (context, index) {
                                   final (ingredient, inPantry) =
                                       allIngredients[index];
-                                  return _IngredientRow(
+                                  return IngredientRow(
                                     ingredient: ingredient,
                                     inPantry: inPantry,
                                   );
@@ -370,7 +375,7 @@ class _RecipeDetailViewState extends State<_RecipeDetailView> {
 
                         // Substitutes section
                         if (missingNames.isNotEmpty)
-                          _SubstitutesSection(missingNames: missingNames),
+                          SubstitutesSection(missingNames: missingNames),
 
                         // ── NUTRITION ──────────────────────────────────────
                         SizedBox(height: 28.h),
@@ -381,13 +386,13 @@ class _RecipeDetailViewState extends State<_RecipeDetailView> {
                         ]),
                         SizedBox(height: 12.h),
                         Row(children: [
-                          _NutritionTile(label: 'Calories', value: '$calories', unit: 'kcal', color: AppColors.primary),
+                          NutritionTile(label: 'Calories', value: '$calories', unit: 'kcal', color: AppColors.primary),
                           SizedBox(width: 8.w),
-                          _NutritionTile(label: 'Protein', value: proteinG.toStringAsFixed(1), unit: 'g', color: AppColors.proteinColor),
+                          NutritionTile(label: 'Protein', value: proteinG.toStringAsFixed(1), unit: 'g', color: AppColors.proteinColor),
                           SizedBox(width: 8.w),
-                          _NutritionTile(label: 'Carbs', value: carbsG.toStringAsFixed(1), unit: 'g', color: AppColors.carbsColor),
+                          NutritionTile(label: 'Carbs', value: carbsG.toStringAsFixed(1), unit: 'g', color: AppColors.carbsColor),
                           SizedBox(width: 8.w),
-                          _NutritionTile(label: 'Fat', value: fatG.toStringAsFixed(1), unit: 'g', color: AppColors.fatColor),
+                          NutritionTile(label: 'Fat', value: fatG.toStringAsFixed(1), unit: 'g', color: AppColors.fatColor),
                         ]),
 
                         // ── DIFFICULTY ─────────────────────────────────────
@@ -578,356 +583,12 @@ class _RecipeDetailViewState extends State<_RecipeDetailView> {
   }
 }
 
-class _InfoChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
 
-  const _InfoChip({required this.icon, required this.label});
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundWhite,
-        borderRadius: BorderRadius.circular(6.r),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.textPrimary.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: AppColors.textSecondary, size: 14.r),
-          SizedBox(width: 4.w),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
-class _IngredientRow extends StatelessWidget {
-  final Map<String, dynamic> ingredient;
-  final bool inPantry;
 
-  const _IngredientRow({required this.ingredient, required this.inPantry});
 
-  @override
-  Widget build(BuildContext context) {
-    final name = ingredient['name']?.toString() ?? 'Unknown';
-    final imageUrl = ingredient['image']?.toString();
 
-    if (!inPantry) {
-      return Container(
-        margin: EdgeInsets.only(bottom: 10.h),
-        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-        decoration: BoxDecoration(
-          color: AppColors.backgroundWhite,
-          borderRadius: BorderRadius.circular(12.r),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.textPrimary.withValues(alpha: 0.04),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.cancel_outlined, color: AppColors.error, size: 18.r),
-            SizedBox(width: 8.w),
-            Text(
-              name,
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const Spacer(),
-            SizedBox(
-              height: 44.h,
-              child: Center(
-                child: GestureDetector(
-                  onTap: () {
-                context.read<ShoppingBloc>().add(
-                      AddShoppingItem(
-                        name,
-                        (ingredient['amount'] as num?)?.toDouble() ?? 1.0,
-                        ingredient['unit']?.toString() ?? 'piece',
-                      ),
-                    );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Added to shopping list ✓',
-                      style: TextStyle(
-                        color: AppColors.textWhite,
-                        fontSize: 13.sp,
-                      ),
-                    ),
-                    backgroundColor: AppColors.primary,
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
-              },
-              child: Container(
-                padding:
-                    EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  borderRadius: BorderRadius.circular(6.r),
-                ),
-                child: Text(
-                  '+ List',
-                  style: TextStyle(
-                    fontSize: 10.sp,
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
 
-    return Container(
-      margin: EdgeInsets.only(bottom: 10.h),
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundWhite,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.textPrimary.withValues(alpha: 0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48.w,
-            height: 48.h,
-            decoration: BoxDecoration(
-              color: AppColors.borderLight,
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-            child: imageUrl != null && imageUrl.isNotEmpty
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(8.r),
-                    child: CachedNetworkImage(
-                      imageUrl: imageUrl,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(
-                        color: AppColors.borderLight,
-                        child: const Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        color: AppColors.borderLight,
-                        child: Icon(
-                          Icons.image_not_supported_outlined,
-                          color: AppColors.textMuted,
-                          size: 32.r,
-                        ),
-                      ),
-                    ),
-                  )
-                : Icon(
-                    Icons.restaurant,
-                    color: AppColors.textMuted,
-                    size: 24.r,
-                  ),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Text(
-              name,
-              style: TextStyle(
-                fontSize: 15.sp,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ),
-          Icon(Icons.check_circle_rounded,
-              color: AppColors.primary, size: 22.r),
-        ],
-      ),
-    );
-  }
-}
 
-class _SubstitutesSection extends StatelessWidget {
-  final List<String> missingNames;
 
-  const _SubstitutesSection({required this.missingNames});
-
-  static const _substitutes = <String, List<String>>{
-    'butter': ['margarine', 'coconut oil', 'applesauce'],
-    'milk': ['almond milk', 'oat milk', 'soy milk'],
-    'eggs': ['flax eggs', 'chia eggs', 'applesauce'],
-    'flour': ['almond flour', 'oat flour', 'rice flour'],
-    'sugar': ['honey', 'maple syrup', 'stevia'],
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    final matchedSubstitutes = <String, List<String>>{};
-    for (final missing in missingNames) {
-      for (final entry in _substitutes.entries) {
-        if (missing.contains(entry.key)) {
-          matchedSubstitutes[entry.key] = entry.value;
-        }
-      }
-    }
-
-    if (matchedSubstitutes.isEmpty) return const SizedBox.shrink();
-
-    return Container(
-      margin: EdgeInsets.only(top: 16.h),
-      padding: EdgeInsets.all(14.r),
-      decoration: BoxDecoration(
-        color: AppColors.warningLight,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.warning.withValues(alpha: 0.15),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'MISSING INGREDIENTS',
-            style: TextStyle(
-              fontSize: 11.sp,
-              color: AppColors.warning,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
-            ),
-          ),
-          SizedBox(height: 6.h),
-          Text(
-            'Common substitutes:',
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          SizedBox(height: 10.h),
-          ...matchedSubstitutes.entries.map((entry) {
-            return Padding(
-              padding: EdgeInsets.only(bottom: 8.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    entry.key,
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    children: entry.value.map((sub) {
-                      return Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 8.w, vertical: 4.h),
-                        decoration: BoxDecoration(
-                          color: AppColors.backgroundWhite,
-                          border: Border.all(
-                              color: AppColors.warning.withValues(alpha: 0.4)),
-                          borderRadius: BorderRadius.circular(6.r),
-                        ),
-                        child: Text(
-                          sub,
-                          style: TextStyle(
-                            fontSize: 11.sp,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-}
-
-class _NutritionTile extends StatelessWidget {
-  const _NutritionTile({required this.label, required this.value, required this.unit, required this.color});
-  final String label, value, unit;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 6.w),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
-        ),
-        child: Column(children: [
-          Text(value, style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w800, color: color)),
-          Text(unit, style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.w600, color: color)),
-          SizedBox(height: 2.h),
-          Text(label, style: TextStyle(fontSize: 10.sp, color: AppColors.textMuted)),
-        ]),
-      ),
-    );
-  }
-}
-
-class _DietTag extends StatelessWidget {
-  const _DietTag({required this.label, required this.color});
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(6.r),
-      ),
-      child: Text(label, style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.w700, color: color, letterSpacing: 0.3)),
-    );
-  }
-}

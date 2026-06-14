@@ -1,16 +1,18 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
 import 'package:vitasense/core/widgets/app_header.dart';
 import 'package:vitasense/features/browse/bloc/browse_bloc.dart';
 import 'package:vitasense/features/browse/bloc/browse_event.dart';
 import 'package:vitasense/features/browse/bloc/browse_state.dart';
+import '../widgets/cuisine_chip.dart';
+import '../widgets/sort_chip.dart';
+import '../widgets/featured_card.dart';
+import '../widgets/recipe_grid_card.dart';
 
 class BrowseScreen extends StatelessWidget {
   const BrowseScreen({super.key});
@@ -219,12 +221,12 @@ class _BrowseViewState extends State<_BrowseView> {
                       padding: EdgeInsets.symmetric(horizontal: 20.w),
                       child: Row(
                         children: [
-                          _CuisineChip(
+                          CuisineChip(
                             label: 'All',
                             isSelected: state.filters.selectedCuisines.isEmpty,
                             onTap: () => context.read<BrowseBloc>().add(const ClearFilters()),
                           ),
-                          ...state.cuisines.map((c) => _CuisineChip(
+                          ...state.cuisines.map((c) => CuisineChip(
                                 label: c,
                                 isSelected: state.filters.selectedCuisines.contains(c),
                                 onTap: () => context.read<BrowseBloc>().add(FilterByCuisine(c)),
@@ -264,7 +266,7 @@ class _BrowseViewState extends State<_BrowseView> {
                                   padding: EdgeInsets.symmetric(horizontal: 20.w),
                                   itemCount: state.featured.length,
                                   itemBuilder: (context, index) {
-                                    return _FeaturedCard(recipe: state.featured[index]);
+                                    return FeaturedCard(recipe: state.featured[index]);
                                   },
                                 ),
                               ),
@@ -287,19 +289,19 @@ class _BrowseViewState extends State<_BrowseView> {
                                     ),
                                   ),
                                   SizedBox(width: 8.w),
-                                  _SortChip(
+                                  SortChip(
                                     label: 'Popular',
                                     value: 'popular',
                                     currentSort: state.filters.sortBy,
                                   ),
                                   SizedBox(width: 8.w),
-                                  _SortChip(
+                                  SortChip(
                                     label: 'Newest',
                                     value: 'newest',
                                     currentSort: state.filters.sortBy,
                                   ),
                                   SizedBox(width: 8.w),
-                                  _SortChip(
+                                  SortChip(
                                     label: 'Quickest',
                                     value: 'quickest',
                                     currentSort: state.filters.sortBy,
@@ -332,7 +334,7 @@ class _BrowseViewState extends State<_BrowseView> {
                                 ),
                                 delegate: SliverChildBuilderDelegate(
                                   (context, index) {
-                                    return _RecipeGridCard(recipe: state.recipes[index]);
+                                    return RecipeGridCard(recipe: state.recipes[index]);
                                   },
                                   childCount: state.recipes.length,
                                 ),
@@ -397,267 +399,10 @@ class _BrowseViewState extends State<_BrowseView> {
   }
 }
 
-class _CuisineChip extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
 
-  const _CuisineChip({required this.label, required this.isSelected, required this.onTap});
 
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: EdgeInsets.only(right: 8.w),
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.textPrimary : AppColors.backgroundWhite,
-          border: isSelected ? null : Border.all(color: AppColors.border),
-          borderRadius: BorderRadius.circular(20.r),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12.sp,
-            fontWeight: FontWeight.w600,
-            color: isSelected ? AppColors.textWhite : AppColors.textSecondary,
-          ),
-        ),
-      ),
-    );
-  }
-}
 
-class _SortChip extends StatelessWidget {
-  final String label;
-  final String value;
-  final String currentSort;
 
-  const _SortChip({required this.label, required this.value, required this.currentSort});
 
-  @override
-  Widget build(BuildContext context) {
-    final isSelected = currentSort == value;
-    return GestureDetector(
-      onTap: () => context.read<BrowseBloc>().add(ChangeSortBy(value)),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryLight : Colors.transparent,
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 11.sp,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? AppColors.primary : AppColors.textSecondary,
-          ),
-        ),
-      ),
-    );
-  }
-}
 
-class _FeaturedCard extends StatelessWidget {
-  final Map<String, dynamic> recipe;
 
-  const _FeaturedCard({required this.recipe});
-
-  @override
-  Widget build(BuildContext context) {
-    final title = recipe['title'] as String? ?? 'Recipe';
-    final image = recipe['image_url'] as String? ?? 'https://picsum.photos/400/300';
-    final cookTime = recipe['cook_time']?.toString() ?? '15m';
-    final calories = recipe['calories']?.toString() ?? '400 kcal';
-
-    return GestureDetector(
-      onTap: () => context.push(AppRoutes.recipeDetails.replaceFirst(':id', recipe['id'] ?? 'none'), extra: recipe),
-      child: Container(
-        width: 280.w,
-        margin: EdgeInsets.only(right: 12.w),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        clipBehavior: Clip.hardEdge,
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: CachedNetworkImage(
-                imageUrl: image,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(color: AppColors.borderLight),
-                errorWidget: (context, url, error) => Container(
-                  color: AppColors.borderLight,
-                  child: const Icon(Icons.image_not_supported, color: AppColors.textMuted),
-                ),
-              ),
-            ),
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.transparent, Colors.black.withValues(alpha: 0.8)],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    stops: const [0.5, 1.0],
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 12.h,
-              left: 12.w,
-              right: 12.w,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textWhite,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 6.h),
-                  Row(
-                    children: [
-                      Icon(Icons.timer_outlined, color: AppColors.textWhite, size: 12.r),
-                      SizedBox(width: 4.w),
-                      Text(
-                        cookTime,
-                        style: TextStyle(fontSize: 11.sp, color: AppColors.textWhite),
-                      ),
-                      SizedBox(width: 8.w),
-                      Icon(Icons.local_fire_department_outlined, color: AppColors.textWhite, size: 12.r),
-                      SizedBox(width: 4.w),
-                      Text(
-                        calories,
-                        style: TextStyle(fontSize: 11.sp, color: AppColors.textWhite),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _RecipeGridCard extends StatelessWidget {
-  final Map<String, dynamic> recipe;
-
-  const _RecipeGridCard({required this.recipe});
-
-  @override
-  Widget build(BuildContext context) {
-    final title = recipe['title'] as String? ?? 'Recipe';
-    final image = recipe['image_url'] as String? ?? 'https://picsum.photos/400/300';
-    final cookTime = recipe['cook_time']?.toString() ?? '15m';
-    final calories = recipe['calories']?.toString() ?? '400 kcal';
-    final tags = (recipe['diet_tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
-
-    return GestureDetector(
-      onTap: () => context.push(AppRoutes.recipeDetails.replaceFirst(':id', recipe['id'] ?? 'none'), extra: recipe),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.backgroundWhite,
-          border: Border.all(color: AppColors.border),
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
-              child: CachedNetworkImage(
-                imageUrl: image,
-                height: 120.h,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(color: AppColors.borderLight),
-                errorWidget: (context, url, error) => Container(
-                  color: AppColors.borderLight,
-                  height: 120.h,
-                  child: const Icon(Icons.image_not_supported, color: AppColors.textMuted),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.all(12.r),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: 4.h),
-                    Row(
-                      children: [
-                        Icon(Icons.timer_outlined, color: AppColors.textMuted, size: 12.r),
-                        SizedBox(width: 4.w),
-                        Text(
-                          cookTime,
-                          style: TextStyle(fontSize: 11.sp, color: AppColors.textMuted),
-                        ),
-                        const Spacer(),
-                        Icon(Icons.local_fire_department, color: AppColors.primary, size: 12.r),
-                        SizedBox(width: 2.w),
-                        Text(
-                          calories,
-                          style: TextStyle(
-                            fontSize: 11.sp,
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 8.h),
-                    if (tags.isNotEmpty)
-                      Wrap(
-                        spacing: 4.w,
-                        runSpacing: 4.h,
-                        children: tags.take(2).map((tag) {
-                          return Container(
-                            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                            decoration: BoxDecoration(
-                              color: AppColors.primaryLight,
-                              borderRadius: BorderRadius.circular(4.r),
-                            ),
-                            child: Text(
-                              tag,
-                              style: TextStyle(
-                                fontSize: 9.sp,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

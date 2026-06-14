@@ -15,6 +15,9 @@ class IngredientCard extends StatelessWidget {
 
   String _emojiForCategory(String category) {
     switch (category.toLowerCase()) {
+      case 'fruits':
+      case 'fruit':
+        return '🍎';
       case 'protein':
         return '🥩';
       case 'vegetables':
@@ -32,6 +35,9 @@ class IngredientCard extends StatelessWidget {
 
   Color _colorForCategory(String category) {
     switch (category.toLowerCase()) {
+      case 'fruits':
+      case 'fruit':
+        return const Color(0xFFFFF3E0);
       case 'protein':
         return const Color(0xFFFFEBEE);
       case 'vegetables':
@@ -47,12 +53,44 @@ class IngredientCard extends StatelessWidget {
     }
   }
 
+  String _emojiForName(String name) {
+    final n = name.toLowerCase();
+    if (n.contains('kiwi')) return '🥝';
+    if (n.contains('banana')) return '🍌';
+    if (n.contains('apple') || n.contains('jabłko')) return '🍎';
+    if (n.contains('orange') || n.contains('pomarańcz')) return '🍊';
+    if (n.contains('lemon') || n.contains('cytryna')) return '🍋';
+    if (n.contains('strawberr') || n.contains('truskaw')) return '🍓';
+    if (n.contains('grape') || n.contains('winogron')) return '🍇';
+    if (n.contains('mango')) return '🥭';
+    if (n.contains('pineapple') || n.contains('ananas')) return '🍍';
+    if (n.contains('watermelon') || n.contains('arbuz')) return '🍉';
+    if (n.contains('pear') || n.contains('gruszka')) return '🍐';
+    if (n.contains('peach') || n.contains('brzoskwin')) return '🍑';
+    if (n.contains('cherry') || n.contains('wiśni') || n.contains('czereśni')) return '🍒';
+    if (n.contains('mixed fruit') || n.contains('fruit mix')) return '🍓';
+    if (n.contains('avocado') || n.contains('awokado')) return '🥑';
+    if (n.contains('carrot') || n.contains('marchew')) return '🥕';
+    if (n.contains('broccoli') || n.contains('brokuł')) return '🥦';
+    if (n.contains('tomato') || n.contains('pomidor')) return '🍅';
+    if (n.contains('potato') || n.contains('ziemniak')) return '🥔';
+    if (n.contains('milk') || n.contains('mleko')) return '🥛';
+    if (n.contains('cheese') || n.contains('ser')) return '🧀';
+    if (n.contains('egg') || n.contains('jajk')) return '🥚';
+    if (n.contains('bread') || n.contains('chleb')) return '🍞';
+    if (n.contains('chicken') || n.contains('kurczak')) return '🍗';
+    return '';
+  }
+
   Widget _buildPlaceholder() {
+    final nameEmoji = _emojiForName(ingredient.name);
+    final emoji = nameEmoji.isNotEmpty ? nameEmoji : _emojiForCategory(ingredient.category);
+
     return Container(
       color: _colorForCategory(ingredient.category),
       alignment: Alignment.center,
       child: Text(
-        _emojiForCategory(ingredient.category),
+        emoji,
         style: TextStyle(fontSize: 36.r),
       ),
     );
@@ -75,11 +113,10 @@ class IngredientCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final days = ingredient.expiryDate?.difference(DateTime.now()).inDays;
-    final imgUrl = 'https://source.unsplash.com/200x200/?food,${Uri.encodeComponent(ingredient.name)}';
 
     return Dismissible(
       key: Key(ingredient.id),
-      direction: DismissDirection.up,
+      direction: DismissDirection.endToStart,
       onDismissed: (_) =>
           context.read<PantryBloc>().add(DeleteIngredient(ingredient.id)),
       background: Container(
@@ -114,16 +151,18 @@ class IngredientCard extends StatelessWidget {
                   flex: 55,
                   child: ClipRRect(
                     borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
-                    child: CachedNetworkImage(
-                      imageUrl: imgUrl,
-                      fit: BoxFit.cover,
-                      placeholder: (_, __) => Shimmer.fromColors(
-                        baseColor: AppColors.borderLight,
-                        highlightColor: AppColors.border,
-                        child: Container(color: AppColors.borderLight),
-                      ),
-                      errorWidget: (_, __, ___) => _buildPlaceholder(),
-                    ),
+                    child: (ingredient.imageUrl != null && ingredient.imageUrl!.isNotEmpty)
+                        ? CachedNetworkImage(
+                            imageUrl: ingredient.imageUrl!,
+                            fit: BoxFit.cover,
+                            placeholder: (_, __) => Shimmer.fromColors(
+                              baseColor: AppColors.borderLight,
+                              highlightColor: AppColors.border,
+                              child: Container(color: AppColors.borderLight),
+                            ),
+                            errorWidget: (_, __, ___) => _buildPlaceholder(),
+                          )
+                        : _buildPlaceholder(),
                   ),
                 ),
                 Expanded(

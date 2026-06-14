@@ -89,6 +89,7 @@ class PantryBloc extends Bloc<PantryEvent, PantryState> {
         unit: event.unit,
         category: event.category,
         expiryDate: event.expiryDate,
+        imageUrl: event.imageUrl,
       );
       emit(const PantryIngredientAdded());
       add(const RefreshPantry());

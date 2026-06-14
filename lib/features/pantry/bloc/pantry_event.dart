@@ -39,6 +39,7 @@ class AddIngredient extends PantryEvent {
   final String unit;
   final String? category;
   final DateTime? expiryDate;
+  final String? imageUrl;
 
   const AddIngredient({
     required this.name,
@@ -46,8 +47,9 @@ class AddIngredient extends PantryEvent {
     required this.unit,
     this.category,
     this.expiryDate,
+    this.imageUrl,
   });
 
   @override
-  List<Object?> get props => [name, quantity, unit, category, expiryDate];
+  List<Object?> get props => [name, quantity, unit, category, expiryDate, imageUrl];
 }

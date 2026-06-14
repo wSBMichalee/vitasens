@@ -186,7 +186,11 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
 
   void _resolveCategoryAndUnit(String categoryLabel) {
     final catLower = categoryLabel.toLowerCase();
-    if (catLower.contains('owoce') || catLower.contains('warzywa')) {
+    if (catLower.contains('owoce')) {
+      _category = 'fruits';
+      _unit = 'szt';
+      _quantity = 1;
+    } else if (catLower.contains('warzywa')) {
       _category = 'vegetables';
       _unit = 'szt';
       _quantity = 1;
@@ -221,6 +225,7 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
             unit: _unit,
             category: _category ?? 'other',
             expiryDate: _calculateExpiry(),
+            imageUrl: _selectedImageUrl,
           ),
         );
   }

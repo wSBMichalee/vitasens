@@ -49,6 +49,7 @@ class PantryRepository {
     required String unit,
     String? category,
     DateTime? expiryDate,
+    String? imageUrl,
   }) async {
     await _supabase.functions.invoke(
       'manage-pantry',
@@ -60,6 +61,7 @@ class PantryRepository {
         'unit': unit,
         'category': category,
         if (expiryDate != null) 'expiry_date': expiryDate.toIso8601String(),
+        if (imageUrl != null && imageUrl.isNotEmpty) 'image_url': imageUrl,
       },
     );
     CacheService().invalidate('pantry_ingredients');

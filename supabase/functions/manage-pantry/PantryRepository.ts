@@ -23,6 +23,7 @@ export interface AddIngredientDTO {
   category: string;
   minimumQuantity?: number;
   expiryDate?: string;
+  imageUrl?: string;
 }
 
 export interface UpdateIngredientDTO {
@@ -48,6 +49,7 @@ export class PantryRepository {
         category: data.category,
         minimum_quantity: data.minimumQuantity ?? 0,
         expiry_date: data.expiryDate ?? null,
+        image_url: data.imageUrl ?? null,
       })
       .select()
       .single();

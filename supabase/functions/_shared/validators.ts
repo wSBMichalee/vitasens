@@ -8,7 +8,7 @@ export const AddIngredientSchema = z.object({
   unit: z.string().min(1),
   category: z.string().min(1),
   minimumQuantity: z.number().min(0).default(0),
-  expiryDate: z.string().datetime().optional(),
+  expiryDate: z.string().optional(),
   imageUrl: z.string().url().optional(),
 });
 
@@ -17,7 +17,7 @@ export const UpdateIngredientSchema = z.object({
   quantity: z.number().positive().optional(),
   unit: z.string().min(1).optional(),
   minimumQuantity: z.number().min(0).optional(),
-  expiryDate: z.string().datetime().optional()
+  expiryDate: z.string().optional()
 });
 
 export const DeleteIngredientSchema = z.object({

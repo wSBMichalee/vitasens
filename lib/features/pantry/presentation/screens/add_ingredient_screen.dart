@@ -52,6 +52,10 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
   String? _selectedImageUrl;
   String _selectedCategoryLabel = '';
   
+  bool _manualEntryMode = false;
+  final TextEditingController _manualNameController = TextEditingController();
+  String _selectedEmoji = '🍽️';
+  
   double _quantity = 1;
   String _unit = 'g';
   String _selectedExpiry = '3 days';
@@ -63,6 +67,7 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
   @override
   void dispose() {
     _searchController.dispose();
+    _manualNameController.dispose();
     _debounce?.cancel();
     super.dispose();
   }
@@ -198,6 +203,14 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
       _category = 'dairy';
       _unit = 'ml';
       _quantity = 100;
+    } else if (catLower.contains('mięso') || catLower.contains('ryby')) {
+      _category = 'protein';
+      _unit = 'g';
+      _quantity = 100;
+    } else if (catLower.contains('zboża') || catLower.contains('pieczywo')) {
+      _category = 'grains';
+      _unit = 'g';
+      _quantity = 100;
     } else {
       _category = 'other';
       _unit = 'g';
@@ -301,9 +314,26 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
   }
 
   Widget _buildSearchStep() {
+    if (_manualEntryMode) {
+      return _buildManualEntryStep();
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Center(
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.h),
+            child: TextButton.icon(
+              onPressed: () => setState(() => _manualEntryMode = true),
+              icon: Icon(Icons.edit_outlined, size: 16.r, color: AppColors.primary),
+              label: Text(
+                'Nie znalazłeś produktu? Dodaj ręcznie',
+                style: TextStyle(fontSize: 13.sp, color: AppColors.primary, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+        ),
+        SizedBox(height: 8.h),
         // Search bar
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -390,6 +420,7 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
                             _selectedName = item.brandName != null ? '${item.brandName} ${item.name}' : item.name;
                             _selectedImageUrl = item.imageUrl;
                             _selectedCategoryLabel = item.categoryLabel;
+                            _selectedEmoji = item.categoryEmoji;
                             _resolveCategoryAndUnit(item.categoryLabel);
                           });
                         },
@@ -405,6 +436,84 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
   
 
   
+
+  void _selectManualCategory(Map<String, String> cat) {
+    final name = _manualNameController.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Wpisz najpierw nazwę produktu')),
+      );
+      return;
+    }
+    setState(() {
+      _selectedName = name;
+      _selectedImageUrl = null;
+      _selectedCategoryLabel = cat['name']!;
+      _selectedEmoji = cat['emoji']!;
+      _resolveCategoryAndUnit(cat['name']!);
+      _manualEntryMode = false;
+    });
+  }
+
+  Widget _buildManualEntryStep() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GestureDetector(
+            onTap: () => setState(() => _manualEntryMode = false),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.arrow_back_ios, size: 14.r, color: AppColors.primary),
+                SizedBox(width: 4.w),
+                Text(
+                  'Wróć do wyszukiwania',
+                  style: TextStyle(fontSize: 14.sp, color: AppColors.primary, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 20.h),
+          Text(
+            'NAZWA PRODUKTU',
+            style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, color: Colors.grey.shade500, letterSpacing: 1.2),
+          ),
+          SizedBox(height: 8.h),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14.r),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
+              ],
+            ),
+            child: TextField(
+              controller: _manualNameController,
+              style: TextStyle(fontSize: 15.sp, color: AppColors.textPrimary),
+              decoration: InputDecoration(
+                hintText: 'np. Jogurt naturalny',
+                hintStyle: TextStyle(fontSize: 15.sp, color: Colors.grey.shade400),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+              ),
+            ),
+          ),
+          SizedBox(height: 24.h),
+          Text(
+            'WYBIERZ KATEGORIĘ',
+            style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, color: Colors.grey.shade500, letterSpacing: 1.2),
+          ),
+          SizedBox(height: 12.h),
+          CategoryGridWidget(
+            onCategoryTap: (_) {},
+            onManualSelect: _selectManualCategory,
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildDetailsStep() {
     return Padding(
@@ -433,9 +542,9 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
                           height: 56.r,
                           fit: BoxFit.cover,
                           placeholder: (_, __) => Container(color: Colors.grey.shade200, width: 56.r, height: 56.r),
-                          errorWidget: (_, __, ___) => const FallbackImageWidget(emoji: '🍽️'),
+                          errorWidget: (_, __, ___) => FallbackImageWidget(emoji: _selectedEmoji),
                         )
-                      : const FallbackImageWidget(emoji: '🍽️'),
+                      : FallbackImageWidget(emoji: _selectedEmoji),
                 ),
                 SizedBox(width: 12.w),
                 Expanded(

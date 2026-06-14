@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class CategoryGridWidget extends StatelessWidget {
-  const CategoryGridWidget({super.key, required this.onCategoryTap});
+  const CategoryGridWidget({
+    super.key,
+    required this.onCategoryTap,
+    this.onManualSelect,
+  });
   final ValueChanged<String> onCategoryTap;
+  final void Function(Map<String, String> category)? onManualSelect;
 
   static const List<Map<String, String>> categories = [
     {'name': 'Owoce', 'emoji': '🍎', 'query': 'fruit', 'color': '0xFFFFEBEE'},
@@ -43,7 +48,13 @@ class CategoryGridWidget extends StatelessWidget {
             itemBuilder: (context, index) {
               final cat = categories[index];
               return GestureDetector(
-                onTap: () => onCategoryTap(cat['query']!),
+                onTap: () {
+                  if (onManualSelect != null) {
+                    onManualSelect!(cat);
+                  } else {
+                    onCategoryTap(cat['query']!);
+                  }
+                },
                 child: Container(
                   decoration: BoxDecoration(
                     color: Color(int.parse(cat['color']!)),

@@ -4,25 +4,27 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/features/pantry/data/models/ingredient_model.dart';
+import 'pantry_emoji_helper.dart';
 
 class ExpiryItem extends StatelessWidget {
   const ExpiryItem({super.key, required this.ingredient});
 
   final IngredientModel ingredient;
 
-  static const Map<String, String> _categoryImages = {
-    'protein':    'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=200&q=80',
-    'vegetables': 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=200&q=80',
-    'vegetable':  'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=200&q=80',
-    'dairy':      'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=200&q=80',
-    'grains':     'https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?w=200&q=80',
-    'grain':      'https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?w=200&q=80',
-  };
+
 
   @override
   Widget build(BuildContext context) {
     final days = ingredient.expiryDate?.difference(DateTime.now()).inDays ?? 0;
-    final imageUrl = _categoryImages[ingredient.category.toLowerCase()];
+    final nameEmoji = emojiForName(ingredient.name);
+    final emoji = nameEmoji.isNotEmpty ? nameEmoji : emojiForCategory(ingredient.category);
+    final bgColor = colorForCategory(ingredient.category);
+
+    Widget placeholder() => Container(
+      color: bgColor,
+      alignment: Alignment.center,
+      child: Text(emoji, style: TextStyle(fontSize: 22.r)),
+    );
 
     return Container(
       padding: EdgeInsets.all(10.r),
@@ -37,24 +39,18 @@ class ExpiryItem extends StatelessWidget {
             child: SizedBox(
               width: 44.r,
               height: 44.r,
-              child: imageUrl != null
+              child: (ingredient.imageUrl != null && ingredient.imageUrl!.isNotEmpty)
                   ? CachedNetworkImage(
-                      imageUrl: imageUrl,
+                      imageUrl: ingredient.imageUrl!,
                       fit: BoxFit.cover,
                       placeholder: (_, __) => Shimmer.fromColors(
                         baseColor: AppColors.border,
                         highlightColor: AppColors.borderLight,
                         child: Container(color: AppColors.border),
                       ),
-                      errorWidget: (_, __, ___) => Container(
-                        color: AppColors.warningLight,
-                        child: Icon(Icons.eco, color: AppColors.warning, size: 20.r),
-                      ),
+                      errorWidget: (_, __, ___) => placeholder(),
                     )
-                  : Container(
-                      color: AppColors.warningLight,
-                      child: Icon(Icons.eco, color: AppColors.warning, size: 20.r),
-                    ),
+                  : placeholder(),
             ),
           ),
           SizedBox(width: 10.w),

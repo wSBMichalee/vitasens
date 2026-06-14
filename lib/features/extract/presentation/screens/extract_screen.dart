@@ -14,6 +14,7 @@ import 'package:vitasense/features/extract/bloc/extract_bloc.dart';
 import 'package:vitasense/features/extract/bloc/extract_event.dart';
 import 'package:vitasense/features/extract/bloc/extract_state.dart';
 import 'package:vitasense/features/extract/data/models/extracted_recipe_model.dart';
+import '../widgets/loading_view.dart';
 
 class ExtractScreen extends StatelessWidget {
   const ExtractScreen({super.key});
@@ -121,7 +122,7 @@ class _ExtractViewState extends State<_ExtractView> with WidgetsBindingObserver 
                 },
                 builder: (context, state) {
                   if (state is ExtractInitial) return _buildInitialState().animate().fadeIn();
-                  if (state is ExtractLoading) return const _LoadingView().animate().fadeIn();
+                  if (state is ExtractLoading) return const LoadingView().animate().fadeIn();
                   if (state is ExtractSuccess) return _buildSuccessState(state.recipe).animate().slideY(begin: 0.1, duration: 300.ms).fadeIn();
                   
                   return _buildInitialState();
@@ -512,111 +513,6 @@ class _ExtractViewState extends State<_ExtractView> with WidgetsBindingObserver 
   }
 }
 
-class _LoadingView extends StatefulWidget {
-  const _LoadingView();
 
-  @override
-  State<_LoadingView> createState() => _LoadingViewState();
-}
 
-class _LoadingViewState extends State<_LoadingView> {
-  int _currentStep = 0;
-  Timer? _timer;
 
-  @override
-  void initState() {
-    super.initState();
-    // Simulate steps changing
-    _timer = Timer.periodic(const Duration(milliseconds: 1500), (timer) {
-      if (mounted && _currentStep < 3) {
-        setState(() {
-          _currentStep++;
-        });
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 40.w),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const CircularProgressIndicator(color: AppColors.primary),
-          SizedBox(height: 24.h),
-          Text(
-            'Analyzing URL...',
-            style: AppTextStyles.headingMedium.copyWith(color: AppColors.textPrimary),
-          ),
-          SizedBox(height: 40.h),
-          _buildLoadingStep(
-            index: 0,
-            icon: Icons.link,
-            title: 'Reading URL',
-          ),
-          SizedBox(height: 16.h),
-          _buildLoadingStep(
-            index: 1,
-            icon: Icons.movie_outlined,
-            title: 'Analyzing video content',
-          ),
-          SizedBox(height: 16.h),
-          _buildLoadingStep(
-            index: 2,
-            icon: Icons.description_outlined,
-            title: 'Extracting recipe',
-          ),
-          SizedBox(height: 16.h),
-          _buildLoadingStep(
-            index: 3,
-            icon: Icons.kitchen,
-            title: 'Comparing with pantry',
-          ),
-          SizedBox(height: 80.h),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLoadingStep({required int index, required IconData icon, required String title}) {
-    final isDone = _currentStep > index;
-    final isActive = _currentStep == index;
-
-    return Row(
-      children: [
-        Container(
-          width: 32.r,
-          height: 32.r,
-          decoration: BoxDecoration(
-            color: isDone ? AppColors.primaryLight : AppColors.borderLight,
-            shape: BoxShape.circle,
-          ),
-          child: isDone
-              ? Icon(Icons.check, color: AppColors.primary, size: 16.r)
-              : isActive
-                  ? Padding(
-                      padding: EdgeInsets.all(8.r),
-                      child: const CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2),
-                    )
-                  : Icon(icon, color: AppColors.textMuted, size: 16.r),
-        ),
-        SizedBox(width: 12.w),
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-            color: isDone || isActive ? AppColors.textPrimary : AppColors.textMuted,
-          ),
-        ),
-      ],
-    );
-  }
-}

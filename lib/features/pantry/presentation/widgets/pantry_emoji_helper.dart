@@ -9,7 +9,7 @@ String emojiForCategory(String category) {
       return '🥩';
     case 'vegetables':
     case 'vegetable':
-      return '🥦';
+      return '🥗';
     case 'dairy':
       return '🥛';
     case 'grains':
@@ -66,5 +66,54 @@ String emojiForName(String name) {
   if (n.contains('egg') || n.contains('jajk')) return '🥚';
   if (n.contains('bread') || n.contains('chleb')) return '🍞';
   if (n.contains('chicken') || n.contains('kurczak')) return '🍗';
+
+  // Warzywa
+  if (n.contains('papryka') || n.contains('pepper') || n.contains('bell pepper')) return '🫑';
+  if (n.contains('onion') || n.contains('cebul')) return '🧅';
+  if (n.contains('garlic') || n.contains('czosnek')) return '🧄';
+  if (n.contains('cucumber') || n.contains('ogórek') || n.contains('ogorek')) return '🥒';
+  if (n.contains('lettuce') || n.contains('salata') || n.contains('sałata')) return '🥬';
+  if (n.contains('spinach') || n.contains('szpinak')) return '🥬';
+  if (n.contains('zucchini') || n.contains('cukinia')) return '🥒';
+  if (n.contains('eggplant') || n.contains('baklazan') || n.contains('bakłażan')) return '🍆';
+  if (n.contains('pumpkin') || n.contains('dynia')) return '🎃';
+  if (n.contains('mushroom') || n.contains('grzyb') || n.contains('pieczark')) return '🍄';
+  if (n.contains('corn') || n.contains('kukurydz')) return '🌽';
+  if (n.contains('pepper') && n.contains('chili')) return '🌶️';
+  if (n.contains('chili') || n.contains('chilli')) return '🌶️';
+  if (n.contains('beet') || n.contains('burak')) return '🟣';
+  if (n.contains('radish') || n.contains('rzodkiew')) return '🔴';
+
+  // Mięso i ryby
+  if (n.contains('beef') || n.contains('wołow') || n.contains('wolowin')) return '🥩';
+  if (n.contains('pork') || n.contains('wieprzow')) return '🥩';
+  if (n.contains('turkey') || n.contains('indyk')) return '🍗';
+  if (n.contains('fish') || n.contains('ryba') || n.contains('ryby') || n.contains('łosoś') || n.contains('losos') || n.contains('salmon')) return '🐟';
+  if (n.contains('shrimp') || n.contains('krewetk')) return '🍤';
+  if (n.contains('sausage') || n.contains('kiełbas') || n.contains('kielbas')) return '🌭';
+  if (n.contains('bacon') || n.contains('boczek')) return '🥓';
+
+  // Nabiał
+  if (n.contains('yogurt') || n.contains('jogurt')) return '🥣';
+  if (n.contains('butter') || n.contains('masło') || n.contains('maslo')) return '🧈';
+  if (n.contains('cream') || n.contains('śmietan') || n.contains('smietan')) return '🥛';
+
+  // Pieczywo i zboża
+  if (n.contains('pasta') || n.contains('makaron')) return '🍝';
+  if (n.contains('rice') || n.contains('ryż') || n.contains('ryz')) return '🍚';
+  if (n.contains('flour') || n.contains('mąka') || n.contains('maka')) return '🌾';
+  if (n.contains('oats') || n.contains('owsian') || n.contains('płatk') || n.contains('platk')) return '🥣';
+  if (n.contains('bagel') || n.contains('bułka') || n.contains('bulka')) return '🥯';
+
+  // Inne
+  if (n.contains('honey') || n.contains('miód') || n.contains('miod')) return '🍯';
+  if (n.contains('chocolate') || n.contains('czekolad')) return '🍫';
+  if (n.contains('nuts') || n.contains('orzech')) return '🥜';
+  if (n.contains('oil') || n.contains('olej') || n.contains('oliwa')) return '🫒';
+  if (n.contains('juice') || n.contains('sok')) return '🧃';
+  if (n.contains('water') || n.contains('woda')) return '💧';
+  if (n.contains('coffee') || n.contains('kawa')) return '☕';
+  if (n.contains('tea') || n.contains('herbata')) return '🍵';
+
   return '';
 }

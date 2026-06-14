@@ -12,7 +12,6 @@ import '../widgets/profile/profile_daily_targets_card.dart';
 import '../widgets/profile/profile_goals_card.dart';
 import '../widgets/profile/profile_menu_card.dart';
 import '../widgets/profile/profile_personal_info_card.dart';
-import '../widgets/profile/profile_hero_banner.dart';
 import '../widgets/profile/profile_shimmer.dart';
 
 

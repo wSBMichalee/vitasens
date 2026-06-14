@@ -1,5 +1,4 @@
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide FilterChip;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -15,6 +14,13 @@ import 'package:vitasense/features/pantry/bloc/pantry_state.dart';
 import 'package:vitasense/features/pantry/data/models/ingredient_model.dart';
 import 'package:vitasense/features/pantry/data/pantry_repository.dart';
 import 'package:vitasense/features/pantry/presentation/screens/add_ingredient_screen.dart';
+
+import '../widgets/pantry_shimmer.dart';
+import '../widgets/pantry_filter_chip.dart';
+import '../widgets/pantry_quick_action_card.dart';
+import '../widgets/pantry_expiry_item.dart';
+import '../widgets/pantry_ingredient_card.dart';
+
 
 class PantryScreen extends StatelessWidget {
   const PantryScreen({super.key});
@@ -103,7 +109,7 @@ class _PantryViewState extends State<_PantryView> {
     return Shimmer.fromColors(
       baseColor: AppColors.borderLight,
       highlightColor: AppColors.border,
-      child: const _ShimmerLayout(),
+      child: const ShimmerLayout(),
     );
   }
 
@@ -229,7 +235,7 @@ class _PantryViewState extends State<_PantryView> {
                         childAspectRatio: 0.75,
                       ),
                       delegate: SliverChildBuilderDelegate(
-                        (context, index) => _IngredientCard(ingredient: filtered[index]),
+                        (context, index) => IngredientCard(ingredient: filtered[index]),
                         childCount: filtered.length,
                       ),
                     ),
@@ -295,21 +301,21 @@ class _PantryViewState extends State<_PantryView> {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          _FilterChip(
+          FilterChip(
             label: 'ALL',
             isSelected: state.selectedFilter == 'all',
             onTap: () =>
                 context.read<PantryBloc>().add(const FilterPantry('all')),
           ),
           SizedBox(width: 8.w),
-          _FilterChip(
+          FilterChip(
             label: 'EXPIRING 🔥',
             isSelected: state.selectedFilter == 'expiring',
             onTap: () =>
                 context.read<PantryBloc>().add(const FilterPantry('expiring')),
           ),
           SizedBox(width: 8.w),
-          _FilterChip(
+          FilterChip(
             label: 'LOW STOCK',
             isSelected: state.selectedFilter == 'low_stock',
             onTap: () =>
@@ -411,7 +417,7 @@ class _PantryViewState extends State<_PantryView> {
     return Row(
       children: [
         Expanded(
-          child: _QuickActionCard(
+          child: QuickActionCard(
             icon: Icons.camera_alt_outlined,
             label: 'SCAN FRIDGE',
             onTap: () => context.push(AppRoutes.scanning),
@@ -419,7 +425,7 @@ class _PantryViewState extends State<_PantryView> {
         ),
         SizedBox(width: 10.w),
         Expanded(
-          child: _QuickActionCard(
+          child: QuickActionCard(
             icon: Icons.receipt_long_outlined,
             label: 'SCAN RECEIPT',
             onTap: () => context.push(AppRoutes.scanning),
@@ -487,7 +493,7 @@ class _PantryViewState extends State<_PantryView> {
             children: [
               for (int i = 0; i < expiring.take(2).length; i++) ...[
                 if (i > 0) SizedBox(width: 8.w),
-                Expanded(child: _ExpiryItem(ingredient: expiring[i])),
+                Expanded(child: ExpiryItem(ingredient: expiring[i])),
               ],
             ],
           ),
@@ -591,435 +597,16 @@ class _PantryViewState extends State<_PantryView> {
 }
 
 // ─── Shimmer skeleton ──────────────────────────────────────────────────────────
-class _ShimmerLayout extends StatelessWidget {
-  const _ShimmerLayout();
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header skeleton
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _box(w: 140.w, h: 24.h, r: 6.r),
-                    SizedBox(height: 6.h),
-                    _box(w: 100.w, h: 14.h, r: 4.r),
-                  ],
-                ),
-              ),
-              _box(w: 44.r, h: 44.r, r: 12.r),
-            ],
-          ),
-          SizedBox(height: 16.h),
-          // Search skeleton
-          _box(w: double.infinity, h: 44.h, r: 12.r),
-          SizedBox(height: 12.h),
-          // Filter chips skeleton
-          Row(
-            children: [
-              _box(w: 90.w, h: 32.h, r: 20.r),
-              SizedBox(width: 8.w),
-              _box(w: 110.w, h: 32.h, r: 20.r),
-              SizedBox(width: 8.w),
-              _box(w: 90.w, h: 32.h, r: 20.r),
-            ],
-          ),
-          SizedBox(height: 20.h),
-          // Promo card skeleton
-          _box(w: double.infinity, h: 140.h, r: 20.r),
-          SizedBox(height: 12.h),
-          // Quick actions skeleton
-          Row(
-            children: [
-              Expanded(child: _box(w: double.infinity, h: 80.h, r: 14.r)),
-              SizedBox(width: 10.w),
-              Expanded(child: _box(w: double.infinity, h: 80.h, r: 14.r)),
-            ],
-          ),
-          SizedBox(height: 20.h),
-          // Ingredient cards
-          for (int i = 0; i < 3; i++) ...[
-            _box(w: double.infinity, h: 72.h, r: 12.r),
-            SizedBox(height: 10.h),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _box({required double w, required double h, required double r}) {
-    return Container(
-      width: w,
-      height: h,
-      decoration: BoxDecoration(
-        color: AppColors.backgroundWhite,
-        borderRadius: BorderRadius.circular(r),
-      ),
-    );
-  }
-}
 
 // ─── Filter chip ───────────────────────────────────────────────────────────────
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
 
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.textPrimary : AppColors.backgroundWhite,
-          border: Border.all(
-            color: isSelected ? AppColors.textPrimary : AppColors.border,
-          ),
-          borderRadius: BorderRadius.circular(20.r),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 11.sp,
-            fontWeight: FontWeight.w700,
-            color: isSelected ? AppColors.textWhite : AppColors.textPrimary,
-            letterSpacing: 0.5,
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 // ─── Quick action card (horizontal) ───────────────────────────────────────────
-class _QuickActionCard extends StatelessWidget {
-  const _QuickActionCard({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
 
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final lines = label.split(' ');
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 18.h),
-        decoration: BoxDecoration(
-          color: AppColors.backgroundWhite,
-          borderRadius: BorderRadius.circular(14.r),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.textPrimary.withValues(alpha: 0.04),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 36.r,
-              height: 36.r,
-              decoration: BoxDecoration(
-                color: AppColors.borderLight,
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-              child: Icon(icon, size: 20.r, color: AppColors.textPrimary),
-            ),
-            SizedBox(width: 12.w),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: lines
-                  .map((l) => Text(
-                        l,
-                        style: TextStyle(
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                          letterSpacing: 0.5,
-                        ),
-                      ))
-                  .toList(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // ─── Expiry item card (with food photo) ───────────────────────────────────────
-class _ExpiryItem extends StatelessWidget {
-  const _ExpiryItem({required this.ingredient});
 
-  final IngredientModel ingredient;
-
-  static const Map<String, String> _categoryImages = {
-    'protein':    'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=200&q=80',
-    'vegetables': 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=200&q=80',
-    'vegetable':  'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=200&q=80',
-    'dairy':      'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=200&q=80',
-    'grains':     'https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?w=200&q=80',
-    'grain':      'https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?w=200&q=80',
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    final days = ingredient.expiryDate?.difference(DateTime.now()).inDays ?? 0;
-    final imageUrl = _categoryImages[ingredient.category.toLowerCase()];
-
-    return Container(
-      padding: EdgeInsets.all(10.r),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundWhite,
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8.r),
-            child: SizedBox(
-              width: 44.r,
-              height: 44.r,
-              child: imageUrl != null
-                  ? CachedNetworkImage(
-                      imageUrl: imageUrl,
-                      fit: BoxFit.cover,
-                      placeholder: (_, __) => Shimmer.fromColors(
-                        baseColor: AppColors.border,
-                        highlightColor: AppColors.borderLight,
-                        child: Container(color: AppColors.border),
-                      ),
-                      errorWidget: (_, __, ___) => Container(
-                        color: AppColors.warningLight,
-                        child: Icon(Icons.eco, color: AppColors.warning, size: 20.r),
-                      ),
-                    )
-                  : Container(
-                      color: AppColors.warningLight,
-                      child: Icon(Icons.eco, color: AppColors.warning, size: 20.r),
-                    ),
-            ),
-          ),
-          SizedBox(width: 10.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  ingredient.name,
-                  style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  days <= 0 ? 'Today' : days == 1 ? 'Tomorrow' : '$days days',
-                  style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.w600, color: AppColors.warningDark),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 // ─── Ingredient card ───────────────────────────────────────────────────────────
-class _IngredientCard extends StatelessWidget {
-  const _IngredientCard({required this.ingredient});
 
-  final IngredientModel ingredient;
-
-  String _emojiForCategory(String category) {
-    switch (category.toLowerCase()) {
-      case 'protein':
-        return '🥩';
-      case 'vegetables':
-      case 'vegetable':
-        return '🥦';
-      case 'dairy':
-        return '🥛';
-      case 'grains':
-      case 'grain':
-        return '🌾';
-      default:
-        return '🛒';
-    }
-  }
-
-  Color _colorForCategory(String category) {
-    switch (category.toLowerCase()) {
-      case 'protein':
-        return const Color(0xFFFFEBEE);
-      case 'vegetables':
-      case 'vegetable':
-        return const Color(0xFFE8F5E9);
-      case 'dairy':
-        return const Color(0xFFE3F2FD);
-      case 'grains':
-      case 'grain':
-        return const Color(0xFFFFF8E1);
-      default:
-        return const Color(0xFFF5F5F5);
-    }
-  }
-
-  Widget _buildPlaceholder() {
-    return Container(
-      color: _colorForCategory(ingredient.category),
-      alignment: Alignment.center,
-      child: Text(
-        _emojiForCategory(ingredient.category),
-        style: TextStyle(fontSize: 36.r),
-      ),
-    );
-  }
-
-  String _formatQuantity(double quantity, String unit) {
-    final u = unit.toLowerCase();
-    if ((u == 'grams' || u == 'g') && quantity >= 1000) {
-      return '${(quantity / 1000).toStringAsFixed(1).replaceAll(RegExp(r'\\.0\$'), '')} kg';
-    }
-    if (['pieces', 'szt', 'pcs', 'units'].contains(u)) {
-      return '${quantity.toInt()} szt';
-    }
-    if (u == 'ml' && quantity >= 1000) {
-      return '${(quantity / 1000).toStringAsFixed(1).replaceAll(RegExp(r'\\.0\$'), '')} l';
-    }
-    return '${quantity.toStringAsFixed(1).replaceAll(RegExp(r'\\.0\$'), '')} $unit';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final days = ingredient.expiryDate?.difference(DateTime.now()).inDays;
-    final imgUrl = 'https://source.unsplash.com/200x200/?food,${Uri.encodeComponent(ingredient.name)}';
-
-    return Dismissible(
-      key: Key(ingredient.id),
-      direction: DismissDirection.up,
-      onDismissed: (_) =>
-          context.read<PantryBloc>().add(DeleteIngredient(ingredient.id)),
-      background: Container(
-        decoration: BoxDecoration(
-          color: AppColors.error,
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        alignment: Alignment.center,
-        child: Icon(Icons.delete_outline, color: AppColors.textWhite, size: 28.r),
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16.r),
-            onTap: () {},
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  flex: 55,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
-                    child: CachedNetworkImage(
-                      imageUrl: imgUrl,
-                      fit: BoxFit.cover,
-                      placeholder: (_, __) => Shimmer.fromColors(
-                        baseColor: AppColors.borderLight,
-                        highlightColor: AppColors.border,
-                        child: Container(color: AppColors.borderLight),
-                      ),
-                      errorWidget: (_, __, ___) => _buildPlaceholder(),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 45,
-                  child: Padding(
-                    padding: EdgeInsets.all(10.r),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          ingredient.name,
-                          style: TextStyle(
-                            fontSize: 13.sp,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 2.h),
-                        Text(
-                          _formatQuantity(ingredient.quantity, ingredient.unit),
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        const Spacer(),
-                        if (days != null)
-                          Container(
-                            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
-                            decoration: BoxDecoration(
-                              color: days <= 0
-                                  ? AppColors.error
-                                  : days <= 3
-                                      ? AppColors.warning
-                                      : AppColors.success,
-                              borderRadius: BorderRadius.circular(20.r),
-                            ),
-                            child: Text(
-                              days <= 0 ? 'Expired' : '${days}d left',
-                              style: TextStyle(
-                                fontSize: 10.sp,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}

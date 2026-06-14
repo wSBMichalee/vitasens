@@ -20,7 +20,14 @@ serve(async (req: Request) => {
         if (!pantryId || pantryId === 'default') {
           pantryId = await PantryRepository.getPantryIdForUser(userId);
         }
-        const parsedData = AddIngredientSchema.parse({ ...data, pantryId });
+        const expiryDate = data.expiryDate || data.expiry_date;
+        const imageUrl = data.imageUrl || data.image_url;
+        const parsedData = AddIngredientSchema.parse({ 
+          ...data, 
+          pantryId,
+          ...(expiryDate && { expiryDate }),
+          ...(imageUrl && { imageUrl }),
+        });
         result = await PantryRepository.add(parsedData);
         break;
       }

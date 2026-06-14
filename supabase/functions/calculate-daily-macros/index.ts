@@ -29,7 +29,15 @@ serve(async (req: Request) => {
           MacrosRepository.getDailyTotals(userId, date),
           ProfileRepository.getTargets(userId)
         ]) as [DailyMacros, MacroTargets];
-        res = MacrosCalculator.calculateDailyProgress(date, m, t);
+
+        const startDateObj = new Date(date + 'T00:00:00Z');
+        startDateObj.setUTCDate(startDateObj.getUTCDate() - 59);
+        const startDate = startDateObj.toISOString().split('T')[0];
+        const weeklyForStreak = await MacrosRepository.getWeeklyTotals(userId, startDate, date);
+        const streakDays = MacrosCalculator.calculateStreak(weeklyForStreak, t, date);
+
+        const dailyProgress = MacrosCalculator.calculateDailyProgress(date, m, t);
+        res = { ...dailyProgress, streakDays };
         break;
       }
       case 'meals': {

@@ -1,3 +1,7 @@
+import 'package:vitasense/features/macros/bloc/macros_bloc.dart';
+import 'package:vitasense/features/macros/bloc/macros_event.dart';
+import 'package:vitasense/features/macros/bloc/macros_state.dart';
+import 'package:vitasense/features/macros/data/macros_repository.dart';
 import 'package:vitasense/features/water/bloc/water_bloc.dart';
 import 'package:vitasense/features/water/bloc/water_event.dart';
 import 'package:vitasense/core/widgets/gradient_scaffold.dart';
@@ -33,9 +37,12 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<WaterBloc>(
-      create: (context) => WaterBloc()..add(LoadWater()),
-      child: BlocProvider<DailyLogBloc>(
+    return BlocProvider<MacrosBloc>(
+      create: (context) => MacrosBloc(repository: MacrosRepository())
+        ..add(LoadDailyMacros(DateTime.now().toIso8601String().split('T')[0])),
+      child: BlocProvider<WaterBloc>(
+        create: (context) => WaterBloc()..add(LoadWater()),
+        child: BlocProvider<DailyLogBloc>(
         create: (_) => DailyLogBloc()..add(LoadDailyLog(_selectedDate)),
         child: GradientScaffold(
           body: SafeArea(
@@ -52,21 +59,29 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
                 backgroundColor: Colors.white,
                 textColor: AppColors.textPrimary,
                 actions: [
-                  Container(
-                    height: 36.r,
-                    padding: EdgeInsets.symmetric(horizontal: 10.w),
-                    decoration: BoxDecoration(
-                      color: AppColors.backgroundWhite,
-                      borderRadius: BorderRadius.circular(20.r),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.local_fire_department_rounded, color: const Color(0xFFFACC15), size: 16.r),
-                        SizedBox(width: 4.w),
-                        Text('5', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
-                      ],
+                  GestureDetector(
+                    onTap: () => context.push(AppRoutes.progress),
+                    child: BlocBuilder<MacrosBloc, MacrosState>(
+                      builder: (context, state) {
+                        final streak = state is MacrosLoaded ? state.streakDays : 0;
+                        return Container(
+                          height: 36.r,
+                          padding: EdgeInsets.symmetric(horizontal: 10.w),
+                          decoration: BoxDecoration(
+                            color: AppColors.backgroundWhite,
+                            borderRadius: BorderRadius.circular(20.r),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.local_fire_department_rounded, color: const Color(0xFFFACC15), size: 16.r),
+                              SizedBox(width: 4.w),
+                              Text('$streak', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ),
                   SizedBox(width: 8.w),
@@ -210,6 +225,7 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
             ),
           ),
         ),
+      ),
       ),
       ),
     );

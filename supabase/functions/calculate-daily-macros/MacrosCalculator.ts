@@ -60,6 +60,33 @@ export class MacrosCalculator {
     };
   }
 
+    static calculateStreak(
+    weeklyData: { date: string, macros: DailyMacros }[],
+    targets: MacroTargets,
+    today: string
+  ): number {
+    const map = new Map<string, DailyProgress>();
+    weeklyData.forEach(d => map.set(d.date, this.calculateDailyProgress(d.date, d.macros, targets)));
+
+    let streak = 0;
+    const cursor = new Date(today + 'T00:00:00Z');
+
+    const todayProgress = map.get(today);
+    if (!todayProgress || todayProgress.mealsCount === 0) {
+      cursor.setUTCDate(cursor.getUTCDate() - 1);
+    }
+
+    while (true) {
+      const dateStr = cursor.toISOString().split('T')[0];
+      const day = map.get(dateStr);
+      if (!day || day.mealsCount === 0 || !day.isGoalMet) break;
+      streak++;
+      cursor.setUTCDate(cursor.getUTCDate() - 1);
+    }
+
+    return streak;
+  }
+
   static calculateWeeklyProgress(
     startDate: string,
     endDate: string,

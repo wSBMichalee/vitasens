@@ -5,6 +5,9 @@ export interface ExpiringIngredient {
   name: string;
   quantity: number;
   unit: string;
+  category: string;
+  imageUrl?: string;
+  minimumQuantity?: number;
   expiryDate: string;
   daysUntilExpiry: number;
 }
@@ -30,6 +33,9 @@ export class ExpiryChecker {
       name: row.name,
       quantity: row.quantity,
       unit: row.unit,
+      category: row.category,
+      imageUrl: row.image_url,
+      minimumQuantity: row.minimum_quantity,
       expiryDate: row.expiry_date,
       daysUntilExpiry: row.days_until_expiry
     }));

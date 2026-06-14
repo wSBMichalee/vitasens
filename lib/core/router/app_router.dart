@@ -35,6 +35,7 @@ import 'package:vitasense/features/showcase/presentation/screens/problem_fatigue
 import 'package:vitasense/features/showcase/presentation/screens/feature_matcher_screen.dart';
 import 'package:vitasense/features/showcase/presentation/screens/results_analysis_screen.dart';
 import 'package:vitasense/features/recipes/presentation/screens/saved_recipes_screen.dart';
+import 'package:vitasense/features/macros/presentation/screens/progress_screen.dart';
 export 'app_routes.dart';
 import 'app_routes.dart';
 import '../widgets/scaffold_with_bottom_nav.dart';
@@ -319,6 +320,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.savedRecipes,
       builder: (context, state) => const SavedRecipesScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.progress,
+      builder: (context, state) => const ProgressScreen(),
     ),
   ],
 );

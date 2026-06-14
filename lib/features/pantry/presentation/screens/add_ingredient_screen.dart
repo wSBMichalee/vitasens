@@ -3,13 +3,20 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:vitasense/core/services/spoonacular_service.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_bloc.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_event.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_state.dart';
 import 'package:vitasense/features/pantry/data/pantry_repository.dart';
+
+import '../../data/models/product_item.dart';
+import '../widgets/add_ingredient/fallback_image_widget.dart';
+import '../widgets/add_ingredient/loading_shimmer_list.dart';
+import '../widgets/add_ingredient/category_grid_widget.dart';
+import '../widgets/add_ingredient/search_results_list.dart';
+import '../widgets/add_ingredient/expiry_chip.dart';
+
 
 class AddIngredientScreen extends StatelessWidget {
   const AddIngredientScreen({super.key});
@@ -23,23 +30,7 @@ class AddIngredientScreen extends StatelessWidget {
   }
 }
 
-class ProductItem {
-  final String name;
-  final String imageUrl;
-  final String categoryLabel;
-  final String categoryEmoji;
-  final String? brandName;
-  final String description;
 
-  ProductItem({
-    required this.name,
-    required this.imageUrl,
-    required this.categoryLabel,
-    required this.categoryEmoji,
-    this.brandName,
-    this.description = '',
-  });
-}
 
 class _AddIngredientView extends StatefulWidget {
   const _AddIngredientView();
@@ -67,17 +58,7 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
   DateTime? _customExpiry;
   String? _category;
 
-  static const List<Map<String, String>> _categoriesGrid = [
-    {'name': 'Owoce', 'emoji': '🍎', 'query': 'fruit', 'color': '0xFFFFEBEE'},
-    {'name': 'Warzywa', 'emoji': '🥦', 'query': 'vegetables', 'color': '0xFFE8F5E9'},
-    {'name': 'Nabiał', 'emoji': '🥛', 'query': 'dairy', 'color': '0xFFE3F2FD'},
-    {'name': 'Mięso', 'emoji': '🥩', 'query': 'meat', 'color': '0xFFFFEbee'},
-    {'name': 'Zboża', 'emoji': '🌾', 'query': 'cereal', 'color': '0xFFFFF8E1'},
-    {'name': 'Słodycze', 'emoji': '🍫', 'query': 'chocolate', 'color': '0xFFF3E5F5'},
-    {'name': 'Napoje', 'emoji': '🥤', 'query': 'drinks', 'color': '0xFFE0F7FA'},
-    {'name': 'Ryby', 'emoji': '🐟', 'query': 'fish', 'color': '0xFFE3F2FD'},
-    {'name': 'Pieczywo', 'emoji': '🍞', 'query': 'bread', 'color': '0xFFFFF3E0'},
-  ];
+  
 
   @override
   void dispose() {
@@ -376,9 +357,12 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
 
         // Search state: Grid / Loading / Error / Results
         if (_searchController.text.trim().length < 2)
-          _buildCategoryGrid()
+          CategoryGridWidget(onCategoryTap: (query) {
+                        _searchController.text = query;
+                        _onSearchChanged(query);
+                      })
         else if (_isLoading)
-          _buildLoadingShimmer()
+          const LoadingShimmerList()
         else if (_errorMessage != null)
           Padding(
             padding: EdgeInsets.all(24.r),
@@ -394,209 +378,28 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
             ),
           )
         else
-          _buildResultsList(),
+          SearchResultsList(
+                        items: _searchResults,
+                        onItemTap: (item) {
+                          setState(() {
+                            _selectedName = item.brandName != null ? '${item.brandName} ${item.name}' : item.name;
+                            _selectedImageUrl = item.imageUrl;
+                            _selectedCategoryLabel = item.categoryLabel;
+                            _resolveCategoryAndUnit(item.categoryLabel);
+                          });
+                        },
+                      ),
       ],
     );
   }
 
-  Widget _buildCategoryGrid() {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'KATEGORIE',
-            style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, color: Colors.grey.shade500, letterSpacing: 1.2),
-          ),
-          SizedBox(height: 12.h),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 12.w,
-              mainAxisSpacing: 12.h,
-              childAspectRatio: 1.0,
-            ),
-            itemCount: _categoriesGrid.length,
-            itemBuilder: (context, index) {
-              final cat = _categoriesGrid[index];
-              return GestureDetector(
-                onTap: () {
-                  _searchController.text = cat['query']!;
-                  _onSearchChanged(cat['query']!);
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Color(int.parse(cat['color']!)),
-                    borderRadius: BorderRadius.circular(16.r),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(cat['emoji']!, style: TextStyle(fontSize: 32.sp)),
-                      SizedBox(height: 8.h),
-                      Text(cat['name']!, style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.bold, color: Colors.black87)),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
+  
 
-  Widget _buildLoadingShimmer() {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
-      itemCount: 5,
-      itemBuilder: (context, index) {
-        return Container(
-          margin: EdgeInsets.only(bottom: 12.h),
-          padding: EdgeInsets.all(12.r),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          child: Row(
-            children: [
-              Shimmer.fromColors(
-                baseColor: Colors.grey.shade200,
-                highlightColor: Colors.white,
-                child: Container(width: 56.r, height: 56.r, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10.r))),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Shimmer.fromColors(
-                      baseColor: Colors.grey.shade200,
-                      highlightColor: Colors.white,
-                      child: Container(width: double.infinity, height: 16.h, color: Colors.white),
-                    ),
-                    SizedBox(height: 8.h),
-                    Shimmer.fromColors(
-                      baseColor: Colors.grey.shade200,
-                      highlightColor: Colors.white,
-                      child: Container(width: 80.w, height: 12.h, color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+  
 
-  Widget _buildResultsList() {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
-      itemCount: _searchResults.length,
-      itemBuilder: (context, index) {
-        final item = _searchResults[index];
-        return GestureDetector(
-          onTap: () {
-            setState(() {
-              _selectedName = item.brandName != null ? '${item.brandName} ${item.name}' : item.name;
-              _selectedImageUrl = item.imageUrl;
-              _selectedCategoryLabel = item.categoryLabel;
-              _resolveCategoryAndUnit(item.categoryLabel);
-            });
-          },
-          child: Container(
-            margin: EdgeInsets.only(bottom: 12.h),
-            padding: EdgeInsets.all(12.r),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12.r),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10.r),
-                  child: item.imageUrl.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: item.imageUrl,
-                          width: 56.r,
-                          height: 56.r,
-                          fit: BoxFit.cover,
-                          placeholder: (_, __) => Container(color: Colors.grey.shade200, width: 56.r, height: 56.r),
-                          errorWidget: (_, __, ___) => _buildFallbackImage(item.categoryEmoji),
-                        )
-                      : _buildFallbackImage(item.categoryEmoji),
-                ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.brandName != null ? '${item.brandName} ${item.name}' : item.name,
-                        style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        item.categoryLabel,
-                        style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade500),
-                      ),
-                      if (item.description.isNotEmpty) ...[
-                        SizedBox(height: 4.h),
-                        Text(
-                          item.description,
-                          style: TextStyle(fontSize: 11.sp, color: Colors.grey.shade400),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                Container(
-                  width: 32.r,
-                  height: 32.r,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                  ),
-                  child: Icon(Icons.add, color: AppColors.primary, size: 20.r),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+  
 
-  Widget _buildFallbackImage(String emoji) {
-    return Container(
-      width: 56.r,
-      height: 56.r,
-      color: Colors.grey.shade200,
-      alignment: Alignment.center,
-      child: Text(emoji, style: TextStyle(fontSize: 24.sp)),
-    );
-  }
+  
 
   Widget _buildDetailsStep() {
     return Padding(
@@ -625,9 +428,9 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
                           height: 56.r,
                           fit: BoxFit.cover,
                           placeholder: (_, __) => Container(color: Colors.grey.shade200, width: 56.r, height: 56.r),
-                          errorWidget: (_, __, ___) => _buildFallbackImage('🍽️'),
+                          errorWidget: (_, __, ___) => const FallbackImageWidget(emoji: '🍽️'),
                         )
-                      : _buildFallbackImage('🍽️'),
+                      : const FallbackImageWidget(emoji: '🍽️'),
                 ),
                 SizedBox(width: 12.w),
                 Expanded(
@@ -751,11 +554,116 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
             spacing: 8.w,
             runSpacing: 8.h,
             children: [
-              _buildExpiryChip('1 day'),
-              _buildExpiryChip('3 days'),
-              _buildExpiryChip('1 week'),
-              _buildExpiryChip('1 month'),
-              _buildExpiryChip('Custom'),
+              ExpiryChip(
+                                  label: '1 day',
+                                  isSelected: _selectedExpiry == '1 day',
+                                  onTap: () async {
+                                    if ('1 day' == 'Custom') {
+                                      final date = await showDatePicker(
+                                        context: context,
+                                        initialDate: DateTime.now().add(const Duration(days: 3)),
+                                        firstDate: DateTime.now(),
+                                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                                      );
+                                      if (date != null) {
+                                        setState(() {
+                                          _selectedExpiry = 'Custom';
+                                          _customExpiry = date;
+                                        });
+                                      }
+                                    } else {
+                                      setState(() => _selectedExpiry = '1 day');
+                                    }
+                                  },
+                                ),
+              ExpiryChip(
+                                  label: '3 days',
+                                  isSelected: _selectedExpiry == '3 days',
+                                  onTap: () async {
+                                    if ('3 days' == 'Custom') {
+                                      final date = await showDatePicker(
+                                        context: context,
+                                        initialDate: DateTime.now().add(const Duration(days: 3)),
+                                        firstDate: DateTime.now(),
+                                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                                      );
+                                      if (date != null) {
+                                        setState(() {
+                                          _selectedExpiry = 'Custom';
+                                          _customExpiry = date;
+                                        });
+                                      }
+                                    } else {
+                                      setState(() => _selectedExpiry = '3 days');
+                                    }
+                                  },
+                                ),
+              ExpiryChip(
+                                  label: '1 week',
+                                  isSelected: _selectedExpiry == '1 week',
+                                  onTap: () async {
+                                    if ('1 week' == 'Custom') {
+                                      final date = await showDatePicker(
+                                        context: context,
+                                        initialDate: DateTime.now().add(const Duration(days: 3)),
+                                        firstDate: DateTime.now(),
+                                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                                      );
+                                      if (date != null) {
+                                        setState(() {
+                                          _selectedExpiry = 'Custom';
+                                          _customExpiry = date;
+                                        });
+                                      }
+                                    } else {
+                                      setState(() => _selectedExpiry = '1 week');
+                                    }
+                                  },
+                                ),
+              ExpiryChip(
+                                  label: '1 month',
+                                  isSelected: _selectedExpiry == '1 month',
+                                  onTap: () async {
+                                    if ('1 month' == 'Custom') {
+                                      final date = await showDatePicker(
+                                        context: context,
+                                        initialDate: DateTime.now().add(const Duration(days: 3)),
+                                        firstDate: DateTime.now(),
+                                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                                      );
+                                      if (date != null) {
+                                        setState(() {
+                                          _selectedExpiry = 'Custom';
+                                          _customExpiry = date;
+                                        });
+                                      }
+                                    } else {
+                                      setState(() => _selectedExpiry = '1 month');
+                                    }
+                                  },
+                                ),
+              ExpiryChip(
+                                  label: 'Custom',
+                                  isSelected: _selectedExpiry == 'Custom',
+                                  onTap: () async {
+                                    if ('Custom' == 'Custom') {
+                                      final date = await showDatePicker(
+                                        context: context,
+                                        initialDate: DateTime.now().add(const Duration(days: 3)),
+                                        firstDate: DateTime.now(),
+                                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                                      );
+                                      if (date != null) {
+                                        setState(() {
+                                          _selectedExpiry = 'Custom';
+                                          _customExpiry = date;
+                                        });
+                                      }
+                                    } else {
+                                      setState(() => _selectedExpiry = 'Custom');
+                                    }
+                                  },
+                                ),
             ],
           ),
           
@@ -790,44 +698,5 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
     );
   }
 
-  Widget _buildExpiryChip(String label) {
-    final isSelected = _selectedExpiry == label;
-    return GestureDetector(
-      onTap: () async {
-        if (label == 'Custom') {
-          final date = await showDatePicker(
-            context: context,
-            initialDate: DateTime.now().add(const Duration(days: 3)),
-            firstDate: DateTime.now(),
-            lastDate: DateTime.now().add(const Duration(days: 365)),
-          );
-          if (date != null) {
-            setState(() {
-              _selectedExpiry = 'Custom';
-              _customExpiry = date;
-            });
-          }
-        } else {
-          setState(() => _selectedExpiry = label);
-        }
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.transparent,
-          border: Border.all(color: AppColors.primary),
-          borderRadius: BorderRadius.circular(20.r),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13.sp,
-            fontWeight: FontWeight.w600,
-            color: isSelected ? Colors.white : AppColors.primary,
-          ),
-        ),
-      ),
-    );
-  }
+  
 }

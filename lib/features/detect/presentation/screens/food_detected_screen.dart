@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
+import 'package:vitasense/features/macros/presentation/widgets/streak_celebration_modal.dart';
 import 'package:vitasense/features/pantry/data/pantry_repository.dart';
 import 'package:vitasense/features/voice/data/voice_repository.dart';
 
@@ -77,6 +78,9 @@ class FoodDetectedScreen extends StatelessWidget {
     
     try {
       await repo.logMeal(mealData);
+      if (context.mounted) {
+        await maybeShowStreakCelebration(context);
+      }
       if (context.mounted) {
         context.go(AppRoutes.home);
       }

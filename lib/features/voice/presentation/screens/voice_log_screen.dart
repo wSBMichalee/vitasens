@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/widgets/app_header.dart';
+import 'package:vitasense/features/macros/presentation/widgets/streak_celebration_modal.dart';
 import 'package:vitasense/features/voice/bloc/voice_bloc.dart';
 import 'package:vitasense/features/voice/bloc/voice_event.dart';
 import 'package:vitasense/features/voice/bloc/voice_state.dart';
@@ -43,6 +44,8 @@ class _VoiceLogViewState extends State<_VoiceLogView> {
               backgroundColor: AppColors.error,
             ),
           );
+        } else if (state is VoiceLogged) {
+          maybeShowStreakCelebration(context);
         }
       },
       builder: (context, state) {

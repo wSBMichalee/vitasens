@@ -35,7 +35,7 @@ class MacrosBloc extends Bloc<MacrosEvent, MacrosState> {
         streakDays: streakDays,
       ));
     } catch (e) {
-      emit(MacrosError(_parseError(e)));
+      print("LoadDailyMacros Error: $e"); print(StackTrace.current); emit(MacrosError(_parseError(e)));
     }
   }
 

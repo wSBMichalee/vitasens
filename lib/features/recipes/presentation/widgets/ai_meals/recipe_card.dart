@@ -21,10 +21,10 @@ class RecipeCard extends StatelessWidget {
         recipe['cookTimeMinutes'] ?? recipe['readyInMinutes'] ?? 0;
     final imageUrl = recipe['image']?.toString();
 
-    final calories = recipe['calories'] ?? recipe['nutrition']?['calories'] ?? 0;
-    final protein = recipe['protein'] ?? recipe['nutrition']?['protein'] ?? '0g';
-    final carbs = recipe['carbs'] ?? recipe['nutrition']?['carbs'] ?? '0g';
-    final fat = recipe['fat'] ?? recipe['nutrition']?['fat'] ?? '0g';
+    final calories = recipe['calories'] ?? 0;
+    final protein = '${(recipe['proteinG'] as num?)?.round() ?? 0}g';
+    final carbs = '${(recipe['carbsG'] as num?)?.round() ?? 0}g';
+    final fat = '${(recipe['fatG'] as num?)?.round() ?? 0}g';
 
     final usedIngredients = <Map<String, dynamic>>[];
     final missedIngredients = <Map<String, dynamic>>[];

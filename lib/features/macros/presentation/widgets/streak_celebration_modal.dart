@@ -9,20 +9,30 @@ import 'package:vitasense/features/macros/data/macros_repository.dart';
 /// Wywołać po udanym zalogowaniu posiłku.
 Future<void> maybeShowStreakCelebration(BuildContext context) async {
   final today = DateTime.now().toIso8601String().split('T')[0];
+  debugPrint('STREAK CHECK: today=$today');
 
   try {
     final prefs = await SharedPreferences.getInstance();
     final lastShown = prefs.getString('last_streak_celebration_date');
-    if (lastShown == today) return;
+    debugPrint('STREAK CHECK: lastShown=$lastShown');
+    if (lastShown == today) {
+      debugPrint('STREAK CHECK: already shown today, skip');
+      return;
+    }
 
     final repo = MacrosRepository();
     CacheService().invalidate('daily_macros_$today');
 
     final daily = await repo.getDailyMacros(today);
+    debugPrint('STREAK CHECK: daily=$daily');
     final isGoalMet = daily['isGoalMet'] as bool? ?? false;
     final streakDays = (daily['streakDays'] as int?) ?? 0;
+    debugPrint('STREAK CHECK: isGoalMet=$isGoalMet streakDays=$streakDays');
 
-    if (!isGoalMet || streakDays <= 0) return;
+    if (!isGoalMet || streakDays <= 0) {
+      debugPrint('STREAK CHECK: condition not met, skip');
+      return;
+    }
 
     final now = DateTime.now();
     final monday = now.subtract(Duration(days: now.weekday - 1));
@@ -39,14 +49,15 @@ Future<void> maybeShowStreakCelebration(BuildContext context) async {
 
     if (!context.mounted) return;
 
+    debugPrint('STREAK CHECK: SHOWING MODAL');
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => StreakCelebrationModal(streakDays: streakDays, weekDays: days),
     );
-  } catch (_) {
-    // Celebracja jest opcjonalna - błąd nie powinien przerywać głównego flow.
+  } catch (e) {
+    debugPrint('STREAK CHECK ERROR: $e');
   }
 }
 

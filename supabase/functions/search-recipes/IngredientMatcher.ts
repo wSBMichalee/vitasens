@@ -44,7 +44,7 @@ export class IngredientMatcher {
 
   static filterByMinMatch(
     recipes: MatchResult[],
-    minPercent: number = 40
+    minPercent: number = 0
   ): MatchResult[] {
     return recipes
       .filter(r => r.matchPercent >= minPercent)

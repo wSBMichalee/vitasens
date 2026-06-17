@@ -1,138 +1,207 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:vitasense/core/theme/app_colors.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vitasense/core/router/app_router.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:vitasense/features/shopping/bloc/shopping_bloc.dart';
-import 'package:vitasense/features/shopping/bloc/shopping_event.dart';
-import 'nutri_badge.dart';
+import 'package:vitasense/core/theme/app_colors.dart';
+import 'package:vitasense/core/theme/app_text_styles.dart';
 
 class RecipeCard extends StatelessWidget {
-  final Map<String, dynamic> recipe;
-
   const RecipeCard({super.key, required this.recipe});
+
+  final Map<String, dynamic> recipe;
 
   @override
   Widget build(BuildContext context) {
-    final title = recipe['title']?.toString() ?? '';
-    final cookTime =
-        recipe['cookTimeMinutes'] ?? recipe['readyInMinutes'] ?? 0;
-    final imageUrl = recipe['image']?.toString();
+    final imageUrl = recipe['imageUrl'] as String?;
+    final title = recipe['title'] as String? ?? 'Brak tytułu';
+    final cookTime = recipe['cookTimeMinutes'] as int? ?? 0;
+    final calories = (recipe['calories'] as num?)?.toInt() ?? 0;
+    final proteinG = (recipe['proteinG'] as num?)?.toInt() ?? 0;
+    final carbsG = (recipe['carbsG'] as num?)?.toInt() ?? 0;
+    final fatG = (recipe['fatG'] as num?)?.toInt() ?? 0;
+    final geminiReason = recipe['geminiReason'] as String?;
+    final missedIngredientsRaw = recipe['missedIngredients'] as List<dynamic>? ?? [];
+    
+    final missedIngredients = missedIngredientsRaw
+        .map((e) => (e as Map<String, dynamic>)['name'] as String?)
+        .where((e) => e != null)
+        .cast<String>()
+        .take(2)
+        .toList();
 
-    final calories = recipe['calories'] ?? 0;
-    final protein = '${(recipe['proteinG'] as num?)?.round() ?? 0}g';
-    final carbs = '${(recipe['carbsG'] as num?)?.round() ?? 0}g';
-    final fat = '${(recipe['fatG'] as num?)?.round() ?? 0}g';
-
-    final usedIngredients = <Map<String, dynamic>>[];
-    final missedIngredients = <Map<String, dynamic>>[];
-
-    if (recipe['usedIngredients'] is List) {
-      for (final item in recipe['usedIngredients'] as List) {
-        if (item is Map<String, dynamic>) usedIngredients.add(item);
-      }
-    }
-    if (recipe['missedIngredients'] is List) {
-      for (final item in recipe['missedIngredients'] as List) {
-        if (item is Map<String, dynamic>) missedIngredients.add(item);
-      }
-    }
-
-    return GestureDetector(
-      onTap: () => context.push(AppRoutes.recipeDetails, extra: recipe),
-      child: Container(
-        margin: EdgeInsets.only(bottom: 12.h),
-        decoration: BoxDecoration(
-          color: AppColors.backgroundWhite,
-          borderRadius: BorderRadius.circular(16.r),
-          boxShadow: [BoxShadow(color: AppColors.textPrimary.withValues(alpha: 0.04), blurRadius: 16, offset: const Offset(0, 6))],
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Zdjęcie po lewej ──
-            ClipRRect(
-              borderRadius: BorderRadius.horizontal(left: Radius.circular(16.r)),
-              child: imageUrl != null && imageUrl.isNotEmpty
-                  ? CachedNetworkImage(
-                      imageUrl: imageUrl,
-                      width: 110.r,
-                      height: 110.r,
-                      fit: BoxFit.cover,
-                      placeholder: (_, __) => Container(width: 110.r, height: 110.r, color: AppColors.borderLight),
-                      errorWidget: (_, __, ___) => Container(width: 110.r, height: 110.r, color: AppColors.borderLight, child: Icon(Icons.image_not_supported_outlined, color: AppColors.textMuted, size: 24.r)),
-                    )
-                  : Container(width: 110.r, height: 110.r, color: AppColors.borderLight),
-            ),
-            // ── Info po prawej ──
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.all(12.r),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      margin: EdgeInsets.only(bottom: 16.h),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundWhite,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+            color: Colors.black.withValues(alpha: 0.04),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Image
+          ClipRRect(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+            child: imageUrl != null && imageUrl.isNotEmpty
+                ? Image.network(
+                    imageUrl,
+                    height: 180.h,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
+                  )
+                : _buildPlaceholder(),
+          ),
+          
+          // Content
+          Padding(
+            padding: EdgeInsets.all(14.r),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: 8.h),
+                
+                // Clock & Flame row
+                Row(
                   children: [
-                    Text(title, style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary), maxLines: 2, overflow: TextOverflow.ellipsis),
-                    SizedBox(height: 4.h),
-                    Row(
-                      children: [
-                        Icon(Icons.timer_outlined, color: AppColors.textMuted, size: 12.r),
-                        SizedBox(width: 3.w),
-                        Text('$cookTime min', style: TextStyle(fontSize: 11.sp, color: AppColors.textMuted)),
-                        SizedBox(width: 8.w),
-                        Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 12.r),
-                        SizedBox(width: 3.w),
-                        Text('${usedIngredients.length} have', style: TextStyle(fontSize: 11.sp, color: AppColors.primary)),
-                        if (missedIngredients.isNotEmpty) ...[
-                          SizedBox(width: 8.w),
-                          Icon(Icons.cancel_outlined, color: AppColors.error, size: 12.r),
-                          SizedBox(width: 3.w),
-                          Text('${missedIngredients.length} miss', style: TextStyle(fontSize: 11.sp, color: AppColors.error)),
-                        ],
-                      ],
+                    Icon(Icons.schedule, size: 14.r, color: AppColors.textSecondary),
+                    SizedBox(width: 4.w),
+                    Text(
+                      '$cookTime min',
+                      style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary),
                     ),
-                    SizedBox(height: 6.h),
-                    Wrap(
-                      spacing: 4.w,
-                      runSpacing: 4.h,
-                      children: [
-                        NutriBadge(label: '$calories kcal', color: AppColors.primary),
-                        NutriBadge(label: 'P: $protein', color: AppColors.proteinColor),
-                        NutriBadge(label: 'C: $carbs', color: AppColors.carbsColor),
-                        NutriBadge(label: 'F: $fat', color: AppColors.fatColor),
-                      ],
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w),
+                      child: Text('|', style: TextStyle(fontSize: 12.sp, color: AppColors.textMuted)),
                     ),
-                    if (missedIngredients.isNotEmpty) ...[
-                      SizedBox(height: 6.h),
-                      Wrap(
-                        spacing: 4.w,
-                        runSpacing: 4.h,
-                        children: missedIngredients.take(2).map((ing) {
-                          final name = ing['name']?.toString() ?? '';
-                          return GestureDetector(
-                            onTap: () {
-                              context.read<ShoppingBloc>().add(AddShoppingItem(name, (ing['amount'] as num?)?.toDouble() ?? 1.0, ing['unit']?.toString() ?? 'piece'));
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('"$name" added to list ✓', style: TextStyle(color: AppColors.textWhite, fontSize: 13.sp)), backgroundColor: AppColors.primary, duration: const Duration(seconds: 2)));
-                            },
-                            child: Container(
-                              padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
-                              decoration: BoxDecoration(color: AppColors.error.withValues(alpha: 0.08), border: Border.all(color: AppColors.error.withValues(alpha: 0.3)), borderRadius: BorderRadius.circular(4.r)),
-                              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                                Icon(Icons.cancel_outlined, color: AppColors.error, size: 10.r),
-                                SizedBox(width: 3.w),
-                                Text(name, style: TextStyle(fontSize: 10.sp, color: AppColors.error)),
-                              ]),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ],
+                    Icon(Icons.local_fire_department_outlined, size: 14.r, color: AppColors.textSecondary),
+                    SizedBox(width: 4.w),
+                    Text(
+                      '$calories kcal',
+                      style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary),
+                    ),
                   ],
                 ),
-              ),
+                SizedBox(height: 12.h),
+                
+                // Macros row
+                Row(
+                  children: [
+                    _buildMacroPill('P: ${proteinG}g'),
+                    SizedBox(width: 8.w),
+                    _buildMacroPill('C: ${carbsG}g'),
+                    SizedBox(width: 8.w),
+                    _buildMacroPill('F: ${fatG}g'),
+                  ],
+                ),
+                
+                if (geminiReason != null && geminiReason.isNotEmpty) ...[
+                  SizedBox(height: 12.h),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLight,
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.auto_awesome, size: 12.r, color: AppColors.primaryDark),
+                        SizedBox(width: 4.w),
+                        Expanded(
+                          child: Text(
+                            geminiReason,
+                            style: TextStyle(
+                              fontSize: 11.sp,
+                              fontStyle: FontStyle.italic,
+                              color: AppColors.primaryDark,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                
+                if (missedIngredients.isNotEmpty) ...[
+                  SizedBox(height: 8.h),
+                  Text(
+                    'Brakuje: ${missedIngredients.join(', ')}',
+                    style: TextStyle(fontSize: 11.sp, color: AppColors.textMuted),
+                  ),
+                ],
+                
+                SizedBox(height: 16.h),
+                // Button
+                SizedBox(
+                  height: 44.h,
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () => context.push(AppRoutes.recipeDetails, extra: recipe),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.r),
+                      ),
+                    ),
+                    child: Text(
+                      'Zacznij gotować',
+                      style: AppTextStyles.labelMedium.copyWith(color: AppColors.textWhite),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlaceholder() {
+    return Container(
+      height: 180.h,
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+      ),
+      child: Center(
+        child: Icon(Icons.restaurant, size: 40.r, color: AppColors.textMuted),
+      ),
+    );
+  }
+
+  Widget _buildMacroPill(String text) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8.r),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12.sp,
+          fontWeight: FontWeight.w600,
+          color: AppColors.primary,
         ),
       ),
     );

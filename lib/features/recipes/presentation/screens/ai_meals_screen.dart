@@ -3,28 +3,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_bloc.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_event.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_state.dart';
-import 'package:vitasense/core/widgets/gradient_scaffold.dart';
+import 'package:vitasense/core/widgets/app_header.dart';
 import '../widgets/ai_meals/recipe_card.dart';
 import '../widgets/ai_meals/filter_bottom_sheet.dart';
-
-const _defaultIngredients = [
-  'chicken',
-  'pasta',
-  'rice',
-  'eggs',
-  'onion',
-  'garlic',
-  'tomatoes',
-  'olive oil',
-  'bread',
-  'cheese',
-];
 
 class AiMealsScreen extends StatefulWidget {
   const AiMealsScreen({super.key, this.ingredients});
@@ -36,216 +24,204 @@ class AiMealsScreen extends StatefulWidget {
 }
 
 class _AiMealsScreenState extends State<AiMealsScreen> {
+  bool _isLoadingIngredients = true;
+  bool _hasNoIngredients = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final pantry = (widget.ingredients?.isNotEmpty == true)
-          ? widget.ingredients!
-          : _defaultIngredients;
-      context.read<RecipesBloc>().add(LoadRecipes(pantry));
+      if (widget.ingredients != null && widget.ingredients!.isNotEmpty) {
+        setState(() => _isLoadingIngredients = false);
+        context.read<RecipesBloc>().add(LoadRecipes(widget.ingredients!));
+      } else {
+        _loadIngredients();
+      }
     });
+  }
+
+  Future<void> _loadIngredients() async {
+    try {
+      final supabase = Supabase.instance.client;
+      final userId = supabase.auth.currentUser?.id;
+      debugPrint('_loadIngredients: userId=$userId');
+      
+      if (userId == null) {
+        if (mounted) setState(() { _isLoadingIngredients = false; _hasNoIngredients = true; });
+        return;
+      }
+
+      // Krok 1: pobierz pantry
+      final pantryRes = await supabase
+          .from('pantries')
+          .select('id')
+          .eq('owner_id', userId)
+          .maybeSingle();
+      
+      debugPrint('_loadIngredients: pantryRes=$pantryRes');
+
+      if (pantryRes == null) {
+        if (mounted) setState(() { _isLoadingIngredients = false; _hasNoIngredients = true; });
+        return;
+      }
+
+      final pantryId = pantryRes['id'] as String;
+      debugPrint('_loadIngredients: pantryId=$pantryId');
+
+      // Krok 2: pobierz składniki
+      final ingredientsRes = await supabase
+          .from('ingredients')
+          .select('name')
+          .eq('pantry_id', pantryId);
+
+      debugPrint('_loadIngredients: ingredientsRes=$ingredientsRes');
+
+      final names = (ingredientsRes as List)
+          .map((i) => i['name']?.toString() ?? '')
+          .where((n) => n.isNotEmpty)
+          .toList();
+
+      debugPrint('_loadIngredients: names=$names');
+
+      if (!mounted) return;
+
+      if (names.isEmpty) {
+        setState(() { _isLoadingIngredients = false; _hasNoIngredients = true; });
+        return;
+      }
+
+      setState(() => _isLoadingIngredients = false);
+      context.read<RecipesBloc>().add(LoadRecipes(names));
+
+    } catch (e, stack) {
+      debugPrint('_loadIngredients ERROR: $e\n$stack');
+      if (mounted) setState(() { _isLoadingIngredients = false; _hasNoIngredients = true; });
+    }
+  }
+
+  Future<void> _onRefresh() async {
+    if (widget.ingredients != null && widget.ingredients!.isNotEmpty) {
+      context.read<RecipesBloc>().add(LoadRecipes(widget.ingredients!));
+    } else {
+      await _loadIngredients();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return GradientScaffold(
+    return Scaffold(
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
-            // ── AppHeader: wariant main, spinner jako action podczas ładowania ────
-            BlocBuilder<RecipesBloc, RecipesState>(
-              builder: (context, state) {
-                final isLoading = state is RecipesLoading;
-                return AppBar(
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  scrolledUnderElevation: 0,
-                  title: Text("AI Meals", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 22.sp)),
-                  actions: [
-                    if (isLoading)
-                      SizedBox(width: 20.r, height: 20.r, child: const CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary)),
-                    GestureDetector(
-                      onTap: () => context.push(AppRoutes.savedRecipes),
+            AppHeader(
+              title: 'AI Meals',
+              variant: AppHeaderVariant.main,
+              actions: [
+                GestureDetector(
+                  onTap: () => context.push(AppRoutes.savedRecipes),
+                  child: Container(
+                    width: 40.r, height: 40.r,
+                    decoration: const BoxDecoration(
+                      color: AppColors.borderLight,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.bookmark_border, color: AppColors.textPrimary, size: 20.r),
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                BlocBuilder<RecipesBloc, RecipesState>(
+                  builder: (context, state) {
+                    final activeFilters = state is RecipesLoaded ? state.activeFilters : <String>{};
+                    final selectedCategory = state is RecipesLoaded ? state.selectedCategory : 'ALL';
+                    final hasActive = activeFilters.isNotEmpty || selectedCategory != 'ALL';
+                    return GestureDetector(
+                      onTap: () => showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => BlocProvider.value(
+                          value: context.read<RecipesBloc>(),
+                          child: const FilterBottomSheet(),
+                        ),
+                      ),
                       child: Container(
                         width: 40.r, height: 40.r,
                         decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.05),
+                          color: hasActive ? AppColors.primary : AppColors.borderLight,
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(Icons.bookmark_border, color: Colors.black, size: 20.r),
+                        child: Icon(Icons.tune_rounded, color: hasActive ? AppColors.textWhite : AppColors.textPrimary, size: 20.r),
                       ),
-                    ),
-                    SizedBox(width: 8.w),
-                    BlocBuilder<RecipesBloc, RecipesState>(
-                      builder: (context, state) {
-                        final activeFilters = state is RecipesLoaded ? state.activeFilters : <String>{};
-                        final selectedCategory = state is RecipesLoaded ? state.selectedCategory : 'ALL';
-                        final hasActive = activeFilters.isNotEmpty || selectedCategory != 'ALL';
-                        return GestureDetector(
-                          onTap: () => showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (_) => BlocProvider.value(
-                              value: context.read<RecipesBloc>(),
-                              child: const FilterBottomSheet(),
-                            ),
-                          ),
-                          child: Container(
-                            width: 40.r, height: 40.r,
-                            decoration: BoxDecoration(
-                              color: hasActive ? AppColors.primary : AppColors.borderLight,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(Icons.tune_rounded, color: hasActive ? AppColors.textWhite : AppColors.textPrimary, size: 20.r),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                );
-              },
+                    );
+                  },
+                ),
+              ],
             ),
             Expanded(
-              child: BlocBuilder<RecipesBloc, RecipesState>(
+              child: BlocConsumer<RecipesBloc, RecipesState>(
+                listener: (context, state) {
+                  if (state is RecipesSubscriptionExpired) {
+                    context.push('/subscription'); // Placeholder dla paywall
+                  }
+                },
                 builder: (context, state) {
-                  if (state is RecipesLoading) {
-                    return ListView.builder(
-                      padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 24.h),
-                      itemCount: 4,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: EdgeInsets.only(bottom: 16.h),
-                          child: Shimmer.fromColors(
-                            baseColor: AppColors.borderLight,
-                            highlightColor: AppColors.border,
-                            child: Container(
-                              height: 250.h,
-                              decoration: BoxDecoration(
-                                color: AppColors.backgroundWhite,
-                                borderRadius: BorderRadius.circular(16.r),
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    );
+                  if (_isLoadingIngredients) {
+                    return _buildLoadingState();
+                  }
+                  if (_hasNoIngredients) {
+                    return _buildEmptyState();
+                  }
+                  
+                  if (state is RecipesInitial || state is RecipesLoading) {
+                    return _buildLoadingState();
                   }
                   if (state is RecipesError) {
-                    return Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.error_outline,
-                              color: AppColors.error, size: 40.r),
-                          SizedBox(height: 12.h),
-                          Text(state.message, style: AppTextStyles.bodyMedium),
-                          SizedBox(height: 16.h),
-                          SizedBox(
-                            height: 50.h,
-                            child: FilledButton(
-                              onPressed: () {
-                                final pantry =
-                                    (widget.ingredients?.isNotEmpty == true)
-                                        ? widget.ingredients!
-                                        : _defaultIngredients;
-                                context
-                                    .read<RecipesBloc>()
-                                    .add(LoadRecipes(pantry));
-                              },
-                              style: FilledButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16.r),
-                                ),
-                              ),
-                              child: Text(
-                                'Retry',
-                                style: TextStyle(
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textWhite,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
+                    return _buildErrorState(state.message);
                   }
                   if (state is RecipesLoaded) {
                     if (state.recipes.isEmpty) {
-                      return Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(32.r),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 72.r,
-                                height: 72.r,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.borderLight,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(Icons.restaurant_menu,
-                                    size: 36.r, color: AppColors.textMuted),
-                              ),
-                              SizedBox(height: 24.h),
-                              Text(
-                                'No recipes found',
-                                style: TextStyle(
-                                  fontSize: 18.sp,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                              SizedBox(height: 8.h),
-                              Text(
-                                'Try changing your filters or add more ingredients.',
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  color: AppColors.textSecondary,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              SizedBox(height: 24.h),
-                              SizedBox(
-                                height: 50.h,
-                                width: double.infinity,
-                                child: FilledButton(
-                                  onPressed: () => context
-                                      .read<RecipesBloc>()
-                                      .add(const ClearRecipeFilters()),
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: AppColors.primary,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16.r),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    'Clear filters',
-                                    style: TextStyle(
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.textWhite,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
+                      return _buildNoResultsState();
                     }
-                    return ListView.builder(
-                      padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 100.h),
-                      itemCount: state.recipes.length,
-                      itemBuilder: (context, index) {
-                        return RecipeCard(recipe: state.recipes[index]);
-                      },
+                    return RefreshIndicator(
+                      onRefresh: _onRefresh,
+                      color: AppColors.primary,
+                      child: ListView.builder(
+                        padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 100.h),
+                        itemCount: state.recipes.length + (state.geminiPersonalized ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (state.geminiPersonalized && index == 0) {
+                            return Padding(
+                              padding: EdgeInsets.only(bottom: 16.h),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                                decoration: BoxDecoration(
+                                  color: AppColors.successLight,
+                                  borderRadius: BorderRadius.circular(8.r),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.auto_awesome, size: 16.r, color: AppColors.successDark),
+                                    SizedBox(width: 8.w),
+                                    Text(
+                                      'Dopasowane do Twojego profilu',
+                                      style: TextStyle(
+                                        fontSize: 13.sp,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.successDark,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }
+                          final recipeIndex = state.geminiPersonalized ? index - 1 : index;
+                          return RecipeCard(recipe: state.recipes[recipeIndex]);
+                        },
+                      ),
                     );
                   }
                   return const SizedBox.shrink();
@@ -257,12 +233,128 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
       ),
     );
   }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 24.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.kitchen, color: AppColors.textMuted, size: 48.r),
+            SizedBox(height: 16.h),
+            Text('Brak składników', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+            SizedBox(height: 8.h),
+            Text(
+              'Dodaj składniki do spiżarki, żeby zobaczyć przepisy',
+              style: TextStyle(fontSize: 14.sp, height: 1.5, color: AppColors.textMuted),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 24.h),
+            SizedBox(
+              height: 56.h,
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => context.go('/pantry'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                ),
+                child: Text('Idź do spiżarki', style: AppTextStyles.labelLarge.copyWith(color: AppColors.textWhite)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return ListView.builder(
+      padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 100.h),
+      itemCount: 3,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: 16.h),
+          child: Shimmer.fromColors(
+            baseColor: AppColors.borderLight,
+            highlightColor: AppColors.border,
+            child: Container(
+              height: 290.h,
+              decoration: BoxDecoration(
+                color: AppColors.backgroundWhite,
+                borderRadius: BorderRadius.circular(16.r),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildErrorState(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, color: AppColors.error, size: 48.r),
+          SizedBox(height: 16.h),
+          Text(message, style: TextStyle(fontSize: 16.sp, color: AppColors.textSecondary)),
+          SizedBox(height: 24.h),
+          SizedBox(
+            height: 56.h,
+            width: 200.w,
+            child: FilledButton(
+              onPressed: _onRefresh,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+              ),
+              child: Text('Spróbuj ponownie', style: AppTextStyles.labelLarge.copyWith(color: AppColors.textWhite)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoResultsState() {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 24.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 72.r,
+              height: 72.r,
+              decoration: const BoxDecoration(color: AppColors.borderLight, shape: BoxShape.circle),
+              child: Icon(Icons.restaurant_menu, size: 36.r, color: AppColors.textMuted),
+            ),
+            SizedBox(height: 24.h),
+            Text('Brak wyników', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+            SizedBox(height: 8.h),
+            Text(
+              'Spróbuj zmienić filtry lub dodać więcej składników.',
+              style: TextStyle(fontSize: 14.sp, color: AppColors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 24.h),
+            SizedBox(
+              height: 56.h,
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => context.read<RecipesBloc>().add(const ClearRecipeFilters()),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                ),
+                child: Text('Wyczyść filtry', style: AppTextStyles.labelLarge.copyWith(color: AppColors.textWhite)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
-
-
-
-
-
-
-
-

@@ -26,6 +26,7 @@ class RecipesLoaded extends RecipesState {
     this.minCalories = 0,
     this.maxCalories = 1200,
     this.minIngredients = 0,
+    this.geminiPersonalized = false,
   });
   final List<Map<String, dynamic>> recipes;
   final Set<String> activeFilters;
@@ -35,6 +36,7 @@ class RecipesLoaded extends RecipesState {
   final int minCalories;
   final int maxCalories;
   final int minIngredients;
+  final bool geminiPersonalized;
 
   RecipesLoaded copyWith({
     List<Map<String, dynamic>>? recipes,
@@ -45,6 +47,7 @@ class RecipesLoaded extends RecipesState {
     int? minCalories,
     int? maxCalories,
     int? minIngredients,
+    bool? geminiPersonalized,
   }) => RecipesLoaded(
     recipes: recipes ?? this.recipes,
     activeFilters: activeFilters ?? this.activeFilters,
@@ -54,12 +57,13 @@ class RecipesLoaded extends RecipesState {
     minCalories: minCalories ?? this.minCalories,
     maxCalories: maxCalories ?? this.maxCalories,
     minIngredients: minIngredients ?? this.minIngredients,
+    geminiPersonalized: geminiPersonalized ?? this.geminiPersonalized,
   );
 
   @override
   List<Object?> get props => [
     recipes, activeFilters, selectedCategory,
-    minCookTime, maxCookTime, minCalories, maxCalories, minIngredients
+    minCookTime, maxCookTime, minCalories, maxCalories, minIngredients, geminiPersonalized
   ];
 }
 
@@ -70,6 +74,10 @@ class RecipesError extends RecipesState {
 
   @override
   List<Object?> get props => [message];
+}
+
+class RecipesSubscriptionExpired extends RecipesState {
+  const RecipesSubscriptionExpired();
 }
 
 class RecipesCooking extends RecipesState {

@@ -33,10 +33,12 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
     try {
       final recipes = await repository.searchRecipes(event.pantryIngredients);
       _allRecipes = recipes;
+      final isPersonalized = recipes.any((r) => r['geminiReason'] != null && r['geminiReason'].toString().isNotEmpty);
       emit(RecipesLoaded(
         recipes: _allRecipes,
         activeFilters: const {},
         selectedCategory: 'ALL',
+        geminiPersonalized: isPersonalized,
       ));
     } catch (e) {
       emit(RecipesError(_parseError(e)));
@@ -52,6 +54,7 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
     int minCalories,
     int maxCalories,
     int minIngredients,
+    bool geminiPersonalized,
   ) {
     List<Map<String, dynamic>> filtered = List.from(_allRecipes);
 
@@ -141,13 +144,14 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
       minCalories: minCalories,
       maxCalories: maxCalories,
       minIngredients: minIngredients,
+      geminiPersonalized: geminiPersonalized,
     ));
   }
 
   void _onSetCategory(SetRecipeCategory event, Emitter<RecipesState> emit) {
     if (state is RecipesLoaded) {
       final s = state as RecipesLoaded;
-      _applyFilters(emit, event.category, s.activeFilters, s.minCookTime, s.maxCookTime, s.minCalories, s.maxCalories, s.minIngredients);
+      _applyFilters(emit, event.category, s.activeFilters, s.minCookTime, s.maxCookTime, s.minCalories, s.maxCalories, s.minIngredients, s.geminiPersonalized);
     }
   }
 
@@ -160,20 +164,21 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
       } else {
         newFilters.add(event.filter);
       }
-      _applyFilters(emit, s.selectedCategory, newFilters, s.minCookTime, s.maxCookTime, s.minCalories, s.maxCalories, s.minIngredients);
+      _applyFilters(emit, s.selectedCategory, newFilters, s.minCookTime, s.maxCookTime, s.minCalories, s.maxCalories, s.minIngredients, s.geminiPersonalized);
     }
   }
 
   void _onClearFilters(ClearRecipeFilters event, Emitter<RecipesState> emit) {
     if (state is RecipesLoaded) {
-      emit(RecipesLoaded(recipes: _allRecipes, activeFilters: const {}, selectedCategory: 'ALL'));
+      final s = state as RecipesLoaded;
+      emit(RecipesLoaded(recipes: _allRecipes, activeFilters: const {}, selectedCategory: 'ALL', geminiPersonalized: s.geminiPersonalized));
     }
   }
 
   void _onApplyRangeFilters(ApplyRangeFilters event, Emitter<RecipesState> emit) {
     if (state is RecipesLoaded) {
       final s = state as RecipesLoaded;
-      _applyFilters(emit, s.selectedCategory, s.activeFilters, event.minCookTime, event.maxCookTime, event.minCalories, event.maxCalories, event.minIngredients);
+      _applyFilters(emit, s.selectedCategory, s.activeFilters, event.minCookTime, event.maxCookTime, event.minCalories, event.maxCalories, event.minIngredients, s.geminiPersonalized);
     }
   }
 
@@ -193,7 +198,12 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
       await repository.cookRecipe(event.recipeId, 'default', event.servings);
       emit(const RecipesCookingSuccess());
     } catch (e) {
-      emit(RecipesError(_parseError(e)));
+      final parsedErr = _parseError(e);
+      if (parsedErr == 'SUBSCRIPTION_EXPIRED') {
+        emit(const RecipesSubscriptionExpired());
+      } else {
+        emit(RecipesError(parsedErr));
+      }
     }
   }
   Future<void> _onLoadMyRecipes(
@@ -306,6 +316,8 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
   String _parseError(dynamic e) {
     final raw = e.toString().toLowerCase();
 
+    if (raw.contains('recipe_not_found') || raw.contains('przepis nie istnieje')) return 'Przepis nie znaleziony — odśwież listę.';
+    if (raw.contains('subscription_expired') || raw.contains('403')) return 'SUBSCRIPTION_EXPIRED';
     if (raw.contains('not found')) return 'Recipe not found.';
     if (raw.contains('network') ||
         raw.contains('socket') ||

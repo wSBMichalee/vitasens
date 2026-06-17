@@ -12,7 +12,20 @@ serve(async (req: Request) => {
     const userId = await getUserId(req.headers.get('Authorization') || '');
     await SubscriptionGuard.checkAccess(userId);
     const data = await req.json();
-    const recipe = await RecipeRepository.findById(data.recipeId);
+    let recipe;
+    try {
+      recipe = await RecipeRepository.findById(data.recipeId);
+    } catch (err: any) {
+      console.error('Recipe not found in DB:', data.recipeId);
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: "RECIPE_NOT_FOUND", 
+        message: "Przepis nie istnieje w bazie. Odśwież listę przepisów." 
+      }), { 
+        status: 404, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      });
+    }
     const res = await CookingProcessor.process(data.recipeId, data.familyId, userId, data.servingsCooked, recipe);
     return new Response(JSON.stringify({ success: true, data: res }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (e) { return handleError(e); }

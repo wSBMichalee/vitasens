@@ -7,40 +7,27 @@ class RecipesRepository {
   RecipesRepository({SupabaseClient? supabase})
       : _supabase = supabase ?? Supabase.instance.client;
 
-  Future<List<Map<String, dynamic>>> searchRecipes(
-      List<String> pantryIngredients) async {
+  Future<List<Map<String, dynamic>>> searchRecipes(List<String> pantryIngredients) async {
     final response = await _supabase.functions.invoke(
       'search-recipes',
-      body: {
-        'action': 'search',
-        'pantryIngredients': pantryIngredients,
-      },
+      body: {'action': 'search', 'pantryIngredients': pantryIngredients},
     );
-
     final body = response.data as Map<String, dynamic>;
+    if (body['success'] != true) throw Exception(body['error'] ?? 'Unknown error');
     final payload = body['data'] as Map<String, dynamic>;
     final list = payload['recipes'] as List<dynamic>;
-    final pantrySet = pantryIngredients.map((e) => e.toLowerCase()).toSet();
-
+    
     return list.map((e) {
       final r = Map<String, dynamic>.from(e as Map);
-      final allIngredients = (r['ingredients'] as List<dynamic>? ?? [])
-          .map((i) => Map<String, dynamic>.from(i as Map))
-          .toList();
-      final used = allIngredients
-          .where((i) => pantrySet.any((p) =>
-              (i['name']?.toString().toLowerCase() ?? '').contains(p)))
-          .toList();
-      final missed = allIngredients
-          .where((i) => !pantrySet.any((p) =>
-              (i['name']?.toString().toLowerCase() ?? '').contains(p)))
-          .toList();
       return {
         ...r,
-        'image': r['imageUrl'],
-        'readyInMinutes': r['cookTimeMinutes'],
-        'usedIngredients': used,
-        'missedIngredients': missed,
+        'imageUrl': r['imageUrl'] ?? r['image_url'] ?? '',
+        'cookTimeMinutes': r['cookTimeMinutes'] ?? r['cook_time_minutes'] ?? 0,
+        'proteinG': (r['proteinG'] ?? r['protein_g'] ?? 0.0).toDouble(),
+        'carbsG': (r['carbsG'] ?? r['carbs_g'] ?? 0.0).toDouble(),
+        'fatG': (r['fatG'] ?? r['fat_g'] ?? 0.0).toDouble(),
+        'calories': (r['calories'] ?? 0).toInt(),
+        'geminiReason': r['geminiReason'] as String?,
       };
     }).toList();
   }
@@ -57,17 +44,16 @@ class RecipesRepository {
     return response.data as Map<String, dynamic>;
   }
 
-  Future<void> cookRecipe(
-      String recipeId, String familyId, int servings) async {
-    await _supabase.functions.invoke(
+  Future<void> cookRecipe(String recipeId, String familyId, int servings) async {
+    final response = await _supabase.functions.invoke(
       'cook-recipe',
-      body: {
-        'action': 'cook',
-        'recipeId': recipeId,
-        'familyId': familyId,
-        'servingsCooked': servings,
-      },
+      body: {'recipeId': recipeId, 'familyId': familyId, 'servingsCooked': servings},
     );
+    final body = response.data as Map<String, dynamic>;
+    if (body['success'] != true) {
+      final error = body['error'] as String? ?? '';
+      throw Exception(error.isNotEmpty ? error : 'cook_recipe_failed');
+    }
   }
 
   Future<List<RecipeModel>> getMyRecipes() async {

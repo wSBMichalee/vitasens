@@ -10,6 +10,8 @@ export interface UserProfile {
   dailyCarbsTarget: number;
   dailyFatTarget: number;
   healthConditions: string[];
+  dietaryPreferences: string[];
+  allergies: string[];
   subscriptionPlan: string | null;
   subscriptionStatus: string;
   trialExpiresAt: string;
@@ -147,6 +149,8 @@ export class ProfileRepository {
       dailyCarbsTarget: Number(row.daily_carbs_target),
       dailyFatTarget: Number(row.daily_fat_target),
       healthConditions: row.health_conditions || [],
+      dietaryPreferences: row.dietary_preferences || [],
+      allergies: row.allergies || [],
       subscriptionPlan: row.subscription_plan,
       subscriptionStatus: row.subscription_status,
       trialExpiresAt: row.trial_expires_at,

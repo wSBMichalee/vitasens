@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vitasense/core/theme/app_colors.dart';
 
 class GradientScaffold extends StatelessWidget {
   final Widget body;
@@ -25,7 +26,7 @@ class GradientScaffold extends StatelessWidget {
     return Scaffold(
       extendBody: extendBody,
       resizeToAvoidBottomInset: resizeToAvoidBottomInset,
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.backgroundWhite,
       appBar: appBar,
       bottomNavigationBar: bottomNavigationBar,
       floatingActionButton: floatingActionButton,
@@ -33,17 +34,7 @@ class GradientScaffold extends StatelessWidget {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFEAFAF0),
-              Color(0xFFFFFFFF),
-            ],
-            stops: [0.0, 0.35],
-          ),
-        ),
+        color: AppColors.backgroundWhite,
         child: body,
       ),
     );

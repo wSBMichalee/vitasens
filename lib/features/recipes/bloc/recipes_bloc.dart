@@ -31,15 +31,45 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
   ) async {
     emit(const RecipesLoading());
     try {
-      final recipes = await repository.searchRecipes(event.pantryIngredients);
-      _allRecipes = recipes;
-      final isPersonalized = recipes.any((r) => r['geminiReason'] != null && r['geminiReason'].toString().isNotEmpty);
+      // Faza 1 — szybkie pobranie z Spoonacular bez makr
+      final fastResponse = await repository.searchRecipesFast(event.pantryIngredients);
+      final fastRecipes = fastResponse['recipes'] as List<Map<String, dynamic>>;
+      final spoonacularIds = (fastResponse['spoonacularIds'] as List).cast<int>();
+      
+      _allRecipes = fastRecipes;
+      final isPersonalized = fastRecipes.any((r) => r['geminiReason'] != null && r['geminiReason'].toString().isNotEmpty);
+      
       emit(RecipesLoaded(
         recipes: _allRecipes,
         activeFilters: const {},
         selectedCategory: 'ALL',
         geminiPersonalized: isPersonalized,
+        isEnriching: spoonacularIds.isNotEmpty,
       ));
+
+      // Faza 2 — w tle doładuj makra i Gemini
+      if (spoonacularIds.isNotEmpty) {
+        final enriched = await repository.enrichRecipes(spoonacularIds);
+        
+        // Zastępujemy szybkie wyniki wzbogaconymi, zachowując te których Gemini nie zwrócił
+        _allRecipes = enriched.map((e) {
+          final original = fastRecipes.firstWhere((f) => f['sourceId'] == e['sourceId'], orElse: () => {});
+          return {
+            ...original,
+            ...e,
+          };
+        }).toList();
+
+        final enrichedIsPersonalized = _allRecipes.any((r) => r['geminiReason'] != null && r['geminiReason'].toString().isNotEmpty);
+        
+        emit(RecipesLoaded(
+          recipes: _allRecipes,
+          activeFilters: const {},
+          selectedCategory: 'ALL',
+          geminiPersonalized: enrichedIsPersonalized,
+          isEnriching: false,
+        ));
+      }
     } catch (e) {
       emit(RecipesError(_parseError(e)));
     }
@@ -55,6 +85,7 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
     int maxCalories,
     int minIngredients,
     bool geminiPersonalized,
+    bool isEnriching,
   ) {
     List<Map<String, dynamic>> filtered = List.from(_allRecipes);
 
@@ -145,13 +176,14 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
       maxCalories: maxCalories,
       minIngredients: minIngredients,
       geminiPersonalized: geminiPersonalized,
+      isEnriching: isEnriching,
     ));
   }
 
   void _onSetCategory(SetRecipeCategory event, Emitter<RecipesState> emit) {
     if (state is RecipesLoaded) {
       final s = state as RecipesLoaded;
-      _applyFilters(emit, event.category, s.activeFilters, s.minCookTime, s.maxCookTime, s.minCalories, s.maxCalories, s.minIngredients, s.geminiPersonalized);
+      _applyFilters(emit, event.category, s.activeFilters, s.minCookTime, s.maxCookTime, s.minCalories, s.maxCalories, s.minIngredients, s.geminiPersonalized, s.isEnriching);
     }
   }
 
@@ -164,21 +196,21 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
       } else {
         newFilters.add(event.filter);
       }
-      _applyFilters(emit, s.selectedCategory, newFilters, s.minCookTime, s.maxCookTime, s.minCalories, s.maxCalories, s.minIngredients, s.geminiPersonalized);
+      _applyFilters(emit, s.selectedCategory, newFilters, s.minCookTime, s.maxCookTime, s.minCalories, s.maxCalories, s.minIngredients, s.geminiPersonalized, s.isEnriching);
     }
   }
 
   void _onClearFilters(ClearRecipeFilters event, Emitter<RecipesState> emit) {
     if (state is RecipesLoaded) {
       final s = state as RecipesLoaded;
-      emit(RecipesLoaded(recipes: _allRecipes, activeFilters: const {}, selectedCategory: 'ALL', geminiPersonalized: s.geminiPersonalized));
+      emit(RecipesLoaded(recipes: _allRecipes, activeFilters: const {}, selectedCategory: 'ALL', geminiPersonalized: s.geminiPersonalized, isEnriching: s.isEnriching));
     }
   }
 
   void _onApplyRangeFilters(ApplyRangeFilters event, Emitter<RecipesState> emit) {
     if (state is RecipesLoaded) {
       final s = state as RecipesLoaded;
-      _applyFilters(emit, s.selectedCategory, s.activeFilters, event.minCookTime, event.maxCookTime, event.minCalories, event.maxCalories, event.minIngredients, s.geminiPersonalized);
+      _applyFilters(emit, s.selectedCategory, s.activeFilters, event.minCookTime, event.maxCookTime, event.minCalories, event.maxCalories, event.minIngredients, s.geminiPersonalized, s.isEnriching);
     }
   }
 

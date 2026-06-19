@@ -8,6 +8,7 @@ import 'package:vitasense/features/auth/data/models/user_model.dart';
 import 'package:vitasense/features/subscription/bloc/subscription_bloc.dart';
 import 'package:vitasense/features/subscription/bloc/subscription_event.dart';
 import 'package:vitasense/core/widgets/gradient_scaffold.dart';
+import 'package:vitasense/core/widgets/app_header.dart';
 import '../widgets/profile/profile_daily_targets_card.dart';
 import '../widgets/profile/profile_goals_card.dart';
 import '../widgets/profile/profile_menu_card.dart';
@@ -54,44 +55,48 @@ class _ProfileView extends StatelessWidget {
     print('goalPace: ${user.goalPace}, activityLevel: ${user.activityLevel}');
     
     return GradientScaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        title: Text("Profile", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 22.sp)),
-        actions: const [],
-      ),
-      body: CustomScrollView(
-        slivers: [
+      body: SafeArea(
+        child: Column(
+          children: [
+            const AppHeader(
+              title: 'Profile',
+              variant: AppHeaderVariant.main,
+            ),
+            Expanded(
+              child: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // ── DAILY TARGETS ────────────────────────────────
+                          DailyTargetsCard(user: user),
+                          SizedBox(height: 16.h),
 
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── DAILY TARGETS ────────────────────────────────
-                  DailyTargetsCard(user: user),
-                  SizedBox(height: 16.h),
+                          // ── MY GOALS ─────────────────────────────────────
+                          MyGoalsCard(user: user),
+                          SizedBox(height: 16.h),
 
-                  // ── MY GOALS ─────────────────────────────────────
-                  MyGoalsCard(user: user),
-                  SizedBox(height: 16.h),
+                          // ── PERSONAL INFO ────────────────────────────────
+                          PersonalInfoCard(user: user),
+                          SizedBox(height: 16.h),
 
-                  // ── PERSONAL INFO ────────────────────────────────
-                  PersonalInfoCard(user: user),
-                  SizedBox(height: 16.h),
-
-                  // ── NAVIGATION MENU ───────────────────────────────
-                  const MenuCard(),
-                  SizedBox(height: 16.h),
-                  const SettingsMenuCard(),
-                  SizedBox(height: 120.h),
+                          // ── NAVIGATION MENU ───────────────────────────────
+                          const MenuCard(),
+                          SizedBox(height: 16.h),
+                          const SettingsMenuCard(),
+                          SizedBox(height: 120.h),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

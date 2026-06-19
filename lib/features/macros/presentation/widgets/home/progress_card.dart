@@ -34,13 +34,13 @@ class ProgressCard extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(24.w, 24.h, 24.w, 24.h),
       decoration: BoxDecoration(
         color: AppColors.backgroundWhite,
-        borderRadius: BorderRadius.circular(24.r),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.06),
           ),
         ],
       ),

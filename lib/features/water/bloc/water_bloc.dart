@@ -17,7 +17,7 @@ class WaterBloc extends Bloc<WaterEvent, WaterState> {
   Future<void> _onLoadWater(LoadWater event, Emitter<WaterState> emit) async {
     try {
       emit(WaterLoading());
-      final consumed = await _repository.getTodayWater();
+      final consumed = await _repository.getWaterForDate(event.date);
       
       final userId = Supabase.instance.client.auth.currentUser?.id;
       int goal = 2500; // default
@@ -42,7 +42,7 @@ class WaterBloc extends Bloc<WaterEvent, WaterState> {
     if (state is WaterLoaded) {
       final currentState = state as WaterLoaded;
       try {
-        await _repository.addWater(event.amountMl);
+        await _repository.addWater(event.amountMl, date: event.date);
         emit(currentState.copyWith(consumedMl: currentState.consumedMl + event.amountMl));
       } catch (e) {
         // Here we could emit error or handle it, but for simplicity let's just emit current state

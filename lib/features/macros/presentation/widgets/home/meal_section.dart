@@ -6,17 +6,20 @@ import 'package:go_router/go_router.dart';
 import 'package:vitasense/core/router/app_router.dart';
 
 class MealSection extends StatefulWidget {
-  const MealSection({super.key, 
+  const MealSection({
+    super.key,
     required this.title,
     required this.mealTime,
     required this.meals,
     required this.onDelete,
+    this.isPast = false,
   });
 
   final String title;
   final String mealTime;
   final List<MealModel> meals;
   final void Function(String mealId) onDelete;
+  final bool isPast;
 
   @override
   State<MealSection> createState() => MealSectionState();
@@ -41,30 +44,32 @@ class MealSectionState extends State<MealSection> {
       child: Column(
         children: [
           // Header sekcji
-          GestureDetector(
-            onTap: () => setState(() => _expanded = !_expanded),
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(16.w, 14.h, 12.w, 14.h),
-              child: Row(
-                children: [
-                  Icon(
+          Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 14.h, 12.w, 14.h),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () => setState(() => _expanded = !_expanded),
+                  child: Icon(
                     _expanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
                     color: AppColors.textSecondary,
                     size: 20.r,
                   ),
-                  SizedBox(width: 8.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(widget.title, style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                        Text(
-                          '$totalKcal kcal  •  P: ${totalP.round()}g  C: ${totalC.round()}g  F: ${totalF.round()}g',
-                          style: TextStyle(fontSize: 11.sp, color: AppColors.textMuted),
-                        ),
-                      ],
-                    ),
+                ),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(widget.title, style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                      Text(
+                        '$totalKcal kcal  •  P: ${totalP.round()}g  C: ${totalC.round()}g  F: ${totalF.round()}g',
+                        style: TextStyle(fontSize: 11.sp, color: AppColors.textMuted),
+                      ),
+                    ],
                   ),
+                ),
+                if (!widget.isPast)
                   GestureDetector(
                     onTap: () => context.go(AppRoutes.aiMeals),
                     child: Container(
@@ -76,8 +81,7 @@ class MealSectionState extends State<MealSection> {
                       child: Icon(Icons.add, color: AppColors.primary, size: 20.r),
                     ),
                   ),
-                ],
-              ),
+              ],
             ),
           ),
           // Empty state gdy brak posiłków

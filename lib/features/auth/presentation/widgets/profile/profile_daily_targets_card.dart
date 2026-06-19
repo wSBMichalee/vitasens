@@ -74,11 +74,11 @@ class DailyTargetsCardState extends State<DailyTargetsCard> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20.r),
+        color: AppColors.backgroundWhite,
+        borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.black.withOpacity(0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),

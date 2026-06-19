@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vitasense/features/auth/data/auth_repository.dart';
+import 'package:vitasense/core/services/cache_service.dart';
+import 'package:vitasense/features/macros/bloc/macros_bloc.dart';
+import 'package:vitasense/features/macros/bloc/macros_event.dart';
+import 'package:vitasense/core/utils/bottom_sheet_utils.dart';
 import 'profile_shimmer.dart';
 
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -107,14 +112,13 @@ class MyGoalsCard extends StatelessWidget {
   }
 
   void _showEditSheet(BuildContext context, String type, UserModel user) {
-    showModalBottomSheet(
+    showAppBottomSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => EditGoalSheet(type: type, user: user),
     ).then((_) {
       if (context.mounted) {
         context.read<AuthBloc>().add(const AppStarted());
+        context.read<MacrosBloc>().add(LoadDailyMacros(DateTime.now().toIso8601String().split('T')[0]));
       }
     });
   }
@@ -206,9 +210,22 @@ class EditGoalSheetState extends State<EditGoalSheet> {
   Future<void> _save(Map<String, dynamic> data) async {
     setState(() => _saving = true);
     try {
-      await AuthRepository().updateProfile(data);
+      final supabase = Supabase.instance.client;
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) return;
+
+      await supabase
+          .from('profiles')
+          .update(data)
+          .eq('id', userId);
+
       await AuthRepository().calculateTargets();
-      if (mounted) Navigator.pop(context, true);
+      CacheService().invalidate('user_profile');
+      CacheService().invalidate('user_targets');
+
+      if (mounted) {
+        Navigator.pop(context, true);
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -223,92 +240,118 @@ class EditGoalSheetState extends State<EditGoalSheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: AppColors.backgroundWhite,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-      ),
-      padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 40.h),
+      height: MediaQuery.of(context).size.height * 0.6,
+      padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 24.h),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Center(
             child: Container(
               width: 40.w,
               height: 4.h,
               decoration: BoxDecoration(
-                color: AppColors.borderMedium,
+                color: Colors.grey.shade400,
                 borderRadius: BorderRadius.circular(2.r),
               ),
             ),
           ),
           SizedBox(height: 24.h),
           if (widget.type == 'goal') ...[
-            Text('Edit Goal', style: AppTextStyles.headingSmall),
-            SizedBox(height: 20.h),
-            _buildGoalCard('General Health', 'general_health', Icons.health_and_safety, 'Overall well-being'),
-            SizedBox(height: 10.h),
-            _buildGoalCard('Lose Weight', 'weight_loss', Icons.trending_down, 'Burn fat with smart meals'),
-            SizedBox(height: 10.h),
-            _buildGoalCard('Build Muscle', 'muscle_gain', Icons.fitness_center, 'High protein meals for growth'),
+            Text('Edit Goal', style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.bold, color: Colors.black)),
             SizedBox(height: 24.h),
-            SaveButton(saving: _saving, onPressed: () => _save({'goal_type': _selectedGoal})),
-          ] else if (widget.type == 'pace') ...[
-            Text('Edit Pace', style: AppTextStyles.headingSmall),
-            SizedBox(height: 20.h),
-            _buildPaceCard('Slow & Steady', 'slow', '~0.25kg/week', 'More sustainable, easier to maintain'),
-            SizedBox(height: 10.h),
-            _buildPaceCard('Moderate', 'moderate', '~0.5kg/week', 'Balanced approach, recommended'),
-            SizedBox(height: 10.h),
-            _buildPaceCard('Fast', 'fast', '~0.75kg/week', 'Requires strict discipline'),
-            SizedBox(height: 24.h),
-            SaveButton(saving: _saving, onPressed: () => _save({'goal_pace': _selectedPace})),
-          ] else if (widget.type == 'activity') ...[
-            Text('Edit Activity', style: AppTextStyles.headingSmall),
-            SizedBox(height: 20.h),
-            _buildActivityCard('Sedentary', 'sedentary', Icons.chair_outlined, 'Desk job, little exercise'),
-            SizedBox(height: 10.h),
-            _buildActivityCard('Lightly Active', 'light', Icons.directions_walk, 'Light exercise 1–3x/week'),
-            SizedBox(height: 10.h),
-            _buildActivityCard('Moderately Active', 'moderate', Icons.directions_run, 'Moderate exercise 3–5x/week'),
-            SizedBox(height: 10.h),
-            _buildActivityCard('Very Active', 'active', Icons.fitness_center, 'Hard exercise 6–7x/week'),
-            SizedBox(height: 10.h),
-            _buildActivityCard('Extremely Active', 'very_active', Icons.sports, 'Physical job + daily training'),
-            SizedBox(height: 24.h),
-            SaveButton(saving: _saving, onPressed: () => _save({'activity_level': _selectedActivity})),
-          ] else if (widget.type == 'weight') ...[
-            Text('Edit Weight', style: AppTextStyles.headingSmall),
-            SizedBox(height: 20.h),
-            Center(
-              child: Text(
-                '$_weight kg',
-                style: TextStyle(fontSize: 48.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _buildGoalCard('General Health', 'general_health', Icons.health_and_safety, 'Overall well-being'),
+                    SizedBox(height: 10.h),
+                    _buildGoalCard('Lose Weight', 'weight_loss', Icons.trending_down, 'Burn fat with smart meals'),
+                    SizedBox(height: 10.h),
+                    _buildGoalCard('Build Muscle', 'muscle_gain', Icons.fitness_center, 'High protein meals for growth'),
+                    SizedBox(height: 24.h),
+                  ],
+                ),
               ),
             ),
-            SizedBox(height: 20.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                GestureDetector(
-                  onTap: () { if (_weight > 30) setState(() => _weight--); },
-                  child: Container(
-                    width: 48.r, height: 48.r,
-                    decoration: const BoxDecoration(color: AppColors.borderLight, shape: BoxShape.circle),
-                    child: Icon(Icons.remove, color: AppColors.textPrimary, size: 24.r),
-                  ),
-                ),
-                SizedBox(width: 32.w),
-                GestureDetector(
-                  onTap: () { if (_weight < 300) setState(() => _weight++); },
-                  child: Container(
-                    width: 48.r, height: 48.r,
-                    decoration: const BoxDecoration(color: AppColors.borderLight, shape: BoxShape.circle),
-                    child: Icon(Icons.add, color: AppColors.textPrimary, size: 24.r),
-                  ),
-                ),
-              ],
-            ),
+            SaveButton(saving: _saving, onPressed: () => _save({'goal_type': _selectedGoal})),
+          ] else if (widget.type == 'pace') ...[
+            Text('Edit Pace', style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.bold, color: Colors.black)),
             SizedBox(height: 24.h),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _buildPaceCard('Slow & Steady', 'slow', '~0.25kg/week', 'More sustainable, easier to maintain'),
+                    SizedBox(height: 10.h),
+                    _buildPaceCard('Moderate', 'moderate', '~0.5kg/week', 'Balanced approach, recommended'),
+                    SizedBox(height: 10.h),
+                    _buildPaceCard('Fast', 'fast', '~0.75kg/week', 'Requires strict discipline'),
+                    SizedBox(height: 24.h),
+                  ],
+                ),
+              ),
+            ),
+            SaveButton(saving: _saving, onPressed: () => _save({'goal_pace': _selectedPace})),
+          ] else if (widget.type == 'activity') ...[
+            Text('Edit Activity', style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.bold, color: Colors.black)),
+            SizedBox(height: 24.h),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _buildActivityCard('Sedentary', 'sedentary', Icons.chair_outlined, 'Desk job, little exercise'),
+                    SizedBox(height: 10.h),
+                    _buildActivityCard('Lightly Active', 'light', Icons.directions_walk, 'Light exercise 1–3x/week'),
+                    SizedBox(height: 10.h),
+                    _buildActivityCard('Moderately Active', 'moderate', Icons.directions_run, 'Moderate exercise 3–5x/week'),
+                    SizedBox(height: 10.h),
+                    _buildActivityCard('Very Active', 'active', Icons.fitness_center, 'Hard exercise 6–7x/week'),
+                    SizedBox(height: 10.h),
+                    _buildActivityCard('Extremely Active', 'very_active', Icons.sports, 'Physical job + daily training'),
+                    SizedBox(height: 24.h),
+                  ],
+                ),
+              ),
+            ),
+            SaveButton(saving: _saving, onPressed: () => _save({'activity_level': _selectedActivity})),
+          ] else if (widget.type == 'weight') ...[
+            Text('Edit Weight', style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.bold, color: Colors.black)),
+            SizedBox(height: 48.h),
+            Expanded(
+              child: Column(
+                children: [
+                  Center(
+                    child: Text(
+                      '$_weight kg',
+                      style: TextStyle(fontSize: 48.sp, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    ),
+                  ),
+                  SizedBox(height: 32.h),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: () { if (_weight > 30) setState(() => _weight--); },
+                        child: Container(
+                          width: 56.r, height: 56.r,
+                          decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8)]),
+                          child: Icon(Icons.remove, color: Colors.black, size: 28.r),
+                        ),
+                      ),
+                      SizedBox(width: 48.w),
+                      GestureDetector(
+                        onTap: () { if (_weight < 300) setState(() => _weight++); },
+                        child: Container(
+                          width: 56.r, height: 56.r,
+                          decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8)]),
+                          child: Icon(Icons.add, color: Colors.black, size: 28.r),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
             SaveButton(saving: _saving, onPressed: () => _save({'weight_kg': _weight.toDouble()})),
           ],
         ],

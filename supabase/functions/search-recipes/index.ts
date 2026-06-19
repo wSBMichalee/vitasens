@@ -66,7 +66,11 @@ serve(async (req: Request) => {
           (i: { name?: string } | string) => typeof i === 'string' ? i : (i.name ?? '')
         );
 
-        const sr = await spoon.findByIngredients(ingredientNames);
+        // OPTYMALIZACJA 1: Parallel fetch
+        const [sr, profile] = await Promise.all([
+          spoon.findByIngredients(ingredientNames),
+          ProfileRepository.getById(userId)
+        ]);
         const matches = IngredientMatcher
           .sortByBestMatch(IngredientMatcher.buildMatchResults(sr))
           .slice(0, 20);
@@ -95,7 +99,29 @@ serve(async (req: Request) => {
           };
         });
 
-        const savedRecipes = await RecipeRepository.upsertMany(mappedForUpsert);
+        // OPTYMALIZACJA 3: Ogranicz payload do Gemini i użyj sourceId jako klucz
+        const recipesForGemini = mappedForUpsert.map(r => {
+          const match = matches.find(m => m.recipeId.toString() === r.sourceId);
+          return {
+            id: r.sourceId,
+            title: r.title,
+            calories: r.calories,
+            proteinG: r.proteinG,
+            carbsG: r.carbsG,
+            fatG: r.fatG,
+            dietTags: r.dietTags,
+            matchPercent: match?.matchPercent || 0
+          };
+        });
+
+        // OPTYMALIZACJA 2: Upsert i Gemini równolegle
+        const [savedRecipes, ranked] = await Promise.all([
+          RecipeRepository.upsertMany(mappedForUpsert),
+          GeminiPersonalizer.rankRecipes(recipesForGemini, profile).catch(e => {
+            console.error('GeminiPersonalizer error:', e);
+            return recipesForGemini.map(r => ({ id: r.id, reason: '' }));
+          })
+        ]);
         
         const recipesWithMatches = savedRecipes.map(r => {
           const match = matches.find(m => m.recipeId.toString() === r.sourceId);
@@ -108,24 +134,21 @@ serve(async (req: Request) => {
           };
         });
 
-        const profile = await ProfileRepository.getById(userId);
-        
-        let ranked: Array<{id: string, reason: string}> = [];
-        try {
-          ranked = await GeminiPersonalizer.rankRecipes(recipesWithMatches, profile);
-        } catch (e) {
-          console.error('GeminiPersonalizer error:', e);
-          ranked = recipesWithMatches.map(r => ({ id: r.id, reason: '' }));
-        }
-        
         const finalRecipes = [];
         for (const rnk of ranked) {
-          const rec = recipesWithMatches.find(r => r.id === rnk.id);
+          const rec = recipesWithMatches.find(r => r.sourceId === rnk.id);
           if (rec) {
             finalRecipes.push({
               ...rec,
               geminiReason: rnk.reason || undefined
             });
+          }
+        }
+        
+        // Fallback: dodaj te, które Gemini mogło pominąć
+        for (const rec of recipesWithMatches) {
+          if (!finalRecipes.find(f => f.id === rec.id)) {
+            finalRecipes.push(rec);
           }
         }
 

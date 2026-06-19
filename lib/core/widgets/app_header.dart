@@ -84,9 +84,11 @@ class AppHeader extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: 20.w,
-              vertical: 16.h,
+            padding: EdgeInsets.only(
+              top: 16.h,
+              left: 20.w,
+              right: 20.w,
+              bottom: 8.h,
             ),
             child: _buildContent(context),
           ),
@@ -172,10 +174,10 @@ class _MainHeader extends StatelessWidget {
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 26.sp,
+                  fontSize: 28.sp,
                   height: 1.2,
-                  fontWeight: FontWeight.w700,
-                  color: textColor ?? AppColors.textPrimary,
+                  fontWeight: FontWeight.w800,
+                  color: textColor ?? Colors.black,
                 ),
               ),
               if (subtitle != null) ...[
@@ -237,10 +239,10 @@ class _NestedHeader extends StatelessWidget {
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 26.sp,
+                  fontSize: 28.sp,
                   height: 1.2,
-                  fontWeight: FontWeight.w700,
-                  color: textColor ?? AppColors.textPrimary,
+                  fontWeight: FontWeight.w800,
+                  color: textColor ?? Colors.black,
                 ),
               ),
               if (subtitle != null) ...[
@@ -297,10 +299,10 @@ class _ModalHeader extends StatelessWidget {
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 26.sp,
+                  fontSize: 28.sp,
                   height: 1.2,
-                  fontWeight: FontWeight.w700,
-                  color: textColor ?? AppColors.textPrimary,
+                  fontWeight: FontWeight.w800,
+                  color: textColor ?? Colors.black,
                 ),
               ),
               if (subtitle != null) ...[

@@ -47,17 +47,18 @@ class FilterBottomSheetState extends State<FilterBottomSheet> {
         final activeFilters = state is RecipesLoaded ? state.activeFilters : <String>{};
         final hasAny = activeFilters.isNotEmpty || selectedCategory != 'ALL';
 
-        return SafeArea(
-          top: false,
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppColors.backgroundWhite,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-            ),
-            padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 24.h),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        return DraggableScrollableSheet(
+          initialChildSize: 0.92,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) {
+            return Container(
+              padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 24.h),
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Handle
                 Center(
@@ -69,7 +70,7 @@ class FilterBottomSheetState extends State<FilterBottomSheet> {
                 // Header
                 Row(
                   children: [
-                    Expanded(child: Text('Filters', style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary))),
+                    Expanded(child: Text('Filters', style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.bold, color: Colors.black))),
                     if (hasAny)
                       GestureDetector(
                         onTap: () => context.read<RecipesBloc>().add(const ClearRecipeFilters()),
@@ -357,10 +358,10 @@ class FilterBottomSheetState extends State<FilterBottomSheet> {
                 ),
               ],
             ),
-          ),
-        ),
-        );
-      },
-    );
+            ),
+          );
+        },
+      );
+    });
   }
 }

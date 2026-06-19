@@ -13,6 +13,7 @@ import '../widgets/cuisine_chip.dart';
 import '../widgets/sort_chip.dart';
 import '../widgets/featured_card.dart';
 import '../widgets/recipe_grid_card.dart';
+import 'package:vitasense/core/utils/bottom_sheet_utils.dart';
 
 class BrowseScreen extends StatelessWidget {
   const BrowseScreen({super.key});
@@ -57,12 +58,8 @@ class _BrowseViewState extends State<_BrowseView> {
   }
 
   void _showFiltersSheet(BuildContext context, BrowseLoaded state) {
-    showModalBottomSheet(
+    showAppBottomSheet(
       context: context,
-      backgroundColor: AppColors.backgroundWhite,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-      ),
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (context, setState) {

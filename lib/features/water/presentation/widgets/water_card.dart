@@ -5,24 +5,26 @@ import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/features/water/bloc/water_bloc.dart';
 import 'package:vitasense/features/water/bloc/water_event.dart';
 import 'package:vitasense/features/water/bloc/water_state.dart';
+import 'package:vitasense/core/utils/bottom_sheet_utils.dart';
 
 class WaterCard extends StatelessWidget {
-  const WaterCard({super.key, this.dailyWaterTarget});
+  const WaterCard({
+    super.key, 
+    this.dailyWaterTarget,
+    this.isPast = false,
+    this.selectedDate,
+  });
   
   final int? dailyWaterTarget;
+  final bool isPast;
+  final DateTime? selectedDate;
 
   void _showAddWaterSheet(BuildContext context) {
-    showModalBottomSheet(
+    showAppBottomSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (sheetContext) {
         return Container(
-          decoration: BoxDecoration(
-            color: AppColors.backgroundWhite,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
-          ),
-          padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 40.h + MediaQuery.of(sheetContext).padding.bottom),
+          padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 40.h),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -39,9 +41,9 @@ class WaterCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _WaterOptionButton(amount: 150, blocContext: context),
-                  _WaterOptionButton(amount: 250, blocContext: context),
-                  _WaterOptionButton(amount: 500, blocContext: context),
+                  _WaterOptionButton(amount: 150, blocContext: context, date: selectedDate),
+                  _WaterOptionButton(amount: 250, blocContext: context, date: selectedDate),
+                  _WaterOptionButton(amount: 500, blocContext: context, date: selectedDate),
                 ],
               ),
             ],
@@ -122,14 +124,15 @@ class WaterCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => _showAddWaterSheet(context),
-                    style: IconButton.styleFrom(
-                      backgroundColor: AppColors.proteinColor.withValues(alpha: 0.1),
-                      shape: const CircleBorder(),
+                  if (!isPast)
+                    IconButton(
+                      onPressed: () => _showAddWaterSheet(context),
+                      style: IconButton.styleFrom(
+                        backgroundColor: AppColors.proteinColor.withValues(alpha: 0.1),
+                        shape: const CircleBorder(),
+                      ),
+                      icon: Icon(Icons.add, color: AppColors.proteinColor, size: 24.r),
                     ),
-                    icon: Icon(Icons.add, color: AppColors.proteinColor, size: 24.r),
-                  ),
                 ],
               ),
               SizedBox(height: 16.h),
@@ -151,10 +154,15 @@ class WaterCard extends StatelessWidget {
 }
 
 class _WaterOptionButton extends StatelessWidget {
-  const _WaterOptionButton({required this.amount, required this.blocContext});
+  const _WaterOptionButton({
+    required this.amount, 
+    required this.blocContext,
+    this.date,
+  });
 
   final int amount;
   final BuildContext blocContext;
+  final DateTime? date;
 
   @override
   Widget build(BuildContext context) {
@@ -163,7 +171,7 @@ class _WaterOptionButton extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 4.w),
         child: FilledButton(
           onPressed: () {
-            blocContext.read<WaterBloc>().add(AddWater(amount));
+            blocContext.read<WaterBloc>().add(AddWater(amount, date ?? DateTime.now()));
             Navigator.of(context).pop();
           },
           style: FilledButton.styleFrom(

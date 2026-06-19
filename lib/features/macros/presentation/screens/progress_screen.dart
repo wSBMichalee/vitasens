@@ -139,8 +139,6 @@ class _ProgressView extends StatelessWidget {
           title: 'Progress',
           subtitle: 'Stay consistent',
           variant: AppHeaderVariant.main,
-          backgroundColor: AppColors.primary,
-          textColor: AppColors.textWhite,
           actions: [
             Container(
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 7.h),

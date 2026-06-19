@@ -12,6 +12,7 @@ import 'package:vitasense/features/shopping/bloc/shopping_state.dart';
 import '../widgets/move_to_pantry_button.dart';
 import '../widgets/shopping_item_card.dart';
 import '../widgets/purchased_item_card.dart';
+import 'package:vitasense/core/utils/bottom_sheet_utils.dart';
 
 class ShoppingListScreen extends StatelessWidget {
   const ShoppingListScreen({super.key});
@@ -47,13 +48,8 @@ class _ShoppingListViewState extends State<_ShoppingListView> {
     String selectedUnit = 'piece';
     final units = ['piece', 'g', 'kg', 'ml', 'l', 'pack'];
 
-    showModalBottomSheet(
+    showAppBottomSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.backgroundWhite,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-      ),
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (context, setState) {

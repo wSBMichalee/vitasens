@@ -22,7 +22,7 @@ class MacrosBloc extends Bloc<MacrosEvent, MacrosState> {
     emit(const MacrosLoading());
     try {
       final daily = await repository.getDailyMacros(event.date);
-      final meals = await repository.getTodayMeals();
+      final meals = await repository.getMealsForDate(event.date);
       _daily = daily;
       _meals = meals;
 

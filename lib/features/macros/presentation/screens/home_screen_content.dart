@@ -37,11 +37,15 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final startOfToday = DateTime(now.year, now.month, now.day);
+    final isPast = _selectedDate.isBefore(startOfToday);
+
     return BlocProvider<MacrosBloc>(
       create: (context) => MacrosBloc(repository: MacrosRepository())
-        ..add(LoadDailyMacros(DateTime.now().toIso8601String().split('T')[0])),
+        ..add(LoadDailyMacros(_selectedDate.toIso8601String().split('T')[0])),
       child: BlocProvider<WaterBloc>(
-        create: (context) => WaterBloc()..add(LoadWater()),
+        create: (context) => WaterBloc()..add(LoadWater(_selectedDate)),
         child: BlocProvider<DailyLogBloc>(
         create: (_) => DailyLogBloc()..add(LoadDailyLog(_selectedDate)),
         child: GradientScaffold(
@@ -108,7 +112,10 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
                 selectedDate: _selectedDate,
                 onDateSelected: (date) {
                   setState(() => _selectedDate = date);
+                  final dateStr = date.toIso8601String().split('T')[0];
                   context.read<DailyLogBloc>().add(LoadDailyLog(date));
+                  context.read<MacrosBloc>().add(LoadDailyMacros(dateStr));
+                  context.read<WaterBloc>().add(LoadWater(date));
                 },
               ),
 
@@ -146,6 +153,8 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
                       // ── WATER CARD ──────────────────────────────────────────────
                       WaterCard(
                         dailyWaterTarget: widget.user?.dailyWaterTarget ?? 2000,
+                        isPast: isPast,
+                        selectedDate: _selectedDate,
                       ),
                       SizedBox(height: 20.h),
 
@@ -207,13 +216,13 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
                           final loaded = state is DailyLogLoaded ? state : null;
                           return Column(
                             children: [
-                              MealSection(title: 'Breakfast', mealTime: 'breakfast', meals: loaded?.breakfast ?? [], onDelete: (id) => context.read<DailyLogBloc>().add(DeleteMeal(id, _selectedDate))),
+                              MealSection(title: 'Breakfast', mealTime: 'breakfast', isPast: isPast, meals: loaded?.breakfast ?? [], onDelete: (id) => context.read<DailyLogBloc>().add(DeleteMeal(id, _selectedDate))),
                               SizedBox(height: 8.h),
-                              MealSection(title: 'Lunch', mealTime: 'lunch', meals: loaded?.lunch ?? [], onDelete: (id) => context.read<DailyLogBloc>().add(DeleteMeal(id, _selectedDate))),
+                              MealSection(title: 'Lunch', mealTime: 'lunch', isPast: isPast, meals: loaded?.lunch ?? [], onDelete: (id) => context.read<DailyLogBloc>().add(DeleteMeal(id, _selectedDate))),
                               SizedBox(height: 8.h),
-                              MealSection(title: 'Dinner', mealTime: 'dinner', meals: loaded?.dinner ?? [], onDelete: (id) => context.read<DailyLogBloc>().add(DeleteMeal(id, _selectedDate))),
+                              MealSection(title: 'Dinner', mealTime: 'dinner', isPast: isPast, meals: loaded?.dinner ?? [], onDelete: (id) => context.read<DailyLogBloc>().add(DeleteMeal(id, _selectedDate))),
                               SizedBox(height: 8.h),
-                              MealSection(title: 'Snacks', mealTime: 'snack', meals: loaded?.snack ?? [], onDelete: (id) => context.read<DailyLogBloc>().add(DeleteMeal(id, _selectedDate))),
+                              MealSection(title: 'Snacks', mealTime: 'snack', isPast: isPast, meals: loaded?.snack ?? [], onDelete: (id) => context.read<DailyLogBloc>().add(DeleteMeal(id, _selectedDate))),
                             ],
                           );
                         },

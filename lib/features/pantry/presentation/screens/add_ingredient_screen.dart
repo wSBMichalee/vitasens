@@ -259,10 +259,6 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
         color: Colors.transparent,
         child: Container(
           height: MediaQuery.of(context).size.height * 0.85,
-          decoration: BoxDecoration(
-            color: const Color(0xFFF5F5F5),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-          ),
           child: SingleChildScrollView(
             child: Column(
               children: [

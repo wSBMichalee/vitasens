@@ -6,6 +6,7 @@ import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/features/macros/presentation/widgets/streak_celebration_modal.dart';
 import 'package:vitasense/features/pantry/data/pantry_repository.dart';
 import 'package:vitasense/features/voice/data/voice_repository.dart';
+import 'package:vitasense/core/utils/bottom_sheet_utils.dart';
 
 class FoodDetectedScreen extends StatelessWidget {
   final Map<String, dynamic> result;
@@ -13,49 +14,43 @@ class FoodDetectedScreen extends StatelessWidget {
   const FoodDetectedScreen({super.key, required this.result});
 
   void _showMealTimeSelector(BuildContext context) {
-    showModalBottomSheet(
+    showAppBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-      ),
       builder: (bottomSheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Select Meal Time',
-                  style: TextStyle(
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                  ),
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Select Meal Time',
+                style: TextStyle(
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
                 ),
-                SizedBox(height: 24.h),
-                _MealTypeButton(
-                  title: 'Breakfast',
-                  onTap: () => _logMeal(context, bottomSheetContext, 'breakfast'),
-                ),
-                SizedBox(height: 12.h),
-                _MealTypeButton(
-                  title: 'Lunch',
-                  onTap: () => _logMeal(context, bottomSheetContext, 'lunch'),
-                ),
-                SizedBox(height: 12.h),
-                _MealTypeButton(
-                  title: 'Dinner',
-                  onTap: () => _logMeal(context, bottomSheetContext, 'dinner'),
-                ),
-                SizedBox(height: 12.h),
-                _MealTypeButton(
-                  title: 'Snack',
-                  onTap: () => _logMeal(context, bottomSheetContext, 'snack'),
-                ),
-              ],
-            ),
+              ),
+              SizedBox(height: 24.h),
+              _MealTypeButton(
+                title: 'Breakfast',
+                onTap: () => _logMeal(context, bottomSheetContext, 'breakfast'),
+              ),
+              SizedBox(height: 12.h),
+              _MealTypeButton(
+                title: 'Lunch',
+                onTap: () => _logMeal(context, bottomSheetContext, 'lunch'),
+              ),
+              SizedBox(height: 12.h),
+              _MealTypeButton(
+                title: 'Dinner',
+                onTap: () => _logMeal(context, bottomSheetContext, 'dinner'),
+              ),
+              SizedBox(height: 12.h),
+              _MealTypeButton(
+                title: 'Snack',
+                onTap: () => _logMeal(context, bottomSheetContext, 'snack'),
+              ),
+            ],
           ),
         );
       },

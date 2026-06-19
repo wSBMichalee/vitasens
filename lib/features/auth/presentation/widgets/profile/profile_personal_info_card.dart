@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vitasense/features/auth/data/auth_repository.dart';
 import 'profile_shimmer.dart';
 import 'profile_goals_card.dart';
+import 'package:vitasense/core/services/cache_service.dart';
+import 'package:vitasense/features/macros/bloc/macros_bloc.dart';
+import 'package:vitasense/features/macros/bloc/macros_event.dart';
+import 'package:vitasense/core/utils/bottom_sheet_utils.dart';
 
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -34,7 +39,7 @@ class PersonalInfoCard extends StatelessWidget {
             iconColor: Colors.red,
             label: 'Allergies',
             tags: user.allergies ?? [],
-            onTap: () => _showEditTagsSheet(context, 'allergies', user),
+            onTap: () => _showEditTagsSheet(context, 'allergies', user.allergies ?? []),
           ),
           Divider(color: AppColors.border, height: 20.h),
           TagsRow(
@@ -43,7 +48,7 @@ class PersonalInfoCard extends StatelessWidget {
             iconColor: Colors.blue,
             label: 'Health Conditions',
             tags: user.healthConditions ?? [],
-            onTap: () => _showEditTagsSheet(context, 'health_conditions', user),
+            onTap: () => _showEditTagsSheet(context, 'health_conditions', user.healthConditions ?? []),
           ),
           Divider(color: AppColors.border, height: 20.h),
           TagsRow(
@@ -52,22 +57,21 @@ class PersonalInfoCard extends StatelessWidget {
             iconColor: Colors.orange,
             label: 'Dietary Preferences',
             tags: user.dietaryPreferences ?? [],
-            onTap: () => _showEditTagsSheet(context, 'dietary_preferences', user),
+            onTap: () => _showEditTagsSheet(context, 'dietary_preferences', user.dietaryPreferences ?? []),
           ),
         ],
       ),
     );
   }
 
-  void _showEditTagsSheet(BuildContext context, String type, UserModel user) {
-    showModalBottomSheet(
+  void _showEditTagsSheet(BuildContext context, String type, List<String> initialTags) {
+    showAppBottomSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => EditTagsSheet(type: type, user: user),
+      builder: (_) => EditTagsSheet(type: type, initialTags: initialTags),
     ).then((_) {
       if (context.mounted) {
         context.read<AuthBloc>().add(const AppStarted());
+        context.read<MacrosBloc>().add(LoadDailyMacros(DateTime.now().toIso8601String().split('T')[0]));
       }
     });
   }
@@ -137,9 +141,9 @@ class TagsRow extends StatelessWidget {
 }
 
 class EditTagsSheet extends StatefulWidget {
-  const EditTagsSheet({super.key, required this.type, required this.user});
+  const EditTagsSheet({super.key, required this.type, required this.initialTags});
   final String type;
-  final UserModel user;
+  final List<String> initialTags;
 
   @override
   State<EditTagsSheet> createState() => EditTagsSheetState();
@@ -153,10 +157,7 @@ class EditTagsSheetState extends State<EditTagsSheet> {
   @override
   void initState() {
     super.initState();
-    if (widget.type == 'allergies') {
-      _tags = List.from(widget.user.allergies ?? []);
-    } else if (widget.type == 'health_conditions') _tags = List.from(widget.user.healthConditions ?? []);
-    else _tags = List.from(widget.user.dietaryPreferences ?? []);
+    _tags = List.from(widget.initialTags);
   }
 
   void _addTag() {
@@ -172,7 +173,17 @@ class EditTagsSheetState extends State<EditTagsSheet> {
   Future<void> _save() async {
     setState(() => _saving = true);
     try {
-      await AuthRepository().updateProfile({widget.type: _tags});
+      final supabase = Supabase.instance.client;
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) return;
+
+      await supabase
+          .from('profiles')
+          .update({widget.type: _tags})
+          .eq('id', userId);
+
+      CacheService().invalidate('user_profile');
+      
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
@@ -187,7 +198,7 @@ class EditTagsSheetState extends State<EditTagsSheet> {
 
   @override
   Widget build(BuildContext context) {
-    String title = 'Edit';
+    String title = 'Edit Info';
     if (widget.type == 'allergies') title = 'Edit Allergies';
     if (widget.type == 'health_conditions') title = 'Edit Health Conditions';
     if (widget.type == 'dietary_preferences') title = 'Edit Dietary Preferences';
@@ -195,62 +206,80 @@ class EditTagsSheetState extends State<EditTagsSheet> {
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.backgroundWhite,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-        ),
-        padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 40.h),
+        height: MediaQuery.of(context).size.height * 0.7,
+        padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 24.h),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Center(
               child: Container(
-                width: 40.w, height: 4.h,
-                decoration: BoxDecoration(color: AppColors.borderMedium, borderRadius: BorderRadius.circular(2.r)),
+                width: 40.w,
+                height: 4.h,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade400,
+                  borderRadius: BorderRadius.circular(2.r),
+                ),
               ),
             ),
             SizedBox(height: 24.h),
-            Text(title, style: AppTextStyles.headingSmall),
-            SizedBox(height: 16.h),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    decoration: InputDecoration(
-                      hintText: 'Add new tag...',
-                      filled: true,
-                      fillColor: AppColors.background,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r), borderSide: BorderSide.none),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            Text(title, style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.bold, color: Colors.black)),
+            SizedBox(height: 24.h),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Wrap(
+                      spacing: 8.w,
+                      runSpacing: 8.h,
+                      children: _tags.map((tag) {
+                        return Chip(
+                          label: Text(tag, style: TextStyle(fontSize: 13.sp, color: AppColors.textPrimary)),
+                          backgroundColor: AppColors.borderLight,
+                          deleteIcon: Icon(Icons.close, size: 16.r),
+                          onDeleted: () {
+                            setState(() => _tags.remove(tag));
+                          },
+                        );
+                      }).toList(),
                     ),
-                    onSubmitted: (_) => _addTag(),
-                  ),
+                    SizedBox(height: 20.h),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.backgroundWhite,
+                              border: Border.all(color: AppColors.border),
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            child: TextField(
+                              controller: _controller,
+                              decoration: InputDecoration(
+                                hintText: 'Add new...',
+                                hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 14.sp),
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                              ),
+                              onSubmitted: (_) => _addTag(),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        GestureDetector(
+                          onTap: _addTag,
+                          child: Container(
+                            padding: EdgeInsets.all(12.r),
+                            decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(12.r)),
+                            child: Icon(Icons.add, color: AppColors.textWhite, size: 24.r),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                SizedBox(width: 12.w),
-                GestureDetector(
-                  onTap: _addTag,
-                  child: Container(
-                    padding: EdgeInsets.all(12.r),
-                    decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(12.r)),
-                    child: Icon(Icons.add, color: Colors.white, size: 24.r),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 16.h),
-            Wrap(
-              spacing: 8.w,
-              runSpacing: 8.h,
-              children: _tags.map((t) => Chip(
-                label: Text(t, style: const TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.w500)),
-                backgroundColor: AppColors.primaryLight.withValues(alpha: 0.5),
-                deleteIconColor: AppColors.primaryDark,
-                onDeleted: () => setState(() => _tags.remove(t)),
-                side: BorderSide.none,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100.r)),
-              )).toList(),
+              ),
             ),
             SizedBox(height: 24.h),
             SaveButton(saving: _saving, onPressed: _save),

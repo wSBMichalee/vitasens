@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
+import 'package:vitasense/core/utils/bottom_sheet_utils.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
 import 'package:vitasense/core/widgets/app_header.dart';
 import 'package:vitasense/core/widgets/gradient_scaffold.dart';
@@ -146,18 +147,14 @@ class _PantryViewState extends State<_PantryView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ── AppHeader: wariant main, przycisk + jako action ───────────────
-        AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          title: Text("Pantry", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 22.sp)),
+        AppHeader(
+          title: 'Pantry',
+          variant: AppHeaderVariant.main,
           actions: [
             AppHeaderIconButton(
               icon: Icons.add,
-              onPressed: () => showModalBottomSheet(
+              onPressed: () => showAppBottomSheet(
                 context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
                 builder: (context) => const AddIngredientScreen(),
               ).then((_) {
                 if (context.mounted) {
@@ -247,10 +244,8 @@ class _PantryViewState extends State<_PantryView> {
           setState(() => _searchQuery = '');
           context.read<PantryBloc>().add(const FilterPantry('all'));
         }
-      : () => showModalBottomSheet(
+      : () => showAppBottomSheet(
             context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
             builder: (context) => const AddIngredientScreen(),
           ).then((_) {
             if (context.mounted) {

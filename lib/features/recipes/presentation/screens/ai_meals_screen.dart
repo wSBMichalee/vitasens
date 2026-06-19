@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
+import 'package:vitasense/core/utils/bottom_sheet_utils.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_bloc.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_event.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_state.dart';
@@ -111,7 +112,7 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.backgroundWhite,
       body: SafeArea(
         child: Column(
           children: [
@@ -137,10 +138,8 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
                     final selectedCategory = state is RecipesLoaded ? state.selectedCategory : 'ALL';
                     final hasActive = activeFilters.isNotEmpty || selectedCategory != 'ALL';
                     return GestureDetector(
-                      onTap: () => showModalBottomSheet(
+                      onTap: () => showAppBottomSheet(
                         context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
                         builder: (_) => BlocProvider.value(
                           value: context.read<RecipesBloc>(),
                           child: const FilterBottomSheet(),

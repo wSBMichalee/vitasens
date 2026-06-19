@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/core/theme/app_text_styles.dart';
@@ -21,6 +22,8 @@ class RecipeCard extends StatelessWidget {
     final fatG = (recipe['fatG'] as num?)?.toInt() ?? 0;
     final geminiReason = recipe['geminiReason'] as String?;
     final missedIngredientsRaw = recipe['missedIngredients'] as List<dynamic>? ?? [];
+    
+    final isEnriching = calories == 0;
     
     final missedIngredients = missedIngredientsRaw
         .map((e) => (e as Map<String, dynamic>)['name'] as String?)
@@ -102,15 +105,18 @@ class RecipeCard extends StatelessWidget {
                 SizedBox(height: 12.h),
                 
                 // Macros row
-                Row(
-                  children: [
-                    _buildMacroPill('P: ${proteinG}g'),
-                    SizedBox(width: 8.w),
-                    _buildMacroPill('C: ${carbsG}g'),
-                    SizedBox(width: 8.w),
-                    _buildMacroPill('F: ${fatG}g'),
-                  ],
-                ),
+                if (isEnriching)
+                  _buildMacroSkeleton()
+                else
+                  Row(
+                    children: [
+                      _buildMacroPill('P: ${proteinG}g'),
+                      SizedBox(width: 8.w),
+                      _buildMacroPill('C: ${carbsG}g'),
+                      SizedBox(width: 8.w),
+                      _buildMacroPill('F: ${fatG}g'),
+                    ],
+                  ),
                 
                 if (geminiReason != null && geminiReason.isNotEmpty) ...[
                   SizedBox(height: 12.h),
@@ -203,6 +209,22 @@ class RecipeCard extends StatelessWidget {
           fontWeight: FontWeight.w600,
           color: AppColors.primary,
         ),
+      ),
+    );
+  }
+
+  Widget _buildMacroSkeleton() {
+    return Shimmer.fromColors(
+      baseColor: AppColors.borderLight,
+      highlightColor: AppColors.border,
+      child: Row(
+        children: [
+          Container(width: 60.w, height: 24.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8.r))),
+          SizedBox(width: 8.w),
+          Container(width: 60.w, height: 24.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8.r))),
+          SizedBox(width: 8.w),
+          Container(width: 60.w, height: 24.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8.r))),
+        ],
       ),
     );
   }

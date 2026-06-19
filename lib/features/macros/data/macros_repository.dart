@@ -43,13 +43,12 @@ class MacrosRepository {
     );
   }
 
-  Future<List<Map<String, dynamic>>> getTodayMeals() async {
-    final today = DateTime.now().toIso8601String().split('T')[0];
+  Future<List<Map<String, dynamic>>> getMealsForDate(String date) async {
     final response = await _supabase.functions.invoke(
       'calculate-daily-macros',
       body: {
         'action': 'meals',
-        'date': today,
+        'date': date,
       },
     );
 

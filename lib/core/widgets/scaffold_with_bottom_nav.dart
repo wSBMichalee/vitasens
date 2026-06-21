@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:go_router/go_router.dart';
 import 'package:native_glass_navbar/native_glass_navbar.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
@@ -58,50 +57,6 @@ class _ScaffoldWithBottomNavState extends State<ScaffoldWithBottomNav>
       extendBody: true,
       backgroundColor: AppColors.background,
       body: widget.navigationShell,
-      floatingActionButton: currentIndex == 0
-          ? SpeedDial(
-              icon: Icons.add,
-              activeIcon: Icons.add, // keeps the add icon and just rotates it
-              iconTheme: const IconThemeData(color: Colors.white, size: 28),
-              backgroundColor: AppColors.primary,
-              shape: const CircleBorder(),
-              elevation: 4,
-              animationDuration: const Duration(milliseconds: 200),
-              animationAngle: 3.14159 / 4, // 45 degrees
-              overlayColor: Colors.black,
-              overlayOpacity: 0.15,
-              children: [
-                SpeedDialChild(
-                  child: const Icon(Icons.menu_book, color: Colors.white),
-                  backgroundColor: AppColors.primary,
-                  label: 'Scan Recipe',
-                  labelStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-                  labelBackgroundColor: Colors.white,
-                  shape: const CircleBorder(),
-                  onTap: () => context.go(AppRoutes.extract),
-                ),
-                SpeedDialChild(
-                  child: const Icon(Icons.qr_code_scanner, color: Colors.white),
-                  backgroundColor: AppColors.primary,
-                  label: 'Scan Food',
-                  labelStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-                  labelBackgroundColor: Colors.white,
-                  shape: const CircleBorder(),
-                  onTap: () => context.go(AppRoutes.scanning),
-                ),
-                SpeedDialChild(
-                  child: const Icon(Icons.restaurant_menu, color: Colors.white),
-                  backgroundColor: AppColors.primary,
-                  label: 'Log Meal',
-                  labelStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-                  labelBackgroundColor: Colors.white,
-                  shape: const CircleBorder(),
-                  onTap: () => context.go(AppRoutes.aiMeals),
-                ),
-              ],
-            )
-          : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: NativeGlassNavBar(
         currentIndex: currentIndex,
         onTap: (index) => _onTap(index, context),

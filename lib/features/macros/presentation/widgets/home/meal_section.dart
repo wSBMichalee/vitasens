@@ -12,14 +12,14 @@ class MealSection extends StatefulWidget {
     required this.mealTime,
     required this.meals,
     required this.onDelete,
-    this.isPast = false,
+    this.isEditable = true,
   });
 
   final String title;
   final String mealTime;
   final List<MealModel> meals;
   final void Function(String mealId) onDelete;
-  final bool isPast;
+  final bool isEditable;
 
   @override
   State<MealSection> createState() => MealSectionState();
@@ -69,7 +69,7 @@ class MealSectionState extends State<MealSection> {
                     ],
                   ),
                 ),
-                if (!widget.isPast)
+                if (widget.isEditable)
                   GestureDetector(
                     onTap: () => context.go(AppRoutes.aiMeals),
                     child: Container(

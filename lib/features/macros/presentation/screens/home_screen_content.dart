@@ -2,6 +2,9 @@ import 'package:vitasense/features/macros/bloc/macros_bloc.dart';
 import 'package:vitasense/features/macros/bloc/macros_event.dart';
 import 'package:vitasense/features/macros/bloc/macros_state.dart';
 import 'package:vitasense/features/macros/data/macros_repository.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:go_router/go_router.dart';
+import 'package:vitasense/core/router/app_routes.dart';
 import 'package:vitasense/features/water/bloc/water_bloc.dart';
 import 'package:vitasense/features/water/bloc/water_event.dart';
 import 'package:vitasense/core/widgets/gradient_scaffold.dart';
@@ -35,21 +38,92 @@ class MockupHomeScreen extends StatefulWidget {
 class _MockupHomeScreenState extends State<MockupHomeScreen> {
   DateTime _selectedDate = DateTime.now();
 
+  late MacrosBloc _macrosBloc;
+  late WaterBloc _waterBloc;
+  late DailyLogBloc _dailyLogBloc;
+
+  @override
+  void initState() {
+    super.initState();
+    _macrosBloc = MacrosBloc(repository: MacrosRepository());
+    _waterBloc = WaterBloc();
+    _dailyLogBloc = DailyLogBloc();
+
+    final today = DateTime.now();
+    final dateStr = today.toIso8601String().split('T')[0];
+    _macrosBloc.add(LoadDailyMacros(dateStr));
+    _waterBloc.add(LoadWater(today));
+    _dailyLogBloc.add(LoadDailyLog(today));
+  }
+
+  @override
+  void dispose() {
+    _macrosBloc.close();
+    _waterBloc.close();
+    _dailyLogBloc.close();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final startOfToday = DateTime(now.year, now.month, now.day);
-    final isPast = _selectedDate.isBefore(startOfToday);
+    final startOfSelected = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+    final isPast = startOfSelected.isBefore(startOfToday);
+    final isFuture = startOfSelected.isAfter(startOfToday);
+    final isEditable = !isPast && !isFuture;
 
-    return BlocProvider<MacrosBloc>(
-      create: (context) => MacrosBloc(repository: MacrosRepository())
-        ..add(LoadDailyMacros(_selectedDate.toIso8601String().split('T')[0])),
-      child: BlocProvider<WaterBloc>(
-        create: (context) => WaterBloc()..add(LoadWater(_selectedDate)),
-        child: BlocProvider<DailyLogBloc>(
-        create: (_) => DailyLogBloc()..add(LoadDailyLog(_selectedDate)),
-        child: GradientScaffold(
-          body: SafeArea(
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: _macrosBloc),
+        BlocProvider.value(value: _waterBloc),
+        BlocProvider.value(value: _dailyLogBloc),
+      ],
+      child: GradientScaffold(
+        floatingActionButton: isEditable
+          ? SpeedDial(
+              icon: Icons.add,
+              activeIcon: Icons.add,
+              iconTheme: const IconThemeData(color: Colors.white, size: 28),
+              backgroundColor: AppColors.primary,
+              shape: const CircleBorder(),
+              elevation: 4,
+              animationDuration: const Duration(milliseconds: 200),
+              animationAngle: 3.14159 / 4,
+              overlayColor: Colors.black,
+              overlayOpacity: 0.15,
+              children: [
+                SpeedDialChild(
+                  child: const Icon(Icons.menu_book, color: Colors.white),
+                  backgroundColor: AppColors.primary,
+                  label: 'Scan Recipe',
+                  labelStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                  labelBackgroundColor: Colors.white,
+                  shape: const CircleBorder(),
+                  onTap: () => context.go(AppRoutes.extract),
+                ),
+                SpeedDialChild(
+                  child: const Icon(Icons.qr_code_scanner, color: Colors.white),
+                  backgroundColor: AppColors.primary,
+                  label: 'Scan Food',
+                  labelStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                  labelBackgroundColor: Colors.white,
+                  shape: const CircleBorder(),
+                  onTap: () => context.go(AppRoutes.scanning),
+                ),
+                SpeedDialChild(
+                  child: const Icon(Icons.restaurant_menu, color: Colors.white),
+                  backgroundColor: AppColors.primary,
+                  label: 'Log Meal',
+                  labelStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                  labelBackgroundColor: Colors.white,
+                  shape: const CircleBorder(),
+                  onTap: () => context.go(AppRoutes.aiMeals),
+                ),
+              ],
+            )
+          : null,
+        body: SafeArea(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Column(
@@ -113,9 +187,9 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
                 onDateSelected: (date) {
                   setState(() => _selectedDate = date);
                   final dateStr = date.toIso8601String().split('T')[0];
-                  context.read<DailyLogBloc>().add(LoadDailyLog(date));
-                  context.read<MacrosBloc>().add(LoadDailyMacros(dateStr));
-                  context.read<WaterBloc>().add(LoadWater(date));
+                  _dailyLogBloc.add(LoadDailyLog(date));
+                  _macrosBloc.add(LoadDailyMacros(dateStr));
+                  _waterBloc.add(LoadWater(date));
                 },
               ),
 
@@ -153,58 +227,60 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
                       // ── WATER CARD ──────────────────────────────────────────────
                       WaterCard(
                         dailyWaterTarget: widget.user?.dailyWaterTarget ?? 2000,
-                        isPast: isPast,
+                        isEditable: isEditable,
                         selectedDate: _selectedDate,
                       ),
                       SizedBox(height: 20.h),
 
                       // ── AI INSIGHT CARD ───────────────────────────────────
-                      Container(
-                        padding: EdgeInsets.all(16.r),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryLight,
-                          borderRadius: BorderRadius.circular(16.r),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 40.r, height: 40.r,
-                              decoration: BoxDecoration(color: AppColors.backgroundWhite, borderRadius: BorderRadius.circular(10.r)),
-                              child: Icon(Icons.auto_awesome_outlined, color: AppColors.primary, size: 20.r),
-                            ),
-                            SizedBox(width: 12.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Low protein today', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                                  Text('Add a high-protein meal to reach your daily goal.', style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary, height: 1.4)),
-                                ],
+                      if (isEditable) ...[
+                        Container(
+                          padding: EdgeInsets.all(16.r),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryLight,
+                            borderRadius: BorderRadius.circular(16.r),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40.r, height: 40.r,
+                                decoration: BoxDecoration(color: AppColors.backgroundWhite, borderRadius: BorderRadius.circular(10.r)),
+                                child: Icon(Icons.auto_awesome_outlined, color: AppColors.primary, size: 20.r),
                               ),
-                            ),
-                            SizedBox(width: 8.w),
-                            GestureDetector(
-                              onTap: () => context.go(AppRoutes.aiMeals),
-                              child: Container(
-                                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                                decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(20.r)),
-                                child: Text('Add', style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w700, color: Colors.white)),
+                              SizedBox(width: 12.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Low protein today', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                                    Text('Add a high-protein meal to reach your daily goal.', style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary, height: 1.4)),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                              SizedBox(width: 8.w),
+                              GestureDetector(
+                                onTap: () => context.go(AppRoutes.aiMeals),
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                                  decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(20.r)),
+                                  child: Text('Add', style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w700, color: Colors.white)),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-
-                      SizedBox(height: 20.h),
+                        SizedBox(height: 20.h),
+                      ],
 
                       // ── TODAY'S MEALS header ──────────────────────────────
                       Row(
                         children: [
                           Expanded(child: Text('Today\'s Meals', style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.w800, color: AppColors.textPrimary))),
-                          GestureDetector(
-                            onTap: () {},
-                            child: Text('EDIT', style: TextStyle(color: AppColors.primary, fontSize: 12.sp, fontWeight: FontWeight.w900, letterSpacing: 1.4)),
-                          ),
+                          if (isEditable)
+                            GestureDetector(
+                              onTap: () {},
+                              child: Text('EDIT', style: TextStyle(color: AppColors.primary, fontSize: 12.sp, fontWeight: FontWeight.w900, letterSpacing: 1.4)),
+                            ),
                         ],
                       ),
 
@@ -216,13 +292,13 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
                           final loaded = state is DailyLogLoaded ? state : null;
                           return Column(
                             children: [
-                              MealSection(title: 'Breakfast', mealTime: 'breakfast', isPast: isPast, meals: loaded?.breakfast ?? [], onDelete: (id) => context.read<DailyLogBloc>().add(DeleteMeal(id, _selectedDate))),
+                              MealSection(title: 'Breakfast', mealTime: 'breakfast', isEditable: isEditable, meals: loaded?.breakfast ?? [], onDelete: (id) => _dailyLogBloc.add(DeleteMeal(id, _selectedDate))),
                               SizedBox(height: 8.h),
-                              MealSection(title: 'Lunch', mealTime: 'lunch', isPast: isPast, meals: loaded?.lunch ?? [], onDelete: (id) => context.read<DailyLogBloc>().add(DeleteMeal(id, _selectedDate))),
+                              MealSection(title: 'Lunch', mealTime: 'lunch', isEditable: isEditable, meals: loaded?.lunch ?? [], onDelete: (id) => _dailyLogBloc.add(DeleteMeal(id, _selectedDate))),
                               SizedBox(height: 8.h),
-                              MealSection(title: 'Dinner', mealTime: 'dinner', isPast: isPast, meals: loaded?.dinner ?? [], onDelete: (id) => context.read<DailyLogBloc>().add(DeleteMeal(id, _selectedDate))),
+                              MealSection(title: 'Dinner', mealTime: 'dinner', isEditable: isEditable, meals: loaded?.dinner ?? [], onDelete: (id) => _dailyLogBloc.add(DeleteMeal(id, _selectedDate))),
                               SizedBox(height: 8.h),
-                              MealSection(title: 'Snacks', mealTime: 'snack', isPast: isPast, meals: loaded?.snack ?? [], onDelete: (id) => context.read<DailyLogBloc>().add(DeleteMeal(id, _selectedDate))),
+                              MealSection(title: 'Snacks', mealTime: 'snack', isEditable: isEditable, meals: loaded?.snack ?? [], onDelete: (id) => _dailyLogBloc.add(DeleteMeal(id, _selectedDate))),
                             ],
                           );
                         },
@@ -234,8 +310,6 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
             ),
           ),
         ),
-      ),
-      ),
       ),
     );
   }

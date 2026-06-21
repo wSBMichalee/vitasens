@@ -11,12 +11,12 @@ class WaterCard extends StatelessWidget {
   const WaterCard({
     super.key, 
     this.dailyWaterTarget,
-    this.isPast = false,
+    this.isEditable = true,
     this.selectedDate,
   });
   
   final int? dailyWaterTarget;
-  final bool isPast;
+  final bool isEditable;
   final DateTime? selectedDate;
 
   void _showAddWaterSheet(BuildContext context) {
@@ -124,7 +124,7 @@ class WaterCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (!isPast)
+                  if (isEditable)
                     IconButton(
                       onPressed: () => _showAddWaterSheet(context),
                       style: IconButton.styleFrom(

@@ -1,11 +1,9 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { corsHeaders } from '../_shared/corsHeaders.ts';
 import { handleError, ValidationError } from '../_shared/errorHandler.ts';
-import { getUserId } from '../_shared/supabaseClient.ts';
+import { getUserId, getSupabaseAdmin } from '../_shared/supabaseClient.ts';
 import { SubscriptionGuard } from '../_shared/SubscriptionGuard.ts';
 import { ProfileRepository } from '../calculate-daily-macros/ProfileRepository.ts';
-import { SpoonacularClient } from './SpoonacularClient.ts';
-import { IngredientMatcher } from './IngredientMatcher.ts';
 import { RecipeRepository } from './RecipeRepository.ts';
 import { GeminiPersonalizer } from './GeminiPersonalizer.ts';
 
@@ -57,106 +55,105 @@ serve(async (req: Request) => {
     const userId = await getUserId(req.headers.get('Authorization') || '');
     await SubscriptionGuard.checkAccess(userId);
     const { action, ...data } = await req.json();
-    const spoon = new SpoonacularClient();
     let res;
 
     switch (action) {
       case 'search': {
         const ingredientNames: string[] = (data.pantryIngredients ?? []).map(
           (i: { name?: string } | string) => typeof i === 'string' ? i : (i.name ?? '')
-        );
+        ).filter((n: string) => n.length > 0);
 
-        // OPTYMALIZACJA 1: Parallel fetch
-        const [sr, profile] = await Promise.all([
-          spoon.findByIngredients(ingredientNames),
-          ProfileRepository.getById(userId)
-        ]);
-        const matches = IngredientMatcher
-          .sortByBestMatch(IngredientMatcher.buildMatchResults(sr))
-          .slice(0, 20);
+        const profile = await ProfileRepository.getById(userId);
 
-        if (matches.length === 0) {
-          res = { recipes: [], totalFound: 0, geminiPersonalized: true };
-          break;
+        const supabase = getSupabaseAdmin();
+
+        let query = supabase
+          .from('recipes')
+          .select('id, title, description, image_url, photo_url, meal_type, cuisine_type, diet_tags, calories, protein_g, carbs_g, fat_g, cook_time_minutes, prep_time_minutes, difficulty_level, servings, ingredients, source, source_id, steps')
+          .eq('is_public', true)
+          .limit(50);
+
+        const { data: allRecipes, error: dbError } = await query;
+        if (dbError) throw new Error(dbError.message);
+
+        let recipes = allRecipes || [];
+
+        // Filtruj i score po stronie serwera
+        if (ingredientNames.length > 0) {
+          const lowerIngredients = ingredientNames.map(n => n.toLowerCase());
+          
+          recipes = recipes
+            .map(recipe => {
+              const recipeIngredientNames: string[] = (recipe.ingredients || [])
+                .map((ing: { name: string }) => ing.name?.toLowerCase() || '');
+              
+              const usedCount = lowerIngredients.filter(pantryIng =>
+                recipeIngredientNames.some(recipeIng => recipeIng.includes(pantryIng) || pantryIng.includes(recipeIng))
+              ).length;
+              
+              const matchPercent = Math.round((usedCount / Math.max(recipeIngredientNames.length, 1)) * 100);
+              
+              return { ...recipe, matchPercent, usedCount };
+            })
+            .filter(r => r.usedCount > 0)
+            .sort((a, b) => b.matchPercent - a.matchPercent)
+            .slice(0, 20);
+        } else {
+          // Brak składników — zwróć losowe przepisy
+          recipes = recipes.sort(() => Math.random() - 0.5).slice(0, 20);
         }
 
-        const details = await spoon.getRecipesBulk(matches.map(m => m.recipeId));
+        // Mapuj do formatu zgodnego z RecipeModel (camelCase)
+        const mappedRecipes = recipes.map(r => ({
+          id: r.id,
+          title: r.title,
+          description: r.description,
+          imageUrl: r.image_url || r.photo_url,
+          mealType: r.meal_type,
+          cuisineType: r.cuisine_type,
+          dietTags: r.diet_tags || [],
+          calories: r.calories || 0,
+          proteinG: r.protein_g || 0,
+          carbsG: r.carbs_g || 0,
+          fatG: r.fat_g || 0,
+          cookTimeMinutes: r.cook_time_minutes || 30,
+          prepTimeMinutes: r.prep_time_minutes || 15,
+          difficultyLevel: r.difficulty_level || 'medium',
+          servings: r.servings || 4,
+          ingredients: r.ingredients || [],
+          source: r.source,
+          sourceId: r.source_id,
+          steps: r.steps || [],
+          matchPercent: (r as any).matchPercent || 0
+        }));
 
-        const mappedForUpsert = details.map(d => {
-          const s = sr.find(x => x.id === d.id)!;
-          const nut = (n: string) => d.nutrition?.nutrients.find((x: { name: string; amount: number }) => x.name === n)?.amount || 0;
-          return {
-            title: d.title, source: 'spoonacular' as const, sourceId: d.id.toString(),
-            ingredients: [...(s.usedIngredients || []), ...(s.missedIngredients || [])].map(i => ({ name: i.name, amount: i.amount, unit: i.unit })),
-            proteinG: Math.round(nut('Protein') * 10) / 10,
-            carbsG: Math.round(nut('Carbohydrates') * 10) / 10,
-            fatG: Math.round(nut('Fat') * 10) / 10,
-            calories: Math.round(nut('Calories')),
-            cookTimeMinutes: d.readyInMinutes, servings: d.servings, imageUrl: d.image,
-            cuisineType: mapCuisine(d.cuisines ?? []),
-            mealType: mapMealType(d.dishTypes ?? []),
-            dietTags: mapDietTags(d.diets ?? [], Math.round(nut('Protein') * 10) / 10, Math.round(nut('Carbohydrates') * 10) / 10, Math.round(nut('Fat') * 10) / 10, Math.round(nut('Calories'))),
-          };
-        });
+        // Gemini personalizacja
+        const recipesForGemini = mappedRecipes.map(r => ({
+          id: r.id,
+          title: r.title,
+          calories: r.calories,
+          proteinG: r.proteinG,
+          carbsG: r.carbsG,
+          fatG: r.fatG,
+          dietTags: r.dietTags,
+          matchPercent: r.matchPercent
+        }));
 
-        // OPTYMALIZACJA 3: Ogranicz payload do Gemini i użyj sourceId jako klucz
-        const recipesForGemini = mappedForUpsert.map(r => {
-          const match = matches.find(m => m.recipeId.toString() === r.sourceId);
-          return {
-            id: r.sourceId,
-            title: r.title,
-            calories: r.calories,
-            proteinG: r.proteinG,
-            carbsG: r.carbsG,
-            fatG: r.fatG,
-            dietTags: r.dietTags,
-            matchPercent: match?.matchPercent || 0
-          };
-        });
-
-        // OPTYMALIZACJA 2: Upsert i Gemini równolegle
-        const [savedRecipes, ranked] = await Promise.all([
-          RecipeRepository.upsertMany(mappedForUpsert),
-          GeminiPersonalizer.rankRecipes(recipesForGemini, profile).catch(e => {
-            console.error('GeminiPersonalizer error:', e);
-            return recipesForGemini.map(r => ({ id: r.id, reason: '' }));
-          })
-        ]);
-        
-        const recipesWithMatches = savedRecipes.map(r => {
-          const match = matches.find(m => m.recipeId.toString() === r.sourceId);
-          const s = sr.find(x => x.id.toString() === r.sourceId);
-          return { 
-            ...r, 
-            matchPercent: match?.matchPercent || 0,
-            usedIngredients: s?.usedIngredients || [],
-            missedIngredients: s?.missedIngredients || []
-          };
+        const ranked = await GeminiPersonalizer.rankRecipes(recipesForGemini, profile).catch(e => {
+          console.error('GeminiPersonalizer error:', e);
+          return recipesForGemini.map(r => ({ id: r.id, reason: '' }));
         });
 
         const finalRecipes = [];
         for (const rnk of ranked) {
-          const rec = recipesWithMatches.find(r => r.sourceId === rnk.id);
-          if (rec) {
-            finalRecipes.push({
-              ...rec,
-              geminiReason: rnk.reason || undefined
-            });
-          }
+          const rec = mappedRecipes.find(r => r.id === rnk.id);
+          if (rec) finalRecipes.push({ ...rec, geminiReason: rnk.reason || undefined });
         }
-        
-        // Fallback: dodaj te, które Gemini mogło pominąć
-        for (const rec of recipesWithMatches) {
-          if (!finalRecipes.find(f => f.id === rec.id)) {
-            finalRecipes.push(rec);
-          }
+        for (const rec of mappedRecipes) {
+          if (!finalRecipes.find(f => f.id === rec.id)) finalRecipes.push(rec);
         }
 
-        res = {
-          recipes: finalRecipes,
-          totalFound: finalRecipes.length,
-          geminiPersonalized: true
-        };
+        res = { recipes: finalRecipes, totalFound: finalRecipes.length, geminiPersonalized: true };
         break;
       }
       case 'favorites': res = await RecipeRepository.getFavorites(userId); break;

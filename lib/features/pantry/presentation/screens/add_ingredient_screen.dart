@@ -40,6 +40,44 @@ class _AddIngredientView extends StatefulWidget {
 }
 
 class _AddIngredientViewState extends State<_AddIngredientView> {
+  static const Map<String, int> _defaultExpiryDays = {
+    // Nabiał
+    'milk': 7, 'mleko': 7, 'jogurt': 14, 'yogurt': 14, 'butter': 30,
+    'masło': 30, 'cheese': 21, 'ser': 21, 'cream': 7, 'śmietana': 7,
+    'eggs': 21, 'jajka': 21, 'jajko': 21,
+    // Mięso i ryby
+    'chicken': 3, 'kurczak': 3, 'beef': 3, 'wołowina': 3, 'pork': 3,
+    'wieprzowina': 3, 'fish': 2, 'ryba': 2, 'łosoś': 2, 'salmon': 2,
+    'tuna': 2, 'tuńczyk': 2, 'ham': 5, 'szynka': 5,
+    // Warzywa
+    'lettuce': 5, 'sałata': 5, 'spinach': 5, 'szpinak': 5,
+    'tomato': 7, 'pomidor': 7, 'cucumber': 7, 'ogórek': 7,
+    'carrot': 14, 'marchewka': 14, 'broccoli': 7, 'brokuł': 7,
+    'pepper': 14, 'papryka': 14, 'onion': 30, 'cebula': 30,
+    'garlic': 30, 'czosnek': 30, 'potato': 30, 'ziemniaki': 30,
+    'mushroom': 5, 'grzyby': 5, 'pieczarki': 5,
+    // Owoce
+    'banana': 5, 'banan': 5, 'apple': 14, 'jabłko': 14,
+    'orange': 14, 'pomarańcza': 14, 'strawberry': 3, 'truskawka': 3,
+    'kiwi': 7, 'grape': 7, 'winogrona': 7, 'lemon': 21, 'cytryna': 21,
+    // Pieczywo
+    'bread': 5, 'chleb': 5, 'bagel': 3, 'tortilla': 7,
+    // Suche produkty (długo się przechowują)
+    'rice': 365, 'ryż': 365, 'pasta': 365, 'makaron': 365,
+    'flour': 365, 'mąka': 365, 'sugar': 730, 'cukier': 730,
+    'oil': 365, 'olej': 365, 'oliwa': 365,
+  };
+
+  int _getDefaultExpiryDays(String name) {
+    final lower = name.toLowerCase().trim();
+    for (final entry in _defaultExpiryDays.entries) {
+      if (lower.contains(entry.key) || entry.key.contains(lower)) {
+        return entry.value;
+      }
+    }
+    return 3; // domyślnie 3 dni jeśli nie znaleziono
+  }
+
   final TextEditingController _searchController = TextEditingController();
   final SpoonacularService _spoonacularService = SpoonacularService();
   Timer? _debounce;
@@ -226,7 +264,7 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
       case '1 week': return now.add(const Duration(days: 7));
       case '1 month': return now.add(const Duration(days: 30));
       case 'Custom': return _customExpiry ?? now.add(const Duration(days: 3));
-      default: return now.add(const Duration(days: 3));
+      default: return now.add(Duration(days: _getDefaultExpiryDays(_selectedName)));
     }
   }
 
@@ -418,6 +456,12 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
                             _selectedCategoryLabel = item.categoryLabel;
                             _selectedEmoji = item.categoryEmoji;
                             _resolveCategoryAndUnit(item.categoryLabel);
+
+                            final suggestedDays = _getDefaultExpiryDays(_selectedName);
+                            if (suggestedDays <= 1) _selectedExpiry = '1 day';
+                            else if (suggestedDays <= 3) _selectedExpiry = '3 days';
+                            else if (suggestedDays <= 7) _selectedExpiry = '1 week';
+                            else _selectedExpiry = '1 month';
                           });
                         },
                       ),
@@ -448,6 +492,12 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
       _selectedEmoji = cat['emoji']!;
       _resolveCategoryAndUnit(cat['name']!);
       _manualEntryMode = false;
+
+      final suggestedDays = _getDefaultExpiryDays(_selectedName);
+      if (suggestedDays <= 1) _selectedExpiry = '1 day';
+      else if (suggestedDays <= 3) _selectedExpiry = '3 days';
+      else if (suggestedDays <= 7) _selectedExpiry = '1 week';
+      else _selectedExpiry = '1 month';
     });
   }
 

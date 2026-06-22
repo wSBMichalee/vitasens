@@ -135,7 +135,9 @@ class IngredientCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(20.r),
                             ),
                             child: Text(
-                              days <= 0 ? 'Expired' : '${days}d left',
+                              days <= 0 
+                                ? 'Expired ${(-days)}d ago'
+                                : days == 0 ? 'Expires today' : '${days}d left',
                               style: TextStyle(
                                 fontSize: 10.sp,
                                 fontWeight: FontWeight.bold,

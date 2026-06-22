@@ -56,6 +56,7 @@ class _ScaffoldWithBottomNavState extends State<ScaffoldWithBottomNav>
     return Scaffold(
       extendBody: true,
       backgroundColor: AppColors.background,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       body: widget.navigationShell,
       bottomNavigationBar: NativeGlassNavBar(
         currentIndex: currentIndex,

@@ -4,6 +4,7 @@ import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/features/meals/data/meal_model.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vitasense/core/router/app_router.dart';
+import 'package:vitasense/features/meals/presentation/widgets/meal_suggestion_card.dart';
 
 class MealSection extends StatefulWidget {
   const MealSection({
@@ -13,6 +14,7 @@ class MealSection extends StatefulWidget {
     required this.meals,
     required this.onDelete,
     this.isEditable = true,
+    this.onMealLogged,
   });
 
   final String title;
@@ -20,6 +22,7 @@ class MealSection extends StatefulWidget {
   final List<MealModel> meals;
   final void Function(String mealId) onDelete;
   final bool isEditable;
+  final VoidCallback? onMealLogged;
 
   @override
   State<MealSection> createState() => MealSectionState();
@@ -85,7 +88,15 @@ class MealSectionState extends State<MealSection> {
             ),
           ),
           // Empty state gdy brak posiłków
-          if (_expanded && widget.meals.isEmpty)
+          if (_expanded && widget.meals.isEmpty && widget.isEditable)
+            Padding(
+              padding: EdgeInsets.only(bottom: 8.h),
+              child: MealSuggestionCard(
+                mealType: widget.mealTime,
+                onLogged: widget.onMealLogged,
+              ),
+            ),
+          if (_expanded && widget.meals.isEmpty && !widget.isEditable)
             Padding(
               padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 14.h),
               child: Container(

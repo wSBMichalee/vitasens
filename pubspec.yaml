@@ -66,6 +66,7 @@ dependencies:
   speech_to_text: ^6.6.0
   flutter_speed_dial: ^7.0.0
   http: ^1.6.0
+  health: ^12.2.0
 
 dev_dependencies:
   flutter_test:

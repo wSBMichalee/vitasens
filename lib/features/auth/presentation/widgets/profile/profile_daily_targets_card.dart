@@ -27,8 +27,9 @@ class DailyTargetsCardState extends State<DailyTargetsCard> {
   Future<void> _fetchDailyCalories() async {
     try {
       final now = DateTime.now();
-      final firstDay = DateTime(now.year, now.month, now.day);
-      final lastDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+      final firstDay = DateTime(now.year, now.month, 1);
+      final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+      final lastDay = DateTime(now.year, now.month, daysInMonth, 23, 59, 59);
       
       final response = await Supabase.instance.client
           .from('meal_logs')
@@ -59,18 +60,25 @@ class DailyTargetsCardState extends State<DailyTargetsCard> {
     return dailyValue.toString();
   }
 
+  String _getMonthName() {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return months[DateTime.now().month - 1];
+  }
+
   @override
   Widget build(BuildContext context) {
     String proteinUnit = 'g';
     String carbsUnit = 'g';
     String fatUnit = 'g';
     
-    final proteinValue = _formatMacro(widget.user.dailyProteinTarget ?? 0, (u) => proteinUnit = u);
-    final carbsValue = _formatMacro(widget.user.dailyCarbsTarget ?? 0, (u) => carbsUnit = u);
-    final fatValue = _formatMacro(widget.user.dailyFatTarget ?? 0, (u) => fatUnit = u);
+    final int daysInMonth = DateTime(DateTime.now().year, DateTime.now().month + 1, 0).day;
+    final proteinValue = _formatMacro((widget.user.dailyProteinTarget ?? 0) * daysInMonth, (u) => proteinUnit = u);
+    final carbsValue = _formatMacro((widget.user.dailyCarbsTarget ?? 0) * daysInMonth, (u) => carbsUnit = u);
+    final fatValue = _formatMacro((widget.user.dailyFatTarget ?? 0) * daysInMonth, (u) => fatUnit = u);
     
     final int dailyTarget = widget.user.dailyCalorieTarget ?? 0;
-    final double progress = dailyTarget > 0 ? (_consumedCalories / dailyTarget).clamp(0.0, 1.0) : 0.0;
+    final int monthlyTarget = dailyTarget * daysInMonth;
+    final double progress = monthlyTarget > 0 ? (_consumedCalories / monthlyTarget).clamp(0.0, 1.0) : 0.0;
 
     return Container(
       decoration: BoxDecoration(
@@ -97,7 +105,7 @@ class DailyTargetsCardState extends State<DailyTargetsCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'DAILY TARGETS',
+                      'MONTHLY TARGETS',
                       style: TextStyle(
                         color: Colors.grey,
                         fontSize: 11.sp,
@@ -107,7 +115,7 @@ class DailyTargetsCardState extends State<DailyTargetsCard> {
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      'Your daily nutrition overview',
+                      'Your nutrition this month',
                       style: TextStyle(
                         color: Colors.grey,
                         fontSize: 11.sp,
@@ -124,7 +132,7 @@ class DailyTargetsCardState extends State<DailyTargetsCard> {
                         borderRadius: BorderRadius.circular(100.r),
                       ),
                       child: Text(
-                        'Today',
+                        _getMonthName(),
                         style: TextStyle(
                           color: const Color(0xFF4CAF50),
                           fontSize: 10.sp,
@@ -146,7 +154,7 @@ class DailyTargetsCardState extends State<DailyTargetsCard> {
               textBaseline: TextBaseline.alphabetic,
               children: [
                 Text(
-                  '$dailyTarget',
+                  '$monthlyTarget',
                   style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 42.sp,
@@ -189,7 +197,7 @@ class DailyTargetsCardState extends State<DailyTargetsCard> {
               ),
               SizedBox(height: 6.h),
               Text(
-                '$_consumedCalories / $dailyTarget kcal',
+                '$_consumedCalories / $monthlyTarget kcal',
                 style: TextStyle(
                   color: Colors.grey,
                   fontSize: 10.sp,

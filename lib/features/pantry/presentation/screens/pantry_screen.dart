@@ -78,9 +78,15 @@ class _PantryViewState extends State<_PantryView> {
     // 2. Selected filter (expiring/low_stock)
     switch (state.selectedFilter) {
       case 'expiring':
-        result = state.expiringSoon.where((i) => _belongsToStorage(i, _selectedStorage)).toList();
+        // Pokaż zarówno expired jak i expiring soon (do 3 dni)
+        result = state.ingredients.where((i) {
+          if (!_belongsToStorage(i, _selectedStorage)) return false;
+          if (i.expiryDate == null) return false;
+          final days = i.expiryDate!.difference(DateTime.now()).inDays;
+          return days <= 3; // expired (ujemne) + expiring soon
+        }).toList();
       case 'low_stock':
-        result = result.where((i) => i.quantity <= i.minimumQuantity).toList();
+        result = result.where((i) => i.quantity <= 1).toList();
       default:
         break; // already filtered by storage
     }

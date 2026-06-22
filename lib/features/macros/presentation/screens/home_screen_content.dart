@@ -22,6 +22,7 @@ import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:vitasense/features/auth/data/models/user_model.dart';
 import 'package:vitasense/features/water/presentation/widgets/water_card.dart';
+import 'package:vitasense/features/macros/presentation/widgets/home/activity_card.dart';
 import '../widgets/home/progress_card.dart';
 import '../widgets/home/week_strip.dart';
 import '../widgets/home/meal_section.dart';
@@ -179,10 +180,16 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
 
               // ── SCROLLABLE BODY ──────────────────────────────────────────
               Padding(
-                padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 120.h),
+                padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 160.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                      // ── ACTIVITY CARD ──────────────────────────────────────────────
+                      ActivityCard(
+                        dailyCalorieTarget: widget.user?.dailyCalorieTarget ?? 2000,
+                      ),
+                      SizedBox(height: 20.h),
+
                       // ── WATER CARD ──────────────────────────────────────────────
                       WaterCard(
                         dailyWaterTarget: widget.user?.dailyWaterTarget ?? 2000,
@@ -251,13 +258,25 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
                           final loaded = state is DailyLogLoaded ? state : null;
                           return Column(
                             children: [
-                              MealSection(title: 'Breakfast', mealTime: 'breakfast', isEditable: isEditable, meals: loaded?.breakfast ?? [], onDelete: (id) => _dailyLogBloc.add(DeleteMeal(id, _selectedDate))),
+                              MealSection(title: 'Breakfast', mealTime: 'breakfast', isEditable: isEditable, meals: loaded?.breakfast ?? [], onDelete: (id) => _dailyLogBloc.add(DeleteMeal(id, _selectedDate)), onMealLogged: () {
+                                _dailyLogBloc.add(LoadDailyLog(_selectedDate));
+                                _macrosBloc.add(LoadDailyMacros(_selectedDate.toIso8601String().split('T')[0]));
+                              }),
                               SizedBox(height: 8.h),
-                              MealSection(title: 'Lunch', mealTime: 'lunch', isEditable: isEditable, meals: loaded?.lunch ?? [], onDelete: (id) => _dailyLogBloc.add(DeleteMeal(id, _selectedDate))),
+                              MealSection(title: 'Lunch', mealTime: 'lunch', isEditable: isEditable, meals: loaded?.lunch ?? [], onDelete: (id) => _dailyLogBloc.add(DeleteMeal(id, _selectedDate)), onMealLogged: () {
+                                _dailyLogBloc.add(LoadDailyLog(_selectedDate));
+                                _macrosBloc.add(LoadDailyMacros(_selectedDate.toIso8601String().split('T')[0]));
+                              }),
                               SizedBox(height: 8.h),
-                              MealSection(title: 'Dinner', mealTime: 'dinner', isEditable: isEditable, meals: loaded?.dinner ?? [], onDelete: (id) => _dailyLogBloc.add(DeleteMeal(id, _selectedDate))),
+                              MealSection(title: 'Dinner', mealTime: 'dinner', isEditable: isEditable, meals: loaded?.dinner ?? [], onDelete: (id) => _dailyLogBloc.add(DeleteMeal(id, _selectedDate)), onMealLogged: () {
+                                _dailyLogBloc.add(LoadDailyLog(_selectedDate));
+                                _macrosBloc.add(LoadDailyMacros(_selectedDate.toIso8601String().split('T')[0]));
+                              }),
                               SizedBox(height: 8.h),
-                              MealSection(title: 'Snacks', mealTime: 'snack', isEditable: isEditable, meals: loaded?.snack ?? [], onDelete: (id) => _dailyLogBloc.add(DeleteMeal(id, _selectedDate))),
+                              MealSection(title: 'Snacks', mealTime: 'snack', isEditable: isEditable, meals: loaded?.snack ?? [], onDelete: (id) => _dailyLogBloc.add(DeleteMeal(id, _selectedDate)), onMealLogged: () {
+                                _dailyLogBloc.add(LoadDailyLog(_selectedDate));
+                                _macrosBloc.add(LoadDailyMacros(_selectedDate.toIso8601String().split('T')[0]));
+                              }),
                             ],
                           );
                         },
@@ -270,7 +289,7 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
           ),
           if (isEditable)
             Positioned(
-              bottom: 16.h,
+              bottom: 22.h,
               right: 16.w,
               child: SpeedDial(
                 icon: Icons.add,

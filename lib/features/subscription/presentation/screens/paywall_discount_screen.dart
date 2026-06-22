@@ -13,7 +13,7 @@ class PaywallDiscountScreen extends StatefulWidget {
 }
 
 class _PaywallDiscountScreenState extends State<PaywallDiscountScreen> {
-  int _selectedPlanIndex = 0; // 0 for Yearly, 1 for Monthly
+  int _selectedPlanIndex = 0;
 
   static const List<String> _features = [
     'Meals from your pantry',

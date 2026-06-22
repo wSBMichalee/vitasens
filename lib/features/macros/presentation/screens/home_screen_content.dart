@@ -80,51 +80,10 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
         BlocProvider.value(value: _dailyLogBloc),
       ],
       child: GradientScaffold(
-        floatingActionButton: isEditable
-          ? SpeedDial(
-              icon: Icons.add,
-              activeIcon: Icons.add,
-              iconTheme: const IconThemeData(color: Colors.white, size: 28),
-              backgroundColor: AppColors.primary,
-              shape: const CircleBorder(),
-              elevation: 4,
-              animationDuration: const Duration(milliseconds: 200),
-              animationAngle: 3.14159 / 4,
-              overlayColor: Colors.black,
-              overlayOpacity: 0.15,
-              children: [
-                SpeedDialChild(
-                  child: const Icon(Icons.menu_book, color: Colors.white),
-                  backgroundColor: AppColors.primary,
-                  label: 'Scan Recipe',
-                  labelStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-                  labelBackgroundColor: Colors.white,
-                  shape: const CircleBorder(),
-                  onTap: () => context.go(AppRoutes.extract),
-                ),
-                SpeedDialChild(
-                  child: const Icon(Icons.qr_code_scanner, color: Colors.white),
-                  backgroundColor: AppColors.primary,
-                  label: 'Scan Food',
-                  labelStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-                  labelBackgroundColor: Colors.white,
-                  shape: const CircleBorder(),
-                  onTap: () => context.go(AppRoutes.scanning),
-                ),
-                SpeedDialChild(
-                  child: const Icon(Icons.restaurant_menu, color: Colors.white),
-                  backgroundColor: AppColors.primary,
-                  label: 'Log Meal',
-                  labelStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-                  labelBackgroundColor: Colors.white,
-                  shape: const CircleBorder(),
-                  onTap: () => context.go(AppRoutes.aiMeals),
-                ),
-              ],
-            )
-          : null,
         body: SafeArea(
-            child: SingleChildScrollView(
+            child: Stack(
+              children: [
+                SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -220,7 +179,7 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
 
               // ── SCROLLABLE BODY ──────────────────────────────────────────
               Padding(
-                padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 100.h),
+                padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 120.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -308,6 +267,54 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
                 ),
               ],
             ),
+          ),
+          if (isEditable)
+            Positioned(
+              bottom: 16.h,
+              right: 16.w,
+              child: SpeedDial(
+                icon: Icons.add,
+                activeIcon: Icons.add,
+                iconTheme: const IconThemeData(color: Colors.white, size: 28),
+                backgroundColor: AppColors.primary,
+                shape: const CircleBorder(),
+                elevation: 4,
+                animationDuration: const Duration(milliseconds: 200),
+                animationAngle: 3.14159 / 4,
+                overlayColor: Colors.black,
+                overlayOpacity: 0.15,
+                children: [
+                  SpeedDialChild(
+                    child: const Icon(Icons.menu_book, color: Colors.white),
+                    backgroundColor: AppColors.primary,
+                    label: 'Scan Recipe',
+                    labelStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                    labelBackgroundColor: Colors.white,
+                    shape: const CircleBorder(),
+                    onTap: () => context.go(AppRoutes.extract),
+                  ),
+                  SpeedDialChild(
+                    child: const Icon(Icons.qr_code_scanner, color: Colors.white),
+                    backgroundColor: AppColors.primary,
+                    label: 'Scan Food',
+                    labelStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                    labelBackgroundColor: Colors.white,
+                    shape: const CircleBorder(),
+                    onTap: () => context.go(AppRoutes.scanning),
+                  ),
+                  SpeedDialChild(
+                    child: const Icon(Icons.restaurant_menu, color: Colors.white),
+                    backgroundColor: AppColors.primary,
+                    label: 'Log Meal',
+                    labelStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                    labelBackgroundColor: Colors.white,
+                    shape: const CircleBorder(),
+                    onTap: () => context.go(AppRoutes.aiMeals),
+                  ),
+                ],
+              ),
+            ),
+            ],
           ),
         ),
       ),

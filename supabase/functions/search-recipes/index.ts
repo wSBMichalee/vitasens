@@ -58,7 +58,8 @@ serve(async (req: Request) => {
     let res;
 
     switch (action) {
-      case 'search': {
+      case 'search':
+      case 'search_fast': {
         const ingredientNames: string[] = (data.pantryIngredients ?? []).map(
           (i: { name?: string } | string) => typeof i === 'string' ? i : (i.name ?? '')
         ).filter((n: string) => n.length > 0);
@@ -135,7 +136,7 @@ serve(async (req: Request) => {
           proteinG: r.proteinG,
           carbsG: r.carbsG,
           fatG: r.fatG,
-          dietTags: r.dietTags,
+          dietTags: r.dietTags || [],
           matchPercent: r.matchPercent
         }));
 

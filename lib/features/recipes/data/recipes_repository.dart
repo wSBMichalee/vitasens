@@ -16,7 +16,7 @@ class RecipesRepository {
     if (body['success'] != true) throw Exception(body['error'] ?? 'Unknown error');
     final payload = body['data'] as Map<String, dynamic>;
     final list = payload['recipes'] as List<dynamic>;
-    final ids = payload['spoonacularIds'] as List;
+    final ids = (payload['spoonacularIds'] as List?) ?? [];
     
     final recipes = list.map((e) {
       final r = Map<String, dynamic>.from(e as Map);

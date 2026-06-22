@@ -15,7 +15,7 @@ export class GeminiPersonalizer {
     const recipesArray = recipes.map(r => ({
       id: r.id,
       title: r.title,
-      ingredients: r.ingredients.map((i: any) => i.name).join(', '),
+      ingredients: (r.ingredients || []).map((i: any) => i.name || '').join(', '),
       macros: `Białko: ${r.proteinG}g, Węglowodany: ${r.carbsG}g, Tłuszcz: ${r.fatG}g`,
       dietTags: r.dietTags?.join(', ') || ''
     }));

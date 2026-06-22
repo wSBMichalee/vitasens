@@ -33,8 +33,9 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
     try {
       // Faza 1 — szybkie pobranie z Spoonacular bez makr
       final fastResponse = await repository.searchRecipesFast(event.pantryIngredients);
-      final fastRecipes = fastResponse['recipes'] as List<Map<String, dynamic>>;
-      final spoonacularIds = (fastResponse['spoonacularIds'] as List).cast<int>();
+      final rawList = fastResponse['recipes'] as List<dynamic>? ?? [];
+      final fastRecipes = rawList.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      final spoonacularIds = <int>[];
       
       _allRecipes = fastRecipes;
       final isPersonalized = fastRecipes.any((r) => r['geminiReason'] != null && r['geminiReason'].toString().isNotEmpty);

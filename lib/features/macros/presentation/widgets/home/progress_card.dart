@@ -78,14 +78,14 @@ class ProgressCard extends StatelessWidget {
               const Spacer(),
               // Mini kołowy wskaźnik kalorii
               SizedBox(
-                width: 64.r,
-                height: 64.r,
+                width: 72.r,
+                height: 72.r,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
                     CircularProgressIndicator(
                       value: kcalProgress,
-                      strokeWidth: 7.r,
+                      strokeWidth: 8.r,
                       color: AppColors.primary,
                       backgroundColor: AppColors.borderLight,
                       strokeCap: StrokeCap.round,
@@ -93,7 +93,7 @@ class ProgressCard extends StatelessWidget {
                     Text(
                       '${(kcalProgress * 100).round()}%',
                       style: TextStyle(
-                        fontSize: 11.sp,
+                        fontSize: 12.sp,
                         fontWeight: FontWeight.w700,
                         color: AppColors.primary,
                       ),

@@ -43,7 +43,15 @@ serve(async (req: Request) => {
       .eq('is_public', true);
 
     if (mealType && mealType !== 'all') {
-      query = query.eq('meal_type', mealType);
+      // Mapuj meal_type na dopuszczalne kategorie z bazy
+      const mealTypeMap: Record<string, string[]> = {
+        'breakfast': ['breakfast'],
+        'lunch': ['lunch', 'dinner'],
+        'dinner': ['dinner', 'lunch'],
+        'snack': ['snack', 'dessert'],
+      };
+      const allowedTypes = mealTypeMap[mealType] || [mealType];
+      query = query.in('meal_type', allowedTypes);
     }
 
     if (excludeIds.length > 0) {

@@ -32,18 +32,27 @@ class MealSuggestionsRepository {
     required String userId,
     double servings = 1.0,
   }) async {
-    final multiplier = servings;
-    await _supabase.from('meals').insert({
-      'user_id': userId,
-      'meal_date': DateTime.now().toIso8601String().split('T')[0],
-      'meal_time': mealTime,
-      'food_name': foodName,
-      'calories': (calories * multiplier).round(),
-      'protein_g': (proteinG * multiplier).roundToDouble(),
-      'carbs_g': (carbsG * multiplier).roundToDouble(),
-      'fat_g': (fatG * multiplier).roundToDouble(),
-      'source': 'recipe',
-      'log_source': 'suggestion',
-    });
+    try {
+      final multiplier = servings;
+      final data = {
+        'user_id': userId,
+        'meal_date': DateTime.now().toIso8601String().split('T')[0],
+        'meal_time': mealTime,
+        'food_name': foodName,
+        'calories': (calories * multiplier).round(),
+        'protein_g': double.parse((proteinG * multiplier).toStringAsFixed(1)),
+        'carbs_g': double.parse((carbsG * multiplier).toStringAsFixed(1)),
+        'fat_g': double.parse((fatG * multiplier).toStringAsFixed(1)),
+        'source': 'manual',
+        'log_source': 'manual',
+      };
+      print('Logging meal: $data');
+      final response = await _supabase.from('meals').insert(data).select();
+      print('Meal logged successfully: $response');
+    } catch (e, stack) {
+      print('Error logging meal: $e');
+      print('Stack: $stack');
+      rethrow;
+    }
   }
 }

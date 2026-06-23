@@ -15,8 +15,12 @@ class ShoppingRepository {
 
     if (result == null) return [];
 
-    final List<dynamic> data = result as List<dynamic>;
-    return data
+    // Edge Function zwraca { success: true, data: [...] }
+    final data = result is Map ? result['data'] : result;
+    if (data == null) return [];
+    
+    final List<dynamic> list = data is List ? data : [];
+    return list
         .map((e) => ShoppingItemModel.fromJson(e as Map<String, dynamic>))
         .toList();
   }

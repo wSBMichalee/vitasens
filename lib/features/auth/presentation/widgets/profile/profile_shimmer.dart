@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:vitasense/features/auth/data/auth_repository.dart';
 
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -117,11 +119,19 @@ class SettingsMenuCard extends StatelessWidget {
         ProfileShimmerCard(
           child: Column(
             children: [
-              _buildRow(context, Icons.notifications_outlined, AppColors.borderLight, AppColors.textSecondary, 'Notifications', null),
+              _buildRow(context, Icons.notifications_outlined, AppColors.borderLight, AppColors.textSecondary, 'Notifications', null, onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Notifications coming soon')))),
               const Divider(color: AppColors.border, height: 1),
-              _buildRow(context, Icons.help_outline, AppColors.borderLight, AppColors.textSecondary, 'Help & Support', null),
-              const Divider(color: AppColors.border, height: 1),
-              _buildRow(context, Icons.lock_outline, AppColors.borderLight, AppColors.textSecondary, 'Change Password', AppRoutes.changePassword),
+              _buildRow(context, Icons.help_outline, AppColors.borderLight, AppColors.textSecondary, 'Help & Support', null, onTap: () async {
+                final uri = Uri.parse('mailto:support@vitasense.app');
+                if (await canLaunchUrl(uri)) await launchUrl(uri);
+              }),
+              if (() {
+                final providers = Supabase.instance.client.auth.currentUser?.appMetadata['providers'] as List?;
+                return providers != null && providers.contains('email') && !providers.contains('google') && !providers.contains('apple');
+              }()) ...[
+                const Divider(color: AppColors.border, height: 1),
+                _buildRow(context, Icons.lock_outline, AppColors.borderLight, AppColors.textSecondary, 'Change Password', AppRoutes.changePassword),
+              ],
               const Divider(color: AppColors.border, height: 1),
               _buildRow(context, Icons.shield_outlined, AppColors.borderLight, AppColors.textSecondary, 'Privacy Policy', AppRoutes.privacyPolicy),
               const Divider(color: AppColors.border, height: 1),

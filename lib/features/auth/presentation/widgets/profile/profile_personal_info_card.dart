@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:vitasense/features/auth/data/auth_repository.dart';
 import 'profile_shimmer.dart';
 import 'profile_goals_card.dart';
 import 'package:vitasense/core/services/cache_service.dart';

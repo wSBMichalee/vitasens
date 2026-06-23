@@ -1,5 +1,8 @@
 
 import 'package:flutter/material.dart';
+import 'package:vitasense/core/widgets/web_view_screen.dart';
+import 'package:vitasense/features/auth/presentation/screens/change_password_screen.dart';
+import 'package:vitasense/features/auth/presentation/screens/delete_account_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vitasense/features/auth/bloc/auth_bloc.dart';
@@ -85,8 +88,6 @@ final GoRouter appRouter = GoRouter(
     }
 
     if (authState is AuthAuthenticated) {
-      final user = authState.user;
-
       if (location == AppRoutes.splash ||
           location == AppRoutes.landing ||
           location == AppRoutes.login ||
@@ -205,6 +206,29 @@ final GoRouter appRouter = GoRouter(
           _slideUpPage(state: state, child: const SuccessPurchaseScreen()),
     ),
 
+    GoRoute(
+      path: AppRoutes.privacyPolicy,
+      builder: (context, state) => const WebViewScreen(
+        title: 'Privacy Policy',
+        url: 'https://vitasense.app/privacy-policy',
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.termsOfService,
+      builder: (context, state) => const WebViewScreen(
+        title: 'Terms of Service',
+        url: 'https://vitasense.app/terms-of-service',
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.changePassword,
+      builder: (context, state) => const ChangePasswordScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.deleteAccount,
+      builder: (context, state) => const DeleteAccountScreen(),
+    ),
+
     // ─── MAIN APP (STATEFUL SHELL ROUTE z bottom navigation) ──────────────────────────
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
@@ -251,6 +275,14 @@ final GoRouter appRouter = GoRouter(
         StatefulShellBranch(
           routes: [
             GoRoute(
+              path: '/shopping',
+              builder: (context, state) => const ShoppingListScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
               path: AppRoutes.profile,
               builder: (context, state) => const ProfileScreen(),
             ),
@@ -264,11 +296,6 @@ final GoRouter appRouter = GoRouter(
       path: '/browse-recipes',
       pageBuilder: (context, state) =>
           _slideUpPage(state: state, child: const BrowseScreen()),
-    ),
-    GoRoute(
-      path: '/shopping',
-      pageBuilder: (context, state) =>
-          _slideUpPage(state: state, child: const ShoppingListScreen()),
     ),
     GoRoute(
       path: AppRoutes.addIngredient,

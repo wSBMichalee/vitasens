@@ -65,6 +65,7 @@ class _ScaffoldWithBottomNavState extends State<ScaffoldWithBottomNav>
           NativeGlassNavBarItem(label: 'Home',     symbol: 'house.fill'),
           NativeGlassNavBarItem(label: 'Pantry',   symbol: 'cart.fill'),
           NativeGlassNavBarItem(label: 'AI Meals', symbol: 'sparkles'),
+          NativeGlassNavBarItem(label: 'Shop',     symbol: 'basket.fill'),
           NativeGlassNavBarItem(label: 'Profile',  symbol: 'person.fill'),
         ],
         fallback: Padding(

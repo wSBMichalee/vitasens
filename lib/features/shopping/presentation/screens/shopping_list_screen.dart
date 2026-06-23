@@ -183,6 +183,26 @@ class _ShoppingListViewState extends State<_ShoppingListView> {
       },
       child: Scaffold(
         backgroundColor: AppColors.background,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          title: Text(
+            'Shopping List',
+            style: TextStyle(
+              fontSize: 24.sp,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.add, color: AppColors.textPrimary),
+              onPressed: () => _showAddItemSheet(context),
+            ),
+            SizedBox(width: 8.w),
+          ],
+        ),
         floatingActionButton: FloatingActionButton(
           backgroundColor: AppColors.primary,
           onPressed: () => _showAddItemSheet(context),
@@ -192,28 +212,7 @@ class _ShoppingListViewState extends State<_ShoppingListView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── AppHeader: wariant nested, + jako action ─────────────────────
-              BlocBuilder<ShoppingBloc, ShoppingState>(
-                builder: (context, state) {
-                  final subtitle = state is ShoppingLoaded
-                      ? '${state.items.length} produktów do kupienia'
-                      : 'Wczytywanie...';
-                  return AppHeader(
-                    title: 'Lista zakupów',
-                    subtitle: subtitle,
-                    variant: AppHeaderVariant.nested,
-                    backgroundColor: AppColors.primary,
-                    textColor: AppColors.textWhite,
-                    onBack: () => context.pop(),
-                    actions: [
-                      AppHeaderIconButton(
-                        icon: Icons.add,
-                        onPressed: () => _showAddItemSheet(context),
-                      ),
-                    ],
-                  );
-                },
-              ),
+
 
               // ─── QUICK ADD BAR ───────────────────────────────────────────────
               Padding(

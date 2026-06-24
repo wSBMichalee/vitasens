@@ -23,17 +23,17 @@ class ShoppingItemModel {
 
   factory ShoppingItemModel.fromJson(Map<String, dynamic> json) {
     return ShoppingItemModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      quantity: (json['quantity'] as num).toDouble(),
-      unit: json['unit'] as String,
-      category: json['category'] as String?,
-      isPurchased: json['is_purchased'] as bool? ?? false,
-      addedBy: json['added_by'] as String?,
+      id: (json['id'] ?? '').toString(),
+      name: (json['ingredientName'] ?? json['ingredient_name'] ?? json['name'] ?? '').toString(),
+      quantity: (json['quantityNeeded'] as num?)?.toDouble() ?? (json['quantity_needed'] as num?)?.toDouble() ?? (json['quantity'] as num?)?.toDouble() ?? 1.0,
+      unit: (json['unit'] ?? 'szt').toString(),
+      category: json['category']?.toString(),
+      isPurchased: json['isPurchased'] as bool? ?? json['is_purchased'] as bool? ?? false,
+      addedBy: json['added_by']?.toString(),
       createdAt: json['created_at'] != null
-          ? DateTime.tryParse(json['created_at'] as String)
+          ? DateTime.tryParse(json['created_at'].toString())
           : null,
-      pantryItemId: json['pantry_item_id'] as String?,
+      pantryItemId: json['pantry_item_id']?.toString(),
     );
   }
 

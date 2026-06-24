@@ -10,6 +10,9 @@ import 'package:vitasense/features/recipes/bloc/recipes_bloc.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_event.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_state.dart';
 import 'package:vitasense/features/recipes/data/recipes_repository.dart';
+import 'package:vitasense/features/shopping/data/shopping_repository.dart';
+import 'package:vitasense/features/shopping/bloc/shopping_bloc.dart';
+import 'package:vitasense/features/shopping/bloc/shopping_event.dart';
 
 import '../widgets/recipe_detail/recipe_info_chip.dart';
 import '../widgets/recipe_detail/recipe_ingredient_row.dart';
@@ -46,6 +49,7 @@ class _RecipeDetailView extends StatefulWidget {
 class _RecipeDetailViewState extends State<_RecipeDetailView> {
   bool _isFavorite = false;
   bool _checkingFavorite = true;
+  bool _ingredientsAddedToList = false;
 
   @override
   void initState() {
@@ -372,6 +376,95 @@ class _RecipeDetailViewState extends State<_RecipeDetailView> {
                                   );
                                 },
                               ),
+
+                        // ── BRAKUJĄCE SKŁADNIKI → LISTA ZAKUPÓW ────────────────────────
+                        if (missedIngredients.isNotEmpty)
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 0),
+                            child: Container(
+                              padding: EdgeInsets.all(16.r),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFF3CD),
+                                borderRadius: BorderRadius.circular(16.r),
+                                border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.4)),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(Icons.shopping_basket_outlined, color: const Color(0xFFF59E0B), size: 20.r),
+                                      SizedBox(width: 8.w),
+                                      Text(
+                                        'Brakujące składniki (${missedIngredients.length})',
+                                        style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 8.h),
+                                  ...missedIngredients.map((ing) => Padding(
+                                    padding: EdgeInsets.only(bottom: 4.h),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.remove_circle_outline, color: const Color(0xFFF59E0B), size: 14.r),
+                                        SizedBox(width: 6.w),
+                                        Text(
+                                          '${ing['name'] ?? ''} ${ing['amount'] != null ? '(${ing['amount']})' : ''}',
+                                          style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary),
+                                        ),
+                                      ],
+                                    ),
+                                  )),
+                                  SizedBox(height: 12.h),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton.icon(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColors.primary,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+                                        padding: EdgeInsets.symmetric(vertical: 12.h),
+                                      ),
+                                      icon: Icon(Icons.add_shopping_cart, color: Colors.white, size: 18.r),
+                                      label: Text(
+                                        _ingredientsAddedToList 
+                                          ? 'Dodano do listy zakupów ✓'
+                                          : 'Dodaj ${missedIngredients.length} składników do listy zakupów',
+                                        style: TextStyle(color: Colors.white, fontSize: 13.sp, fontWeight: FontWeight.w600),
+                                      ),
+                                      onPressed: _ingredientsAddedToList ? null : () async {
+                                        final repo = ShoppingRepository();
+                                        final items = missedIngredients.map((ing) => {
+                                          'name': ing['name']?.toString() ?? '',
+                                          'quantity': double.tryParse(ing['amount']?.toString() ?? '') ?? 1.0,
+                                          'unit': ing['unit']?.toString() ?? 'szt',
+                                        }).where((item) => (item['name'] as String).isNotEmpty).toList();
+                                        
+                                        try {
+                                          final added = await repo.addItemsBatch(items);
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text('Dodano $added składników do listy zakupów ✓'),
+                                                backgroundColor: AppColors.primary,
+                                                duration: const Duration(seconds: 2),
+                                              ),
+                                            );
+                                            setState(() => _ingredientsAddedToList = true);
+                                          }
+                                        } catch (e) {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text('Błąd: $e'), backgroundColor: AppColors.error),
+                                            );
+                                          }
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
 
                         // Substitutes section
                         if (missingNames.isNotEmpty)

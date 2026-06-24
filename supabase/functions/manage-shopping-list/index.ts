@@ -17,6 +17,24 @@ serve(async (req: Request) => {
     switch (action) {
       case 'list': result = data.familyId ? await ShoppingListRepository.listForFamily(data.familyId) : await ShoppingListRepository.listForUser(userId); break;
       case 'add': result = await ShoppingListRepository.add(AddShoppingItemSchema.parse({ ...data, userId })); break;
+      case 'add_batch': {
+        const items = data.items as Array<{ingredientName: string, quantityNeeded: number, unit: string}>;
+        if (!items || !Array.isArray(items)) throw new ValidationError('items array required');
+        
+        const results = [];
+        for (const item of items) {
+          const result = await ShoppingListRepository.add({
+            userId,
+            ingredientName: item.ingredientName,
+            quantityNeeded: item.quantityNeeded || 1,
+            unit: item.unit || 'szt',
+            source: 'manual',
+          });
+          results.push(result);
+        }
+        result = { added: results.length, items: results };
+        break;
+      }
       case 'purchased': result = await ShoppingListRepository.markAsPurchased(MarkPurchasedSchema.parse(data).itemId); break;
       case 'delete': await ShoppingListRepository.delete(DeleteShoppingItemSchema.parse(data).itemId); result = { success: true }; break;
       case 'clear_purchased': await ShoppingListRepository.clearPurchased(userId, data.familyId); result = { success: true }; break;

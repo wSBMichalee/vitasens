@@ -36,14 +36,17 @@ class IngredientRow extends StatelessWidget {
           children: [
             Icon(Icons.cancel_outlined, color: AppColors.error, size: 18.r),
             SizedBox(width: 8.w),
-            Text(
-              name,
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: AppColors.textPrimary,
+            Expanded(
+              child: Text(
+                name,
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: AppColors.textPrimary,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-            const Spacer(),
             SizedBox(
               height: 44.h,
               child: Center(

@@ -30,11 +30,26 @@ class ShoppingRepository {
       'manage-shopping-list',
       body: {
         'action': 'add',
-        'name': name,
-        'quantity': quantity,
+        'ingredientName': name,
+        'quantityNeeded': quantity,
         'unit': unit,
       },
     );
+  }
+
+  Future<int> addItemsBatch(List<Map<String, dynamic>> items) async {
+    final result = await _supabaseService.invokeFunction(
+      'manage-shopping-list',
+      body: {
+        'action': 'add_batch',
+        'items': items.map((item) => {
+          'ingredientName': item['name'],
+          'quantityNeeded': item['quantity'] ?? 1.0,
+          'unit': item['unit'] ?? 'szt',
+        }).toList(),
+      },
+    );
+    return (result?['added'] as int?) ?? 0;
   }
 
   Future<void> markPurchased(String itemId) async {
@@ -52,7 +67,7 @@ class ShoppingRepository {
       'manage-shopping-list',
       body: {
         'action': 'delete',
-        'item_id': itemId,
+        'itemId': itemId,
       },
     );
   }

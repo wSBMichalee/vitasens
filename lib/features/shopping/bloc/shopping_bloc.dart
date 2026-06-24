@@ -106,6 +106,7 @@ class ShoppingBloc extends Bloc<ShoppingEvent, ShoppingState> {
 
   // ─── Error Parser ──────────────────────────────────────────────────────────────
   String _parseError(dynamic e) {
+    print('ShoppingBloc error: $e');
     final raw = e.toString().toLowerCase();
 
     if (raw.contains('network') ||
@@ -113,6 +114,6 @@ class ShoppingBloc extends Bloc<ShoppingEvent, ShoppingState> {
         raw.contains('connection')) {
       return 'No internet connection.';
     }
-    return 'Could not update shopping list. Try again.';
+    return e.toString();
   }
 }

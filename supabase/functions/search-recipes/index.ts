@@ -104,6 +104,26 @@ serve(async (req: Request) => {
           recipes = recipes.sort(() => Math.random() - 0.5).slice(0, 20);
         }
 
+        // Pobierz składniki z pantry użytkownika
+        let pantryIngredientNames: string[] = [];
+        try {
+          const { data: pantryData } = await supabase
+            .from('pantries')
+            .select('id')
+            .eq('user_id', userId)
+            .single();
+          
+          if (pantryData?.id) {
+            const { data: pantryItems } = await supabase
+              .from('ingredients')
+              .select('name')
+              .eq('pantry_id', pantryData.id);
+            pantryIngredientNames = (pantryItems || []).map((i: any) => i.name.toLowerCase());
+          }
+        } catch (e) {
+          console.log('Could not fetch pantry:', e);
+        }
+
         // Mapuj do formatu zgodnego z RecipeModel (camelCase)
         const mappedRecipes = recipes.map(r => ({
           id: r.id,
@@ -125,7 +145,15 @@ serve(async (req: Request) => {
           source: r.source,
           sourceId: r.source_id,
           steps: r.steps || [],
-          matchPercent: (r as any).matchPercent || 0
+          matchPercent: (r as any).matchPercent || 0,
+          usedIngredients: (r.ingredients || []).filter((ing: any) => {
+            const name = (ing.name || '').toLowerCase();
+            return pantryIngredientNames.some(p => name.includes(p) || p.includes(name));
+          }).map((ing: any) => ({ name: ing.name, amount: ing.amount || '' })),
+          missedIngredients: (r.ingredients || []).filter((ing: any) => {
+            const name = (ing.name || '').toLowerCase();
+            return !pantryIngredientNames.some(p => name.includes(p) || p.includes(name));
+          }).map((ing: any) => ({ name: ing.name, amount: ing.amount || '' }))
         }));
 
         // Gemini personalizacja

@@ -109,6 +109,14 @@ serve(async (req: Request) => {
       dietTags: r.diet_tags || [],
       cuisineType: r.cuisine_type,
       servings: r.servings || 4,
+      usedIngredients: (r.ingredients || []).filter((ing: any) => {
+        const name = (ing.name || '').toLowerCase();
+        return pantryIngredients.some(p => name.includes(p) || p.includes(name));
+      }).map((ing: any) => ({ name: ing.name, amount: ing.amount || '' })),
+      missedIngredients: (r.ingredients || []).filter((ing: any) => {
+        const name = (ing.name || '').toLowerCase();
+        return !pantryIngredients.some(p => name.includes(p) || p.includes(name));
+      }).map((ing: any) => ({ name: ing.name, amount: ing.amount || '' }))
     }));
 
     return new Response(JSON.stringify({ success: true, data: { recipes: suggested } }), {

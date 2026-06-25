@@ -97,6 +97,7 @@ class ShoppingBloc extends Bloc<ShoppingEvent, ShoppingState> {
     emit(const ShoppingLoading());
     try {
       await _repository.moveToPantry();
+      emit(const ShoppingMovedToPantry());
       add(const LoadShoppingList()); // reload
     } catch (e) {
       emit(ShoppingError(_parseError(e)));

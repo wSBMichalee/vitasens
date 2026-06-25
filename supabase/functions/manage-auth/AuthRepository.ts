@@ -60,11 +60,14 @@ export class AuthRepository {
 
     // Ensure the profile is created in the database
     try {
+      const trialExpiresAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
       await supabaseAdmin
         .from('profiles')
         .upsert({
           id: data.user.id,
           name: fullName,
+          subscription_status: 'trialing',
+          trial_expires_at: trialExpiresAt,
         }, { onConflict: 'id' });
     } catch (e) {
       console.warn(`[manage-auth] signUp - profile upsert failed:`, e);

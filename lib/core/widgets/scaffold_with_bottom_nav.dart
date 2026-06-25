@@ -19,10 +19,11 @@ class _ScaffoldWithBottomNavState extends State<ScaffoldWithBottomNav>
   late AnimationController _controller;
 
   static const List<_NavItem> _tabs = [
-    _NavItem(label: 'Home',     icon: Icons.home_outlined,         activeIcon: Icons.home_rounded,            route: AppRoutes.home),
-    _NavItem(label: 'Pantry',   icon: Icons.shopping_bag_outlined, activeIcon: Icons.shopping_bag_rounded,    route: AppRoutes.pantry),
-    _NavItem(label: 'AI Meals', icon: Icons.auto_awesome_outlined, activeIcon: Icons.auto_awesome,            route: AppRoutes.aiMeals),
-    _NavItem(label: 'Profile',  icon: Icons.person_outline,        activeIcon: Icons.person_rounded,          route: AppRoutes.profile),
+    _NavItem(label: 'Home',     icon: Icons.home_outlined,              activeIcon: Icons.home_rounded,            route: AppRoutes.home),
+    _NavItem(label: 'Pantry',   icon: Icons.shopping_bag_outlined,      activeIcon: Icons.shopping_bag_rounded,    route: AppRoutes.pantry),
+    _NavItem(label: 'AI Meals', icon: Icons.auto_awesome_outlined,      activeIcon: Icons.auto_awesome,            route: AppRoutes.aiMeals),
+    _NavItem(label: 'Shop',     icon: Icons.shopping_basket_outlined,   activeIcon: Icons.shopping_basket_rounded, route: '/shopping'),
+    _NavItem(label: 'Profile',  icon: Icons.person_outline,             activeIcon: Icons.person_rounded,          route: AppRoutes.profile),
   ];
 
   int _currentIndex(BuildContext context) {

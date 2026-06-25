@@ -4,6 +4,7 @@ class UserModel {
   final String? fullName;
   final bool onboardingCompleted;
   final String? subscriptionStatus;
+  final DateTime? trialExpiresAt;
   final String? goalType;
   final int? dailyCalorieTarget;
   final int? dailyProteinTarget;
@@ -28,6 +29,7 @@ class UserModel {
     this.fullName,
     this.onboardingCompleted = false,
     this.subscriptionStatus,
+    this.trialExpiresAt,
     this.goalType,
     this.dailyCalorieTarget,
     this.dailyProteinTarget,
@@ -61,6 +63,7 @@ class UserModel {
       fullName: (json['full_name'] ?? json['fullName']) as String?,
       onboardingCompleted: (json['onboarding_completed'] as bool?) ?? (json['onboardingCompleted'] as bool?) ?? false,
       subscriptionStatus: (json['subscription_status'] ?? json['subscriptionStatus']) as String?,
+      trialExpiresAt: json['trial_expires_at'] != null ? DateTime.tryParse(json['trial_expires_at'] as String) : null,
       goalType: (json['goal_type'] ?? json['goalType']) as String?,
       dailyCalorieTarget: _toInt(json['daily_calorie_target'] ?? json['dailyCalorieTarget']),
       dailyProteinTarget: _toInt(json['daily_protein_target'] ?? json['dailyProteinTarget']),

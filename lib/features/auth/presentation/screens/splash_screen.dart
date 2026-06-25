@@ -25,7 +25,13 @@ class _SplashScreenState extends State<SplashScreen> {
           if (!state.user.onboardingCompleted) {
             context.go(AppRoutes.userOnboarding);
           } else {
-            context.go(AppRoutes.home);
+            final status = state.user.subscriptionStatus?.toLowerCase();
+            final isActive = status == 'active' || status == 'trialing';
+            if (!isActive) {
+              context.go(AppRoutes.paywall, extra: state.user);
+            } else {
+              context.go(AppRoutes.home);
+            }
           }
         } else if (state is AuthUnauthenticated) {
           context.go(AppRoutes.landing);

@@ -14,6 +14,8 @@ import 'package:vitasense/features/shopping/data/shopping_repository.dart';
 import 'package:vitasense/features/shopping/bloc/shopping_bloc.dart';
 import 'package:vitasense/features/shopping/bloc/shopping_event.dart';
 import 'package:vitasense/features/macros/presentation/widgets/streak_celebration_modal.dart';
+import 'package:vitasense/features/pantry/bloc/pantry_bloc.dart';
+import 'package:vitasense/features/pantry/bloc/pantry_event.dart';
 
 import '../widgets/recipe_detail/recipe_info_chip.dart';
 import '../widgets/recipe_detail/recipe_ingredient_row.dart';
@@ -148,9 +150,10 @@ class _RecipeDetailViewState extends State<_RecipeDetailView> {
             ),
           );
           if (context.mounted) {
+            context.read<PantryBloc>().add(const LoadPantry());
             await maybeShowStreakCelebration(context);
           }
-          context.go(AppRoutes.home);
+          if (context.mounted) context.go(AppRoutes.home);
         } else if (state is RecipesError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

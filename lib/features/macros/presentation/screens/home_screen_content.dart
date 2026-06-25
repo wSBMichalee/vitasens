@@ -252,7 +252,7 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
                           Expanded(child: Text('Today\'s Meals', style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.w800, color: AppColors.textPrimary))),
                           if (isEditable)
                             GestureDetector(
-                              onTap: () {},
+                              onTap: () => context.go(AppRoutes.aiMeals),
                               child: Text('EDIT', style: TextStyle(color: AppColors.primary, fontSize: 12.sp, fontWeight: FontWeight.w900, letterSpacing: 1.4)),
                             ),
                         ],

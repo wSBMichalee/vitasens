@@ -67,6 +67,7 @@ dependencies:
   flutter_speed_dial: ^7.0.0
   http: ^1.6.0
   health: ^12.2.0
+  connectivity_plus: ^7.1.1
 
 dev_dependencies:
   flutter_test:

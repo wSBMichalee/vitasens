@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_theme.dart';
+import 'package:vitasense/core/widgets/no_internet_overlay.dart';
 import 'package:vitasense/features/auth/bloc/auth_bloc.dart';
 import 'package:vitasense/features/auth/bloc/auth_event.dart';
 import 'package:vitasense/features/auth/data/auth_repository.dart';
@@ -111,6 +112,8 @@ class _MaterialApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'VitaSense',
       debugShowCheckedModeBanner: false,
+
+      builder: (context, child) => NoInternetOverlay(child: child!),
 
       // Router
       routerConfig: appRouter,

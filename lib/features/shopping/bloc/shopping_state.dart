@@ -34,3 +34,8 @@ class ShoppingError extends ShoppingState {
   @override
   List<Object?> get props => [message];
 }
+
+class ShoppingMovedToPantry extends ShoppingState {
+  const ShoppingMovedToPantry();
+}
+

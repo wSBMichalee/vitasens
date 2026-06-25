@@ -30,14 +30,14 @@ class MenuCard extends StatelessWidget {
       iconBg: AppColors.warningLight,
       iconColor: AppColors.warning,
       label: 'My Recipes',
-      route: null,
+      route: AppRoutes.myRecipes,
     ),
     MenuItem(
       icon: Icons.explore_outlined,
       iconBg: AppColors.primaryLight,
       iconColor: AppColors.primaryDark,
       label: 'Browse Recipes',
-      route: null,
+      route: '/browse-recipes',
     ),
 
   ];

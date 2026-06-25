@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vitasense/features/auth/bloc/auth_bloc.dart';
 import 'package:vitasense/features/auth/bloc/auth_state.dart';
+import 'package:vitasense/features/auth/data/models/user_model.dart';
 
 import 'package:vitasense/features/auth/presentation/screens/splash_screen.dart';
 import 'package:vitasense/features/auth/presentation/screens/landing_screen.dart';
@@ -192,13 +193,22 @@ final GoRouter appRouter = GoRouter(
     // ─── PAYWALL FLOW ────────────────────────────────────────────────────────
     GoRoute(
       path: AppRoutes.paywall,
-      pageBuilder: (context, state) =>
-          _slideUpPage(state: state, child: const PaywallScreen()),
+      pageBuilder: (context, state) => _slideUpPage(
+        state: state,
+        child: PaywallScreen(user: state.extra as UserModel?),
+      ),
     ),
     GoRoute(
       path: AppRoutes.paywallDiscount,
       pageBuilder: (context, state) =>
           _slideUpPage(state: state, child: const PaywallDiscountScreen()),
+    ),
+    GoRoute(
+      path: AppRoutes.subscription,
+      pageBuilder: (context, state) => _slideUpPage(
+        state: state,
+        child: PaywallScreen(user: state.extra as UserModel?),
+      ),
     ),
     GoRoute(
       path: AppRoutes.successPurchase,

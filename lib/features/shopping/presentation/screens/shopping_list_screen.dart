@@ -13,6 +13,8 @@ import '../widgets/move_to_pantry_button.dart';
 import '../widgets/shopping_item_card.dart';
 import '../widgets/purchased_item_card.dart';
 import 'package:vitasense/core/utils/bottom_sheet_utils.dart';
+import 'package:vitasense/features/pantry/bloc/pantry_bloc.dart';
+import 'package:vitasense/features/pantry/bloc/pantry_event.dart';
 
 class ShoppingListScreen extends StatelessWidget {
   const ShoppingListScreen({super.key});
@@ -179,6 +181,8 @@ class _ShoppingListViewState extends State<_ShoppingListView> {
               backgroundColor: AppColors.error,
             ),
           );
+        } else if (state is ShoppingMovedToPantry) {
+          context.read<PantryBloc>().add(const LoadPantry());
         }
       },
       child: Scaffold(

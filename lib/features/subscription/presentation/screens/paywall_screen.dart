@@ -4,9 +4,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:vitasense/features/auth/data/models/user_model.dart';
 
 class PaywallScreen extends StatefulWidget {
-  const PaywallScreen({super.key});
+  final UserModel? user;
+
+  const PaywallScreen({super.key, this.user});
 
   @override
   State<PaywallScreen> createState() => _PaywallScreenState();
@@ -14,6 +18,63 @@ class PaywallScreen extends StatefulWidget {
 
 class _PaywallScreenState extends State<PaywallScreen> {
   int _selectedPlanIndex = 0; // 0 for Yearly, 1 for Monthly
+  bool _isPurchasing = false;
+
+  int get _trialDaysLeft {
+    final expires = widget.user?.trialExpiresAt;
+    if (expires == null) return 0;
+    final diff = expires.difference(DateTime.now()).inDays;
+    return diff.clamp(0, 3);
+  }
+
+  String get _trialHeadline {
+    final days = _trialDaysLeft;
+    if (days <= 0) return 'Twój trial wygasł';
+    if (days == 1) return 'Ostatni dzień trialu!';
+    return 'Zostały Ci $days dni darmowego dostępu';
+  }
+
+  String get _ctaLabel {
+    if (_trialDaysLeft <= 0) return 'Kup plan i wróć do VitaSense';
+    if (_selectedPlanIndex == 0) return 'Kontynuuj z Yearly — \$4.91/mo';
+    return 'Kontynuuj z Monthly — \$9.99/mo';
+  }
+
+  Future<void> _purchase(BuildContext context) async {
+    if (_isPurchasing) return;
+    setState(() => _isPurchasing = true);
+    try {
+      final offerings = await Purchases.getOfferings();
+      final current = offerings.current;
+      if (current == null) {
+        throw Exception('No offerings available. Configure products in RevenueCat dashboard.');
+      }
+      // Yearly = index 0, Monthly = index 1
+      final package = _selectedPlanIndex == 0
+          ? (current.annual ?? current.availablePackages.first)
+          : (current.monthly ?? current.availablePackages.last);
+      await Purchases.purchasePackage(package);
+      if (context.mounted) context.go(AppRoutes.successPurchase);
+    } on PurchasesErrorCode catch (e) {
+      if (e == PurchasesErrorCode.purchaseCancelledError) {
+        // User cancelled — cicho wróć
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Purchase failed: ${e.name}'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isPurchasing = false);
+    }
+  }
 
   static const List<String> _features = [
     'Meals from your pantry',
@@ -36,13 +97,35 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 children: [
                   // ─── Heading ───────────────────────────────────────────────
                   Text(
-                    'Unlock VitaSense',
+                    _trialHeadline,
                     style: TextStyle(
-                      fontSize: 34.sp,
+                      fontSize: 28.sp,
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
                     ),
                   ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0),
+
+                  if (_trialDaysLeft > 0)
+                    Container(
+                      margin: EdgeInsets.only(top: 12.h, bottom: 8.h),
+                      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryLight,
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.info_outline, color: AppColors.primary, size: 18.r),
+                          SizedBox(width: 8.w),
+                          Expanded(
+                            child: Text(
+                              'Za ${_trialDaysLeft == 1 ? "1 dzień" : "$_trialDaysLeft dni"} wyślemy Ci przypomnienie przed końcem trialu.',
+                              style: TextStyle(fontSize: 13.sp, color: AppColors.primary),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
 
                   SizedBox(height: 32.h),
 
@@ -100,24 +183,23 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     width: double.infinity,
                     height: 56.h,
                     child: FilledButton(
-                      onPressed: () {
-                        // TODO: RevenueCat purchase
-                        context.go(AppRoutes.home);
-                      },
+                      onPressed: _isPurchasing ? null : () => _purchase(context),
                       style: FilledButton.styleFrom(
                         backgroundColor: const Color(0xFF2ECC71),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14.r),
                         ),
                       ),
-                      child: Text(
-                        _selectedPlanIndex == 0 ? 'Start My 3-Day Free Trial' : 'Start Monthly Plan',
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
+                      child: _isPurchasing
+                          ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                          : Text(
+                              _ctaLabel,
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
                     ),
                   ).animate(delay: 360.ms).fadeIn(duration: 400.ms),
 

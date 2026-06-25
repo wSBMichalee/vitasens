@@ -72,7 +72,12 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
         ));
       }
     } catch (e) {
-      emit(RecipesError(_parseError(e)));
+      final parsedErr = _parseError(e);
+      if (parsedErr == 'SUBSCRIPTION_EXPIRED') {
+        emit(const RecipesSubscriptionExpired());
+      } else {
+        emit(RecipesError(parsedErr));
+      }
     }
   }
 

@@ -7,19 +7,56 @@ import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/features/meals/bloc/meal_suggestions_bloc.dart';
 import 'package:vitasense/features/meals/data/meal_suggestion_model.dart';
 import 'package:vitasense/features/meals/data/meal_suggestions_repository.dart';
-
+import 'package:go_router/go_router.dart';
+import 'package:vitasense/core/router/app_routes.dart';
+import 'package:vitasense/features/macros/presentation/widgets/streak_celebration_modal.dart';
 class MealSuggestionCard extends StatelessWidget {
   final String mealType;
   final VoidCallback? onLogged;
+  final bool pantryIsEmpty;
 
   const MealSuggestionCard({
     super.key,
     required this.mealType,
     this.onLogged,
+    this.pantryIsEmpty = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (pantryIsEmpty) {
+      return Container(
+        margin: EdgeInsets.fromLTRB(16.w, 0, 16.w, 8.h),
+        padding: EdgeInsets.all(16.r),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.kitchen_outlined, color: AppColors.textMuted, size: 24.r),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Your pantry is empty',
+                    style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                  ),
+                  Text(
+                    'Add ingredients to get personalized meal suggestions',
+                    style: TextStyle(fontSize: 11.sp, color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return BlocProvider(
       create: (_) => MealSuggestionsBloc(
         repository: MealSuggestionsRepository(),
@@ -74,14 +111,24 @@ class _ErrorCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 60.h,
       margin: EdgeInsets.symmetric(horizontal: 16.w),
+      padding: EdgeInsets.all(12.r),
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: AppColors.border),
       ),
-      child: Center(
-        child: Text('No suggestions available', style: TextStyle(fontSize: 12.sp, color: AppColors.textMuted)),
+      child: Row(
+        children: [
+          Icon(Icons.add_shopping_cart_outlined, color: AppColors.textMuted, size: 20.r),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Text(
+              'Add ingredients to your pantry to get personalized meal suggestions',
+              style: TextStyle(fontSize: 11.sp, color: AppColors.textMuted),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -102,8 +149,25 @@ class _SuggestionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.fromLTRB(16.w, 0, 16.w, 8.h),
+    return GestureDetector(
+      onTap: () => context.push(AppRoutes.recipeDetails, extra: {
+        'id': suggestion.id,
+        'title': suggestion.title,
+        'imageUrl': suggestion.imageUrl,
+        'calories': suggestion.calories,
+        'proteinG': suggestion.proteinG,
+        'carbsG': suggestion.carbsG,
+        'fatG': suggestion.fatG,
+        'cookTimeMinutes': suggestion.cookTimeMinutes,
+        'servings': suggestion.servings,
+        'cuisineType': suggestion.cuisineType,
+        'mealType': suggestion.mealType,
+        'ingredients': suggestion.ingredients,
+        'missedIngredients': suggestion.missedIngredients,
+        'usedIngredients': suggestion.usedIngredients,
+      }),
+      child: Container(
+        margin: EdgeInsets.fromLTRB(16.w, 0, 16.w, 8.h),
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.circular(12.r),
@@ -196,6 +260,7 @@ class _SuggestionCard extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 
@@ -253,6 +318,9 @@ class _SuggestionCard extends StatelessWidget {
                   servings: servings,
                 );
                 onLogged?.call();
+                if (context.mounted) {
+                  await maybeShowStreakCelebration(context);
+                }
               },
               child: Text('Zapisz', style: TextStyle(color: Colors.white, fontSize: 13.sp)),
             ),

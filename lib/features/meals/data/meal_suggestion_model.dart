@@ -11,6 +11,9 @@ class MealSuggestionModel {
   final int cookTimeMinutes;
   final String? cuisineType;
   final int servings;
+  final List<Map<String, dynamic>> ingredients;
+  final List<Map<String, dynamic>> missedIngredients;
+  final List<Map<String, dynamic>> usedIngredients;
 
   const MealSuggestionModel({
     required this.id,
@@ -25,6 +28,9 @@ class MealSuggestionModel {
     required this.cookTimeMinutes,
     this.cuisineType,
     required this.servings,
+    this.ingredients = const [],
+    this.missedIngredients = const [],
+    this.usedIngredients = const [],
   });
 
   factory MealSuggestionModel.fromJson(Map<String, dynamic> json) {
@@ -41,6 +47,15 @@ class MealSuggestionModel {
       cookTimeMinutes: (json['cookTimeMinutes'] as num?)?.toInt() ?? 30,
       cuisineType: json['cuisineType'] as String?,
       servings: (json['servings'] as num?)?.toInt() ?? 4,
+      ingredients: (json['ingredients'] as List<dynamic>? ?? [])
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList(),
+      missedIngredients: (json['missedIngredients'] as List<dynamic>? ?? [])
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList(),
+      usedIngredients: (json['usedIngredients'] as List<dynamic>? ?? [])
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList(),
     );
   }
 }

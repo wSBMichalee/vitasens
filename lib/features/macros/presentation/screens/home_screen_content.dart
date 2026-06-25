@@ -12,6 +12,10 @@ import 'package:vitasense/core/widgets/app_header.dart';
 import 'package:vitasense/features/meals/bloc/daily_log_bloc.dart';
 import 'package:vitasense/features/meals/bloc/daily_log_event.dart';
 import 'package:vitasense/features/meals/bloc/daily_log_state.dart';
+import 'package:vitasense/features/pantry/bloc/pantry_bloc.dart';
+import 'package:vitasense/features/pantry/bloc/pantry_event.dart';
+import 'package:vitasense/features/pantry/bloc/pantry_state.dart';
+import 'package:vitasense/features/pantry/data/pantry_repository.dart';
 
 import 'package:vitasense/core/router/app_router.dart';
 
@@ -41,6 +45,7 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
   late MacrosBloc _macrosBloc;
   late WaterBloc _waterBloc;
   late DailyLogBloc _dailyLogBloc;
+  late PantryBloc _pantryBloc;
 
   @override
   void initState() {
@@ -48,12 +53,14 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
     _macrosBloc = MacrosBloc(repository: MacrosRepository());
     _waterBloc = WaterBloc();
     _dailyLogBloc = DailyLogBloc();
+    _pantryBloc = PantryBloc(repository: PantryRepository());
 
     final today = DateTime.now();
     final dateStr = today.toIso8601String().split('T')[0];
     _macrosBloc.add(LoadDailyMacros(dateStr));
     _waterBloc.add(LoadWater(today));
     _dailyLogBloc.add(LoadDailyLog(today));
+    _pantryBloc.add(LoadPantry());
   }
 
   @override
@@ -61,6 +68,7 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
     _macrosBloc.close();
     _waterBloc.close();
     _dailyLogBloc.close();
+    _pantryBloc.close();
     super.dispose();
   }
 
@@ -78,6 +86,7 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
         BlocProvider.value(value: _macrosBloc),
         BlocProvider.value(value: _waterBloc),
         BlocProvider.value(value: _dailyLogBloc),
+        BlocProvider.value(value: _pantryBloc),
       ],
       child: GradientScaffold(
         body: SafeArea(
@@ -255,28 +264,44 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
                       BlocBuilder<DailyLogBloc, DailyLogState>(
                         builder: (context, state) {
                           final loaded = state is DailyLogLoaded ? state : null;
-                          return Column(
-                            children: [
-                              MealSection(title: 'Breakfast', mealTime: 'breakfast', isEditable: isEditable, meals: loaded?.breakfast ?? [], onDelete: (id) => _dailyLogBloc.add(DeleteMeal(id, _selectedDate)), onMealLogged: () {
-                                _dailyLogBloc.add(LoadDailyLog(_selectedDate));
-                                _macrosBloc.add(LoadDailyMacros(_selectedDate.toIso8601String().split('T')[0]));
-                              }),
-                              SizedBox(height: 8.h),
-                              MealSection(title: 'Lunch', mealTime: 'lunch', isEditable: isEditable, meals: loaded?.lunch ?? [], onDelete: (id) => _dailyLogBloc.add(DeleteMeal(id, _selectedDate)), onMealLogged: () {
-                                _dailyLogBloc.add(LoadDailyLog(_selectedDate));
-                                _macrosBloc.add(LoadDailyMacros(_selectedDate.toIso8601String().split('T')[0]));
-                              }),
-                              SizedBox(height: 8.h),
-                              MealSection(title: 'Dinner', mealTime: 'dinner', isEditable: isEditable, meals: loaded?.dinner ?? [], onDelete: (id) => _dailyLogBloc.add(DeleteMeal(id, _selectedDate)), onMealLogged: () {
-                                _dailyLogBloc.add(LoadDailyLog(_selectedDate));
-                                _macrosBloc.add(LoadDailyMacros(_selectedDate.toIso8601String().split('T')[0]));
-                              }),
-                              SizedBox(height: 8.h),
-                              MealSection(title: 'Snacks', mealTime: 'snack', isEditable: isEditable, meals: loaded?.snack ?? [], onDelete: (id) => _dailyLogBloc.add(DeleteMeal(id, _selectedDate)), onMealLogged: () {
-                                _dailyLogBloc.add(LoadDailyLog(_selectedDate));
-                                _macrosBloc.add(LoadDailyMacros(_selectedDate.toIso8601String().split('T')[0]));
-                              }),
-                            ],
+                          return BlocBuilder<PantryBloc, PantryState>(
+                            builder: (context, pantryState) {
+                              final pantryIsEmpty = pantryState is! PantryLoaded || (() {
+                                if (pantryState is! PantryLoaded) return true;
+                                final ingredients = (pantryState as PantryLoaded).ingredients;
+                                if (ingredients.isEmpty) return true;
+                                // Sprawdź czy są jakieś nieexpired produkty
+                                final now = DateTime.now();
+                                final hasValidIngredients = ingredients.any((ing) {
+                                  if (ing.expiryDate == null) return true; // bez daty = OK
+                                  return ing.expiryDate!.isAfter(now); // nie expired = OK
+                                });
+                                return !hasValidIngredients;
+                              })();
+                              return Column(
+                                children: [
+                                  MealSection(title: 'Breakfast', mealTime: 'breakfast', isEditable: isEditable, meals: loaded?.breakfast ?? [], onDelete: (id) => _dailyLogBloc.add(DeleteMeal(id, _selectedDate)), pantryIsEmpty: pantryIsEmpty, onMealLogged: () {
+                                    _dailyLogBloc.add(LoadDailyLog(_selectedDate));
+                                    _macrosBloc.add(LoadDailyMacros(_selectedDate.toIso8601String().split('T')[0]));
+                                  }),
+                                  SizedBox(height: 8.h),
+                                  MealSection(title: 'Lunch', mealTime: 'lunch', isEditable: isEditable, meals: loaded?.lunch ?? [], onDelete: (id) => _dailyLogBloc.add(DeleteMeal(id, _selectedDate)), pantryIsEmpty: pantryIsEmpty, onMealLogged: () {
+                                    _dailyLogBloc.add(LoadDailyLog(_selectedDate));
+                                    _macrosBloc.add(LoadDailyMacros(_selectedDate.toIso8601String().split('T')[0]));
+                                  }),
+                                  SizedBox(height: 8.h),
+                                  MealSection(title: 'Dinner', mealTime: 'dinner', isEditable: isEditable, meals: loaded?.dinner ?? [], onDelete: (id) => _dailyLogBloc.add(DeleteMeal(id, _selectedDate)), pantryIsEmpty: pantryIsEmpty, onMealLogged: () {
+                                    _dailyLogBloc.add(LoadDailyLog(_selectedDate));
+                                    _macrosBloc.add(LoadDailyMacros(_selectedDate.toIso8601String().split('T')[0]));
+                                  }),
+                                  SizedBox(height: 8.h),
+                                  MealSection(title: 'Snacks', mealTime: 'snack', isEditable: isEditable, meals: loaded?.snack ?? [], onDelete: (id) => _dailyLogBloc.add(DeleteMeal(id, _selectedDate)), pantryIsEmpty: pantryIsEmpty, onMealLogged: () {
+                                    _dailyLogBloc.add(LoadDailyLog(_selectedDate));
+                                    _macrosBloc.add(LoadDailyMacros(_selectedDate.toIso8601String().split('T')[0]));
+                                  }),
+                                ],
+                              );
+                            },
                           );
                         },
                       ),

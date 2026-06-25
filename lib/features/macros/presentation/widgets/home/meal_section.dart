@@ -15,6 +15,7 @@ class MealSection extends StatefulWidget {
     required this.onDelete,
     this.isEditable = true,
     this.onMealLogged,
+    this.pantryIsEmpty = false,
   });
 
   final String title;
@@ -23,6 +24,7 @@ class MealSection extends StatefulWidget {
   final void Function(String mealId) onDelete;
   final bool isEditable;
   final VoidCallback? onMealLogged;
+  final bool pantryIsEmpty;
 
   @override
   State<MealSection> createState() => MealSectionState();
@@ -94,6 +96,7 @@ class MealSectionState extends State<MealSection> {
               child: MealSuggestionCard(
                 mealType: widget.mealTime,
                 onLogged: widget.onMealLogged,
+                pantryIsEmpty: widget.pantryIsEmpty,
               ),
             ),
           if (_expanded && widget.meals.isEmpty && !widget.isEditable)

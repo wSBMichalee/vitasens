@@ -8,38 +8,55 @@ class PantryRepository {
   PantryRepository({SupabaseClient? supabase})
       : _supabase = supabase ?? Supabase.instance.client;
 
+  Future<String?> _getPantryId() async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) return null;
+    final existing = await _supabase
+        .from('pantries')
+        .select('id')
+        .eq('owner_id', userId)
+        .maybeSingle();
+    if (existing != null) return existing['id'] as String;
+    final created = await _supabase
+        .from('pantries')
+        .insert({'owner_id': userId})
+        .select('id')
+        .single();
+    return created['id'] as String;
+  }
+
   Future<List<IngredientModel>> getIngredients() async {
     return CacheService().fetchWithStaleWhileRevalidate(
       key: 'pantry_ingredients',
       fetchFuture: () async {
-        final response = await _supabase.functions.invoke(
-          'manage-pantry',
-          body: {'action': 'list'},
-        );
-        final List<dynamic> data = response.data['data'] ?? [];
-        return data.map((json) => IngredientModel.fromJson(json as Map<String, dynamic>)).toList();
+        final pantryId = await _getPantryId();
+        if (pantryId == null) return [];
+        final data = await _supabase
+            .from('ingredients')
+            .select('*')
+            .eq('pantry_id', pantryId)
+            .order('created_at', ascending: false);
+        return (data as List)
+            .map((json) => IngredientModel.fromJson(json as Map<String, dynamic>))
+            .toList();
       },
     );
   }
 
   Future<List<IngredientModel>> getExpiring({int days = 3}) async {
-    final response = await _supabase.functions.invoke(
-      'manage-pantry',
-      body: {'action': 'expiring', 'days': days},
-    );
-
-    final payload = response.data['data'] as Map<String, dynamic>?;
-    if (payload == null) return [];
-    final List<dynamic> data = payload['expiringSoonItems'] ?? [];
-    return data.map((json) => IngredientModel.fromJson(json as Map<String, dynamic>)).toList();
-  }
-
-  Future<void> deleteIngredient(String id) async {
-    await _supabase.functions.invoke(
-      'manage-pantry',
-      body: {'action': 'delete', 'id': id},
-    );
-    CacheService().invalidate('pantry_ingredients');
+    final pantryId = await _getPantryId();
+    if (pantryId == null) return [];
+    final cutoff = DateTime.now().add(Duration(days: days)).toIso8601String();
+    final data = await _supabase
+        .from('ingredients')
+        .select('*')
+        .eq('pantry_id', pantryId)
+        .lte('expiry_date', cutoff)
+        .gte('expiry_date', DateTime.now().toIso8601String())
+        .order('expiry_date');
+    return (data as List)
+        .map((json) => IngredientModel.fromJson(json as Map<String, dynamic>))
+        .toList();
   }
 
   Future<void> addIngredient({
@@ -51,19 +68,22 @@ class PantryRepository {
     DateTime? expiryDate,
     String? imageUrl,
   }) async {
-    await _supabase.functions.invoke(
-      'manage-pantry',
-      body: {
-        'action': 'add',
-        'pantry_id': pantryId,
-        'name': name,
-        'quantity': quantity,
-        'unit': unit,
-        'category': category,
-        if (expiryDate != null) 'expiry_date': expiryDate.toIso8601String(),
-        if (imageUrl != null && imageUrl.isNotEmpty) 'image_url': imageUrl,
-      },
-    );
+    final resolvedPantryId = await _getPantryId();
+    if (resolvedPantryId == null) throw Exception('Not authenticated');
+    await _supabase.from('ingredients').insert({
+      'pantry_id': resolvedPantryId,
+      'name': name,
+      'quantity': quantity,
+      'unit': unit,
+      'category': category ?? 'other',
+      if (expiryDate != null) 'expiry_date': expiryDate.toIso8601String(),
+      if (imageUrl != null && imageUrl.isNotEmpty) 'image_url': imageUrl,
+    });
+    CacheService().invalidate('pantry_ingredients');
+  }
+
+  Future<void> deleteIngredient(String id) async {
+    await _supabase.from('ingredients').delete().eq('id', id);
     CacheService().invalidate('pantry_ingredients');
   }
 }

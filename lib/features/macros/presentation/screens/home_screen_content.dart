@@ -20,6 +20,7 @@ import 'package:vitasense/features/pantry/data/pantry_repository.dart';
 import 'package:vitasense/core/router/app_router.dart';
 
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -166,6 +167,20 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
               // ── PROGRESS RING CARD ──────────────────────────────────────
               BlocBuilder<DailyLogBloc, DailyLogState>(
                 builder: (context, state) {
+                  if (state is DailyLogInitial || state is DailyLogLoading) {
+                    return Shimmer.fromColors(
+                      baseColor: AppColors.borderLight,
+                      highlightColor: Colors.white,
+                      child: Container(
+                        height: 180.h,
+                        margin: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 0),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20.r),
+                        ),
+                      ),
+                    );
+                  }
                   final kcalConsumed = state is DailyLogLoaded ? state.totalCalories : 0;
                   final proteinConsumed = state is DailyLogLoaded ? state.totalProtein.round() : 0;
                   final carbsConsumed = state is DailyLogLoaded ? state.totalCarbs.round() : 0;
@@ -263,6 +278,22 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
                       // ── MEAL SECTIONS (styl Fitollo) ──────────────────────
                       BlocBuilder<DailyLogBloc, DailyLogState>(
                         builder: (context, state) {
+                          if (state is DailyLogInitial || state is DailyLogLoading) {
+                            return Shimmer.fromColors(
+                              baseColor: AppColors.borderLight,
+                              highlightColor: Colors.white,
+                              child: Column(
+                                children: List.generate(4, (i) => Container(
+                                  height: 80.h,
+                                  margin: EdgeInsets.only(bottom: 8.h),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(16.r),
+                                  ),
+                                )),
+                              ),
+                            );
+                          }
                           final loaded = state is DailyLogLoaded ? state : null;
                           return BlocBuilder<PantryBloc, PantryState>(
                             builder: (context, pantryState) {

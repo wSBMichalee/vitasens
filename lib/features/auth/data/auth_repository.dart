@@ -111,14 +111,38 @@ class AuthRepository {
     return CacheService().fetchWithStaleWhileRevalidate(
       key: 'user_profile',
       fetchFuture: () async {
-        final response = await _client.functions.invoke(
-          'manage-auth',
-          body: {
-            'action': 'get_user',
-          },
-        );
-        final responseData = response.data as Map;
-        return Map<String, dynamic>.from(responseData['data'] as Map);
+        final userId = _client.auth.currentUser?.id;
+        if (userId == null) throw Exception('Not authenticated');
+        final response = await _client
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+        return {
+          'id': response['id'],
+          'email': _client.auth.currentUser?.email ?? '',
+          'full_name': response['name'],
+          'onboarding_completed': response['onboarding_completed'],
+          'subscription_status': response['subscription_status'],
+          'trial_expires_at': response['trial_expires_at'],
+          'goal_type': response['goal_type'],
+          'daily_calorie_target': response['daily_calorie_target'],
+          'daily_protein_target': response['daily_protein_target'],
+          'daily_carbs_target': response['daily_carbs_target'],
+          'daily_fat_target': response['daily_fat_target'],
+          'goal_pace': response['goal_pace'],
+          'activity_level': response['activity_level'],
+          'weight_kg': response['weight_kg'],
+          'target_weight_kg': response['target_weight_kg'],
+          'height_cm': response['height_cm'],
+          'gender': response['gender'],
+          'age': response['age'],
+          'daily_water_target': response['daily_water_target'],
+          'avatar_url': response['avatar_url'],
+          'allergies': response['allergies'],
+          'health_conditions': response['health_conditions'],
+          'dietary_preferences': response['dietary_preferences'],
+        };
       },
     );
   }

@@ -113,6 +113,24 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
     super.dispose();
   }
 
+  void _selectManualCategory(Map<String, String> cat) {
+    final name = _manualNameController.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Wpisz najpierw nazwę produktu')),
+      );
+      return;
+    }
+    setState(() {
+      _selectedName = name;
+      _selectedImageUrl = null;
+      _selectedCategoryLabel = cat['name']!;
+      _selectedEmoji = cat['emoji']!;
+      _resolveCategoryAndUnit(cat['name']!);
+      _manualEntryMode = false;
+    });
+  }
+
   Map<String, String> _mapCategory(String aisle, String foodName) {
     final lowerAisle = aisle.toLowerCase();
     final lowerName = foodName.toLowerCase();

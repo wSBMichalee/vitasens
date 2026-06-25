@@ -18,19 +18,19 @@ class AccountSettingsSection extends StatelessWidget {
           ActionRow(
             icon: Icons.lock_outline,
             label: 'Change Password',
-            onTap: () => _showComingSoon(context),
+            onTap: () => context.push(AppRoutes.changePassword),
           ),
           const Divider(color: AppColors.border),
           ActionRow(
             icon: Icons.privacy_tip_outlined,
             label: 'Privacy Policy',
-            onTap: () => _showComingSoon(context),
+            onTap: () => context.push(AppRoutes.privacyPolicy),
           ),
           const Divider(color: AppColors.border),
           ActionRow(
             icon: Icons.description_outlined,
             label: 'Terms of Service',
-            onTap: () => _showComingSoon(context),
+            onTap: () => context.push(AppRoutes.termsOfService),
           ),
           const Divider(color: AppColors.border),
           ActionRow(
@@ -45,17 +45,11 @@ class AccountSettingsSection extends StatelessWidget {
           ActionRow(
             icon: Icons.delete_outline,
             label: 'Delete Account',
-            onTap: () => _showComingSoon(context),
+            onTap: () => context.push(AppRoutes.deleteAccount),
             isDestructive: true,
           ),
         ],
       ),
-    );
-  }
-
-  void _showComingSoon(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Coming soon')),
     );
   }
 }

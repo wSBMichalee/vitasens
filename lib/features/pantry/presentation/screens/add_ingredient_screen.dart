@@ -16,6 +16,9 @@ import '../widgets/add_ingredient/loading_shimmer_list.dart';
 import '../widgets/add_ingredient/category_grid_widget.dart';
 import '../widgets/add_ingredient/search_results_list.dart';
 import '../widgets/add_ingredient/expiry_chip.dart';
+import '../widgets/add_ingredient/search_step.dart';
+import '../widgets/add_ingredient/manual_entry_step.dart';
+import '../widgets/add_ingredient/details_step.dart';
 
 
 class AddIngredientScreen extends StatelessWidget {
@@ -338,522 +341,90 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
                 SizedBox(height: 16.h),
                 
                 // Content
-                _selectedName.isEmpty ? _buildSearchStep() : _buildDetailsStep(),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+                _selectedName.isEmpty ? SearchStep(
+                  manualEntryMode: _manualEntryMode,
+                  onEnableManualEntry: () => setState(() => _manualEntryMode = true),
+                  searchController: _searchController,
+                  onSearchChanged: _onSearchChanged,
+                  onClearSearch: () {
+                    _searchController.clear();
+                    _onSearchChanged('');
+                  },
+                  isLoading: _isLoading,
+                  errorMessage: _errorMessage,
+                  searchResults: _searchResults,
+                  onItemTap: (item) {
+                    setState(() {
+                      _selectedName = item.brandName != null ? '${item.brandName} ${item.name}' : item.name;
+                      _selectedImageUrl = item.imageUrl;
+                      _selectedCategoryLabel = item.categoryLabel;
+                      _selectedEmoji = item.categoryEmoji;
+                      _resolveCategoryAndUnit(item.categoryLabel);
 
-  Widget _buildSearchStep() {
-    if (_manualEntryMode) {
-      return _buildManualEntryStep();
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Center(
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 8.h),
-            child: TextButton.icon(
-              onPressed: () => setState(() => _manualEntryMode = true),
-              icon: Icon(Icons.edit_outlined, size: 16.r, color: AppColors.primary),
-              label: Text(
-                'Nie znalazłeś produktu? Dodaj ręcznie',
-                style: TextStyle(fontSize: 13.sp, color: AppColors.primary, fontWeight: FontWeight.w600),
-              ),
-            ),
-          ),
-        ),
-        SizedBox(height: 8.h),
-        // Search bar
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.w),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14.r),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _onSearchChanged,
-              style: TextStyle(fontSize: 15.sp, color: AppColors.textPrimary),
-              decoration: InputDecoration(
-                hintText: 'Search ingredient...',
-                hintStyle: TextStyle(fontSize: 15.sp, color: Colors.grey.shade400),
-                prefixIcon: Icon(Icons.search, color: AppColors.primary, size: 22.r),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 14.h),
-              ),
-            ),
-          ),
-        ),
-        SizedBox(height: 16.h),
-        
-        Padding(
-          padding: EdgeInsets.only(left: 20.w, bottom: 12.h),
-          child: GestureDetector(
-            onTap: () {
-              _searchController.clear();
-              _onSearchChanged('');
-            },
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.arrow_back_ios, size: 14.r, color: AppColors.primary),
-                SizedBox(width: 4.w),
-                Text(
-                  'Kategorie',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
+                      final suggestedDays = _getDefaultExpiryDays(_selectedName);
+                      if (suggestedDays <= 1) _selectedExpiry = '1 day';
+                      else if (suggestedDays <= 3) _selectedExpiry = '3 days';
+                      else if (suggestedDays <= 7) _selectedExpiry = '1 week';
+                      else _selectedExpiry = '1 month';
+                    });
+                  },
+                  onCategoryGridTap: (query) {
+                    _searchController.text = query;
+                    _onSearchChanged(query);
+                  },
+                  manualEntryStepWidget: ManualEntryStep(
+                    onDisableManualEntry: () => setState(() => _manualEntryMode = false),
+                    manualNameController: _manualNameController,
+                    onManualSelect: _selectManualCategory,
                   ),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        // Search state: Grid / Loading / Error / Results
-        if (_searchController.text.trim().length < 2)
-          CategoryGridWidget(onCategoryTap: (query) {
-                        _searchController.text = query;
-                        _onSearchChanged(query);
-                      })
-        else if (_isLoading)
-          const LoadingShimmerList()
-        else if (_errorMessage != null)
-          Padding(
-            padding: EdgeInsets.all(24.r),
-            child: Center(
-              child: Text(_errorMessage!, style: TextStyle(color: AppColors.error, fontSize: 14.sp)),
-            ),
-          )
-        else if (_searchResults.isEmpty && !_isLoading)
-          Padding(
-            padding: EdgeInsets.all(24.r),
-            child: Center(
-              child: Text("Brak wyników dla '${_searchController.text}'", style: TextStyle(color: Colors.grey.shade500, fontSize: 15.sp)),
-            ),
-          )
-        else
-          SearchResultsList(
-                        items: _searchResults,
-                        onItemTap: (item) {
-                          setState(() {
-                            _selectedName = item.brandName != null ? '${item.brandName} ${item.name}' : item.name;
-                            _selectedImageUrl = item.imageUrl;
-                            _selectedCategoryLabel = item.categoryLabel;
-                            _selectedEmoji = item.categoryEmoji;
-                            _resolveCategoryAndUnit(item.categoryLabel);
-
-                            final suggestedDays = _getDefaultExpiryDays(_selectedName);
-                            if (suggestedDays <= 1) _selectedExpiry = '1 day';
-                            else if (suggestedDays <= 3) _selectedExpiry = '3 days';
-                            else if (suggestedDays <= 7) _selectedExpiry = '1 week';
-                            else _selectedExpiry = '1 month';
-                          });
-                        },
-                      ),
-      ],
-    );
-  }
-
-  
-
-  
-
-  
-
-  
-
-  void _selectManualCategory(Map<String, String> cat) {
-    final name = _manualNameController.text.trim();
-    if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Wpisz najpierw nazwę produktu')),
-      );
-      return;
-    }
-    setState(() {
-      _selectedName = name;
-      _selectedImageUrl = null;
-      _selectedCategoryLabel = cat['name']!;
-      _selectedEmoji = cat['emoji']!;
-      _resolveCategoryAndUnit(cat['name']!);
-      _manualEntryMode = false;
-
-      final suggestedDays = _getDefaultExpiryDays(_selectedName);
-      if (suggestedDays <= 1) _selectedExpiry = '1 day';
-      else if (suggestedDays <= 3) _selectedExpiry = '3 days';
-      else if (suggestedDays <= 7) _selectedExpiry = '1 week';
-      else _selectedExpiry = '1 month';
-    });
-  }
-
-  Widget _buildManualEntryStep() {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          GestureDetector(
-            onTap: () => setState(() => _manualEntryMode = false),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.arrow_back_ios, size: 14.r, color: AppColors.primary),
-                SizedBox(width: 4.w),
-                Text(
-                  'Wróć do wyszukiwania',
-                  style: TextStyle(fontSize: 14.sp, color: AppColors.primary, fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 20.h),
-          Text(
-            'NAZWA PRODUKTU',
-            style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, color: Colors.grey.shade500, letterSpacing: 1.2),
-          ),
-          SizedBox(height: 8.h),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14.r),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
-              ],
-            ),
-            child: TextField(
-              controller: _manualNameController,
-              style: TextStyle(fontSize: 15.sp, color: AppColors.textPrimary),
-              decoration: InputDecoration(
-                hintText: 'np. Jogurt naturalny',
-                hintStyle: TextStyle(fontSize: 15.sp, color: Colors.grey.shade400),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-              ),
-            ),
-          ),
-          SizedBox(height: 24.h),
-          Text(
-            'WYBIERZ KATEGORIĘ',
-            style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, color: Colors.grey.shade500, letterSpacing: 1.2),
-          ),
-          SizedBox(height: 12.h),
-          CategoryGridWidget(
-            onCategoryTap: (_) {},
-            onManualSelect: _selectManualCategory,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailsStep() {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Selected item card
-          Container(
-            padding: EdgeInsets.all(12.r),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12.r),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 2)),
-              ],
-            ),
-            child: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10.r),
-                  child: _selectedImageUrl != null && _selectedImageUrl!.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: _selectedImageUrl!,
-                          width: 56.r,
-                          height: 56.r,
-                          fit: BoxFit.cover,
-                          placeholder: (_, __) => Container(color: Colors.grey.shade200, width: 56.r, height: 56.r),
-                          errorWidget: (_, __, ___) => FallbackImageWidget(emoji: _selectedEmoji),
-                        )
-                      : FallbackImageWidget(emoji: _selectedEmoji),
-                ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _selectedName,
-                        style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        _selectedCategoryLabel.toUpperCase(),
-                        style: TextStyle(fontSize: 12.sp, color: Colors.grey.shade500),
-                      ),
-                    ],
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () => setState(() => _selectedName = ''),
-                  child: Icon(Icons.edit, color: Colors.grey.shade400, size: 20.r),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 32.h),
-
-          // Quantity Section
-          Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                GestureDetector(
-                  onTap: () {
+                ) : DetailsStep(
+                  selectedImageUrl: _selectedImageUrl,
+                  selectedEmoji: _selectedEmoji,
+                  selectedName: _selectedName,
+                  selectedCategoryLabel: _selectedCategoryLabel,
+                  onEditName: () => setState(() => _selectedName = ''),
+                  unit: _unit,
+                  quantity: _quantity,
+                  onDecreaseQuantity: () {
                     setState(() {
                       double step = _unit == 'szt' ? 1 : 50;
                       if (_quantity > step) _quantity -= step;
                     });
                   },
-                  child: Container(
-                    width: 48.r,
-                    height: 48.r,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8)],
-                    ),
-                    child: const Icon(Icons.remove, color: Colors.black),
-                  ),
-                ),
-                SizedBox(width: 32.w),
-                Column(
-                  children: [
-                    Text(
-                      _unit == 'szt' ? _quantity.toInt().toString() : _quantity.toInt().toString(),
-                      style: TextStyle(fontSize: 32.sp, fontWeight: FontWeight.bold, color: Colors.black),
-                    ),
-                    SizedBox(height: 4.h),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade200,
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _unit,
-                          isDense: true,
-                          icon: Icon(Icons.keyboard_arrow_down, size: 16.r),
-                          style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold, color: Colors.black),
-                          items: ['g', 'kg', 'ml', 'l', 'szt'].map((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            );
-                          }).toList(),
-                          onChanged: (val) {
-                            if (val != null) setState(() => _unit = val);
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(width: 32.w),
-                GestureDetector(
-                  onTap: () {
+                  onIncreaseQuantity: () {
                     setState(() {
                       double step = _unit == 'szt' ? 1 : 50;
                       _quantity += step;
                     });
                   },
-                  child: Container(
-                    width: 48.r,
-                    height: 48.r,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8)],
-                    ),
-                    child: const Icon(Icons.add, color: Colors.black),
-                  ),
+                  onUnitChanged: (val) {
+                    if (val != null) setState(() => _unit = val);
+                  },
+                  selectedExpiry: _selectedExpiry,
+                  onAddIngredient: _addIngredient,
+                  onExpiryTap: (label) async {
+                    if (label == 'Custom') {
+                      final date = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now().add(const Duration(days: 3)),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                      );
+                      if (date != null) {
+                        setState(() {
+                          _selectedExpiry = 'Custom';
+                          _customExpiry = date;
+                        });
+                      }
+                    } else {
+                      setState(() => _selectedExpiry = label);
+                    }
+                  },
                 ),
               ],
             ),
           ),
-          SizedBox(height: 40.h),
-
-          // Expiry Section
-          Text(
-            'EXPIRES IN',
-            style: TextStyle(
-              fontSize: 11.sp,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
-              color: Colors.grey.shade600,
-            ),
-          ),
-          SizedBox(height: 12.h),
-          Wrap(
-            spacing: 8.w,
-            runSpacing: 8.h,
-            children: [
-              ExpiryChip(
-                                  label: '1 day',
-                                  isSelected: _selectedExpiry == '1 day',
-                                  onTap: () async {
-                                    if ('1 day' == 'Custom') {
-                                      final date = await showDatePicker(
-                                        context: context,
-                                        initialDate: DateTime.now().add(const Duration(days: 3)),
-                                        firstDate: DateTime.now(),
-                                        lastDate: DateTime.now().add(const Duration(days: 365)),
-                                      );
-                                      if (date != null) {
-                                        setState(() {
-                                          _selectedExpiry = 'Custom';
-                                          _customExpiry = date;
-                                        });
-                                      }
-                                    } else {
-                                      setState(() => _selectedExpiry = '1 day');
-                                    }
-                                  },
-                                ),
-              ExpiryChip(
-                                  label: '3 days',
-                                  isSelected: _selectedExpiry == '3 days',
-                                  onTap: () async {
-                                    if ('3 days' == 'Custom') {
-                                      final date = await showDatePicker(
-                                        context: context,
-                                        initialDate: DateTime.now().add(const Duration(days: 3)),
-                                        firstDate: DateTime.now(),
-                                        lastDate: DateTime.now().add(const Duration(days: 365)),
-                                      );
-                                      if (date != null) {
-                                        setState(() {
-                                          _selectedExpiry = 'Custom';
-                                          _customExpiry = date;
-                                        });
-                                      }
-                                    } else {
-                                      setState(() => _selectedExpiry = '3 days');
-                                    }
-                                  },
-                                ),
-              ExpiryChip(
-                                  label: '1 week',
-                                  isSelected: _selectedExpiry == '1 week',
-                                  onTap: () async {
-                                    if ('1 week' == 'Custom') {
-                                      final date = await showDatePicker(
-                                        context: context,
-                                        initialDate: DateTime.now().add(const Duration(days: 3)),
-                                        firstDate: DateTime.now(),
-                                        lastDate: DateTime.now().add(const Duration(days: 365)),
-                                      );
-                                      if (date != null) {
-                                        setState(() {
-                                          _selectedExpiry = 'Custom';
-                                          _customExpiry = date;
-                                        });
-                                      }
-                                    } else {
-                                      setState(() => _selectedExpiry = '1 week');
-                                    }
-                                  },
-                                ),
-              ExpiryChip(
-                                  label: '1 month',
-                                  isSelected: _selectedExpiry == '1 month',
-                                  onTap: () async {
-                                    if ('1 month' == 'Custom') {
-                                      final date = await showDatePicker(
-                                        context: context,
-                                        initialDate: DateTime.now().add(const Duration(days: 3)),
-                                        firstDate: DateTime.now(),
-                                        lastDate: DateTime.now().add(const Duration(days: 365)),
-                                      );
-                                      if (date != null) {
-                                        setState(() {
-                                          _selectedExpiry = 'Custom';
-                                          _customExpiry = date;
-                                        });
-                                      }
-                                    } else {
-                                      setState(() => _selectedExpiry = '1 month');
-                                    }
-                                  },
-                                ),
-              ExpiryChip(
-                                  label: 'Custom',
-                                  isSelected: _selectedExpiry == 'Custom',
-                                  onTap: () async {
-                                    if ('Custom' == 'Custom') {
-                                      final date = await showDatePicker(
-                                        context: context,
-                                        initialDate: DateTime.now().add(const Duration(days: 3)),
-                                        firstDate: DateTime.now(),
-                                        lastDate: DateTime.now().add(const Duration(days: 365)),
-                                      );
-                                      if (date != null) {
-                                        setState(() {
-                                          _selectedExpiry = 'Custom';
-                                          _customExpiry = date;
-                                        });
-                                      }
-                                    } else {
-                                      setState(() => _selectedExpiry = 'Custom');
-                                    }
-                                  },
-                                ),
-            ],
-          ),
-          
-          SizedBox(height: 40.h),
-
-          // Add Button
-          BlocBuilder<PantryBloc, PantryState>(
-            builder: (context, state) {
-              final isLoading = state is PantryAddingIngredient;
-              return SizedBox(
-                width: double.infinity,
-                height: 56.h,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-                  ),
-                  onPressed: (_quantity > 0 && !isLoading) ? _addIngredient : null,
-                  child: isLoading
-                      ? SizedBox(width: 24.r, height: 24.r, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : Text(
-                          'Add to Pantry',
-                          style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: Colors.white),
-                        ),
-                ),
-              );
-            },
-          ),
-          SizedBox(height: 32.h),
-        ],
+        ),
       ),
     );
   }

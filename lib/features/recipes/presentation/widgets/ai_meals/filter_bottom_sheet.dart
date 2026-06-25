@@ -125,32 +125,9 @@ class FilterBottomSheetState extends State<FilterBottomSheet> {
                   Text('Diet & Nutrition', style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w700, color: AppColors.textMuted, letterSpacing: 0.8)),
                 ]),
                 SizedBox(height: 12.h),
-                Wrap(
-                  spacing: 8.w,
-                  runSpacing: 8.h,
-                  children: _quickFilters.map((f) {
-                    final active = activeFilters.contains(f.$1);
-                    return GestureDetector(
-                      onTap: () => context.read<RecipesBloc>().add(ToggleRecipeFilter(f.$1)),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
-                        decoration: BoxDecoration(
-                          color: active ? AppColors.primaryLight : AppColors.backgroundWhite,
-                          border: Border.all(color: active ? AppColors.primary : AppColors.border),
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(f.$1, style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w700, color: active ? AppColors.primary : AppColors.textPrimary)),
-                            Text(f.$2, style: TextStyle(fontSize: 10.sp, color: active ? AppColors.primary : AppColors.textMuted)),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                _FilterChipsSection(
+                  activeFilters: activeFilters,
+                  onToggle: (filter) => context.read<RecipesBloc>().add(ToggleRecipeFilter(filter)),
                 ),
                 SizedBox(height: 24.h),
 
@@ -161,29 +138,10 @@ class FilterBottomSheetState extends State<FilterBottomSheet> {
                   Text('Cook Time', style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w700, color: AppColors.textMuted, letterSpacing: 0.8)),
                 ]),
                 SizedBox(height: 4.h),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('${_cookTimeRange.start.round()} min', style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary)),
-                    Text('${_cookTimeRange.end.round() == 120 ? '120+' : _cookTimeRange.end.round().toString()} min', style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary)),
-                  ],
-                ),
-                SliderTheme(
-                  data: SliderThemeData(
-                    activeTrackColor: AppColors.primary,
-                    inactiveTrackColor: AppColors.borderLight,
-                    thumbColor: AppColors.primary,
-                    overlayColor: AppColors.primary.withValues(alpha: 0.1),
-                    trackHeight: 4,
-                    rangeThumbShape: const RoundRangeSliderThumbShape(enabledThumbRadius: 10),
-                  ),
-                  child: RangeSlider(
-                    values: _cookTimeRange,
-                    min: 0,
-                    max: 120,
-                    divisions: 12,
-                    onChanged: (v) => setState(() => _cookTimeRange = v),
-                  ),
+                _CookTimeSlider(
+                  minCookTime: _cookTimeRange.start.round(),
+                  maxCookTime: _cookTimeRange.end.round(),
+                  onChanged: (min, max) => setState(() => _cookTimeRange = RangeValues(min.toDouble(), max.toDouble())),
                 ),
                 SizedBox(height: 20.h),
 
@@ -194,29 +152,10 @@ class FilterBottomSheetState extends State<FilterBottomSheet> {
                   Text('Calories', style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w700, color: AppColors.textMuted, letterSpacing: 0.8)),
                 ]),
                 SizedBox(height: 4.h),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('${_caloriesRange.start.round()} kcal', style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary)),
-                    Text('${_caloriesRange.end.round() == 1200 ? '1200+' : _caloriesRange.end.round().toString()} kcal', style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary)),
-                  ],
-                ),
-                SliderTheme(
-                  data: SliderThemeData(
-                    activeTrackColor: AppColors.primary,
-                    inactiveTrackColor: AppColors.borderLight,
-                    thumbColor: AppColors.primary,
-                    overlayColor: AppColors.primary.withValues(alpha: 0.1),
-                    trackHeight: 4,
-                    rangeThumbShape: const RoundRangeSliderThumbShape(enabledThumbRadius: 10),
-                  ),
-                  child: RangeSlider(
-                    values: _caloriesRange,
-                    min: 0,
-                    max: 1200,
-                    divisions: 12,
-                    onChanged: (v) => setState(() => _caloriesRange = v),
-                  ),
+                _CaloriesSlider(
+                  minCalories: _caloriesRange.start.round(),
+                  maxCalories: _caloriesRange.end.round(),
+                  onChanged: (min, max) => setState(() => _caloriesRange = RangeValues(min.toDouble(), max.toDouble())),
                 ),
                 SizedBox(height: 20.h),
 
@@ -227,32 +166,9 @@ class FilterBottomSheetState extends State<FilterBottomSheet> {
                   Text('Cuisine', style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w700, color: AppColors.textMuted, letterSpacing: 0.8)),
                 ]),
                 SizedBox(height: 12.h),
-                Wrap(
-                  spacing: 8.w,
-                  runSpacing: 8.h,
-                  children: _cuisines.map((c) {
-                    final active = activeFilters.contains(c.$1);
-                    return GestureDetector(
-                      onTap: () => context.read<RecipesBloc>().add(ToggleRecipeFilter(c.$1)),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
-                        decoration: BoxDecoration(
-                          color: active ? AppColors.secondaryLight : AppColors.backgroundWhite,
-                          border: Border.all(color: active ? AppColors.secondary : AppColors.border),
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(c.$2, style: TextStyle(fontSize: 16.sp)),
-                            SizedBox(width: 6.w),
-                            Text(c.$1, style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600, color: active ? AppColors.secondary : AppColors.textSecondary)),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                _CuisineChipsSection(
+                  activeFilters: activeFilters,
+                  onToggle: (filter) => context.read<RecipesBloc>().add(ToggleRecipeFilter(filter)),
                 ),
                 SizedBox(height: 20.h),
 
@@ -363,5 +279,161 @@ class FilterBottomSheetState extends State<FilterBottomSheet> {
         },
       );
     });
+  }
+}
+
+class _FilterChipsSection extends StatelessWidget {
+  final Set<String> activeFilters;
+  final Function(String) onToggle;
+
+  const _FilterChipsSection({required this.activeFilters, required this.onToggle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8.w,
+      runSpacing: 8.h,
+      children: FilterBottomSheetState._quickFilters.map((f) {
+        final active = activeFilters.contains(f.$1);
+        return GestureDetector(
+          onTap: () => onToggle(f.$1),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+            decoration: BoxDecoration(
+              color: active ? AppColors.primaryLight : AppColors.backgroundWhite,
+              border: Border.all(color: active ? AppColors.primary : AppColors.border),
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(f.$1, style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w700, color: active ? AppColors.primary : AppColors.textPrimary)),
+                Text(f.$2, style: TextStyle(fontSize: 10.sp, color: active ? AppColors.primary : AppColors.textMuted)),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _CookTimeSlider extends StatelessWidget {
+  final int minCookTime;
+  final int maxCookTime;
+  final Function(int, int) onChanged;
+
+  const _CookTimeSlider({required this.minCookTime, required this.maxCookTime, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('$minCookTime min', style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary)),
+            Text('${maxCookTime == 120 ? '120+' : maxCookTime.toString()} min', style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary)),
+          ],
+        ),
+        SliderTheme(
+          data: SliderThemeData(
+            activeTrackColor: AppColors.primary,
+            inactiveTrackColor: AppColors.borderLight,
+            thumbColor: AppColors.primary,
+            overlayColor: AppColors.primary.withValues(alpha: 0.1),
+            trackHeight: 4,
+            rangeThumbShape: const RoundRangeSliderThumbShape(enabledThumbRadius: 10),
+          ),
+          child: RangeSlider(
+            values: RangeValues(minCookTime.toDouble(), maxCookTime.toDouble()),
+            min: 0,
+            max: 120,
+            divisions: 12,
+            onChanged: (v) => onChanged(v.start.round(), v.end.round()),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CaloriesSlider extends StatelessWidget {
+  final int minCalories;
+  final int maxCalories;
+  final Function(int, int) onChanged;
+
+  const _CaloriesSlider({required this.minCalories, required this.maxCalories, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('$minCalories kcal', style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary)),
+            Text('${maxCalories == 1200 ? '1200+' : maxCalories.toString()} kcal', style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary)),
+          ],
+        ),
+        SliderTheme(
+          data: SliderThemeData(
+            activeTrackColor: AppColors.primary,
+            inactiveTrackColor: AppColors.borderLight,
+            thumbColor: AppColors.primary,
+            overlayColor: AppColors.primary.withValues(alpha: 0.1),
+            trackHeight: 4,
+            rangeThumbShape: const RoundRangeSliderThumbShape(enabledThumbRadius: 10),
+          ),
+          child: RangeSlider(
+            values: RangeValues(minCalories.toDouble(), maxCalories.toDouble()),
+            min: 0,
+            max: 1200,
+            divisions: 12,
+            onChanged: (v) => onChanged(v.start.round(), v.end.round()),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CuisineChipsSection extends StatelessWidget {
+  final Set<String> activeFilters;
+  final Function(String) onToggle;
+
+  const _CuisineChipsSection({required this.activeFilters, required this.onToggle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8.w,
+      runSpacing: 8.h,
+      children: FilterBottomSheetState._cuisines.map((c) {
+        final active = activeFilters.contains(c.$1);
+        return GestureDetector(
+          onTap: () => onToggle(c.$1),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+            decoration: BoxDecoration(
+              color: active ? AppColors.secondaryLight : AppColors.backgroundWhite,
+              border: Border.all(color: active ? AppColors.secondary : AppColors.border),
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(c.$2, style: TextStyle(fontSize: 16.sp)),
+                SizedBox(width: 6.w),
+                Text(c.$1, style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600, color: active ? AppColors.secondary : AppColors.textSecondary)),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
   }
 }

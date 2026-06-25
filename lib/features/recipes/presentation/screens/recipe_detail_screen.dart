@@ -22,6 +22,10 @@ import '../widgets/recipe_detail/recipe_ingredient_row.dart';
 import '../widgets/recipe_detail/recipe_substitutes_section.dart';
 import '../widgets/recipe_detail/recipe_nutrition_tile.dart';
 import '../widgets/recipe_detail/recipe_diet_tag.dart';
+import '../widgets/recipe_detail/recipe_steps_section.dart';
+import '../widgets/recipe_detail/recipe_nutrition_section.dart';
+import '../widgets/recipe_detail/recipe_difficulty_section.dart';
+import '../widgets/recipe_detail/recipe_cook_button.dart';
 
 
 class RecipeDetailScreen extends StatelessWidget {
@@ -441,53 +445,16 @@ class _RecipeDetailViewState extends State<_RecipeDetailView> {
 
                         // ── NUTRITION ──────────────────────────────────────
                         SizedBox(height: 28.h),
-                        Row(children: [
-                          Icon(Icons.monitor_heart_outlined, color: AppColors.primary, size: 18.r),
-                          SizedBox(width: 8.w),
-                          Text('Nutrition per serving', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                        ]),
-                        SizedBox(height: 12.h),
-                        Row(children: [
-                          NutritionTile(label: 'Calories', value: '$calories', unit: 'kcal', color: AppColors.primary),
-                          SizedBox(width: 8.w),
-                          NutritionTile(label: 'Protein', value: proteinG.toStringAsFixed(1), unit: 'g', color: AppColors.proteinColor),
-                          SizedBox(width: 8.w),
-                          NutritionTile(label: 'Carbs', value: carbsG.toStringAsFixed(1), unit: 'g', color: AppColors.carbsColor),
-                          SizedBox(width: 8.w),
-                          NutritionTile(label: 'Fat', value: fatG.toStringAsFixed(1), unit: 'g', color: AppColors.fatColor),
-                        ]),
+                        RecipeNutritionSection(
+                          calories: calories,
+                          proteinG: proteinG,
+                          carbsG: carbsG,
+                          fatG: fatG,
+                        ),
 
                         // ── DIFFICULTY ─────────────────────────────────────
                         SizedBox(height: 28.h),
-                        Row(children: [
-                          Icon(Icons.bar_chart_rounded, color: AppColors.primary, size: 18.r),
-                          SizedBox(width: 8.w),
-                          Text('Difficulty', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                        ]),
-                        SizedBox(height: 12.h),
-                        Builder(
-                          builder: (context) {
-                            final difficultyLevel = cookTimeMinutes <= 20 ? 0 : cookTimeMinutes <= 45 ? 1 : 2;
-                            final difficultyLabels = ['Easy', 'Medium', 'Hard'];
-                            final difficultyColors = [AppColors.primary, AppColors.warning, AppColors.error];
-                            return Row(children: difficultyLabels.asMap().entries.map((e) {
-                              final active = e.key == difficultyLevel;
-                              return Expanded(child: Padding(
-                                padding: EdgeInsets.only(right: e.key < 2 ? 8.w : 0),
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(vertical: 10.h),
-                                  decoration: BoxDecoration(
-                                    color: active ? difficultyColors[e.key] : AppColors.borderLight,
-                                    borderRadius: BorderRadius.circular(8.r),
-                                  ),
-                                  child: Center(child: Text(e.value,
-                                    style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w700,
-                                      color: active ? AppColors.textWhite : AppColors.textMuted))),
-                                ),
-                              ));
-                            }).toList());
-                          }
-                        ),
+                        RecipeDifficultySection(cookTimeMinutes: cookTimeMinutes),
 
                         // ── DESCRIPTION ────────────────────────────────────
                         if (description.isNotEmpty) ...[
@@ -503,44 +470,7 @@ class _RecipeDetailViewState extends State<_RecipeDetailView> {
 
                         // ── INSTRUCTIONS ───────────────────────────────────
                         SizedBox(height: 28.h),
-                        Row(children: [
-                          Icon(Icons.menu_book_outlined, color: AppColors.primary, size: 18.r),
-                          SizedBox(width: 8.w),
-                          Text('How to prepare', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                        ]),
-                        SizedBox(height: 16.h),
-                        if (steps.isEmpty)
-                          Container(
-                            padding: EdgeInsets.all(16.r),
-                            decoration: BoxDecoration(color: AppColors.borderLight, borderRadius: BorderRadius.circular(12.r)),
-                            child: Row(children: [
-                              Icon(Icons.info_outline, color: AppColors.textMuted, size: 20.r),
-                              SizedBox(width: 12.w),
-                              Expanded(child: Text('Step-by-step instructions not available yet. Try cooking this recipe after re-syncing.',
-                                style: TextStyle(fontSize: 13.sp, color: AppColors.textSecondary, height: 1.5))),
-                            ]),
-                          )
-                        else
-                          ...steps.asMap().entries.map((entry) {
-                            final stepText = entry.value['step']?.toString() ?? '';
-                            final stepNum = entry.value['number'] ?? (entry.key + 1);
-                            return Padding(
-                              padding: EdgeInsets.only(bottom: 16.h),
-                              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                Container(
-                                  width: 32.r, height: 32.r,
-                                  decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-                                  child: Center(child: Text('$stepNum',
-                                    style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: AppColors.textWhite))),
-                                ),
-                                SizedBox(width: 12.w),
-                                Expanded(child: Padding(
-                                  padding: EdgeInsets.only(top: 6.h),
-                                  child: Text(stepText, style: TextStyle(fontSize: 14.sp, color: AppColors.textPrimary, height: 1.6)),
-                                )),
-                              ]),
-                            );
-                          }),
+                        RecipeStepsSection(steps: steps),
                       ],
                     ),
                   ),
@@ -553,89 +483,13 @@ class _RecipeDetailViewState extends State<_RecipeDetailView> {
               bottom: 0,
               left: 0,
               right: 0,
-              child: Container(
-                padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 28.h),
-                decoration: BoxDecoration(
-                  color: AppColors.backgroundWhite,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.textPrimary.withValues(alpha: 0.06),
-                      blurRadius: 20.r,
-                      offset: const Offset(0, -4),
-                    ),
-                  ],
-                ),
-                child: BlocBuilder<RecipesBloc, RecipesState>(
-                  builder: (context, state) {
-                    final isCooking = state is RecipesCooking;
-
-                    return Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: double.infinity,
-                          height: 56.h,
-                          child: FilledButton(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16.r),
-                              ),
-                            ),
-                            onPressed: isCooking ? null : () => _cookRecipe(context),
-                            child: isCooking
-                                ? SizedBox(
-                                    width: 24.w,
-                                    height: 24.h,
-                                    child: CircularProgressIndicator(
-                                      color: AppColors.textWhite,
-                                      strokeWidth: 2.w,
-                                    ),
-                                  )
-                                : Text(
-                                    'Start cooking now',
-                                    style: TextStyle(
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.textWhite,
-                                    ),
-                                  ),
-                          ),
-                        ),
-
-                        SizedBox(height: 10.h),
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.people, color: AppColors.textMuted, size: 14.r),
-                            SizedBox(width: 4.w),
-                            Text(
-                              'USED BY 12,000+ USERS THIS WEEK',
-                              style: TextStyle(
-                                fontSize: 10.sp,
-                                color: AppColors.textMuted,
-                                letterSpacing: 0.3,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(height: 4.h),
-
-                        Text(
-                          'UPDATES YOUR PANTRY AUTOMATICALLY',
-                          style: TextStyle(
-                            fontSize: 10.sp,
-                            color: AppColors.textMuted,
-                            letterSpacing: 0.3,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    );
-                  },
-                ),
+              child: BlocBuilder<RecipesBloc, RecipesState>(
+                builder: (context, state) {
+                  return RecipeCookButton(
+                    onCook: () => _cookRecipe(context),
+                    isCooking: state is RecipesCooking,
+                  );
+                },
               ),
             ),
           ],

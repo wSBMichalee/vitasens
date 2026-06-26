@@ -11,11 +11,7 @@ import 'package:vitasense/features/pantry/bloc/pantry_state.dart';
 import 'package:vitasense/features/pantry/data/pantry_repository.dart';
 
 import '../../data/models/product_item.dart';
-import '../widgets/add_ingredient/fallback_image_widget.dart';
-import '../widgets/add_ingredient/loading_shimmer_list.dart';
-import '../widgets/add_ingredient/category_grid_widget.dart';
-import '../widgets/add_ingredient/search_results_list.dart';
-import '../widgets/add_ingredient/expiry_chip.dart';
+import '../../data/models/product_item.dart';
 import '../widgets/add_ingredient/search_step.dart';
 import '../widgets/add_ingredient/manual_entry_step.dart';
 import '../widgets/add_ingredient/details_step.dart';
@@ -382,10 +378,15 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
                       _resolveCategoryAndUnit(item.categoryLabel);
 
                       final suggestedDays = _getDefaultExpiryDays(_selectedName);
-                      if (suggestedDays <= 1) _selectedExpiry = '1 day';
-                      else if (suggestedDays <= 3) _selectedExpiry = '3 days';
-                      else if (suggestedDays <= 7) _selectedExpiry = '1 week';
-                      else _selectedExpiry = '1 month';
+                      if (suggestedDays <= 1) {
+                        _selectedExpiry = '1 day';
+                      } else if (suggestedDays <= 3) {
+                        _selectedExpiry = '3 days';
+                      } else if (suggestedDays <= 7) {
+                        _selectedExpiry = '1 week';
+                      } else {
+                        _selectedExpiry = '1 month';
+                      }
                     });
                   },
                   onCategoryGridTap: (query) {
@@ -439,6 +440,10 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
                     } else {
                       setState(() => _selectedExpiry = label);
                     }
+                  },
+                  storageLocation: _storageLocation,
+                  onStorageChanged: (val) {
+                    setState(() => _storageLocation = val);
                   },
                 ),
               ],

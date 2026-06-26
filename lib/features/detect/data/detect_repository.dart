@@ -26,6 +26,17 @@ class DetectRepository {
     return response.data as Map<String, dynamic>;
   }
 
+  Future<Map<String, dynamic>> scanFridge({
+    required String imageBase64,
+    required String mode,
+  }) async {
+    final response = await _supabase.functions.invoke(
+      'scan-fridge',
+      body: {'imageBase64': imageBase64, 'mode': mode},
+    ).timeout(const Duration(seconds: 30));
+    return response.data as Map<String, dynamic>;
+  }
+
   Future<Map<String, dynamic>> scanBarcode(String barcode) async {
     final response = await _supabase.functions.invoke(
       'scan-barcode',

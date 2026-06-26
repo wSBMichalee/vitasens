@@ -24,6 +24,7 @@ import 'package:vitasense/features/pantry/presentation/screens/pantry_screen.dar
 import 'package:vitasense/features/pantry/presentation/screens/add_ingredient_screen.dart';
 import 'package:vitasense/features/detect/presentation/screens/scanning_screen.dart';
 import 'package:vitasense/features/detect/presentation/screens/food_detected_screen.dart';
+import 'package:vitasense/features/detect/presentation/screens/fridge_scan_result_screen.dart';
 import 'package:vitasense/features/recipes/presentation/screens/ai_meals_screen.dart';
 import 'package:vitasense/features/recipes/presentation/screens/recipe_detail_screen.dart';
 import 'package:vitasense/features/auth/presentation/screens/profile_screen.dart';
@@ -316,6 +317,19 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.scanning,
       pageBuilder: (context, state) =>
           _slideUpPage(state: state, child: const ScanningScreen()),
+    ),
+    GoRoute(
+      path: '/fridge-scan-result',
+      pageBuilder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>;
+        return _slideUpPage(
+          state: state,
+          child: FridgeScanResultScreen(
+            products: extra['products'] as List<dynamic>,
+            mode: extra['mode'] as String,
+          ),
+        );
+      },
     ),
     GoRoute(
       path: AppRoutes.recipeDetails,

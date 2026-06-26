@@ -36,3 +36,13 @@ class DetectError extends DetectState {
   @override
   List<Object?> get props => [message];
 }
+
+class DetectFridgeSuccess extends DetectState {
+  final List<dynamic> products;
+  final String mode;
+
+  const DetectFridgeSuccess(this.products, this.mode);
+
+  @override
+  List<Object?> get props => [products, mode];
+}

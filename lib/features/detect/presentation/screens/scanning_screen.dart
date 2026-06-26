@@ -84,9 +84,13 @@ class _ScanningViewState extends State<_ScanningView> {
       final base64String = base64Encode(bytes);
       
       if (mounted) {
+      if (_mode == 'fridge' || _mode == 'receipt') {
+        context.read<DetectBloc>().add(ScanFridge(base64String, _mode));
+      } else {
         context.read<DetectBloc>().add(
-          CapturePhoto(base64String, 'lunch'), // Temporary mock for mealTime
+          CapturePhoto(base64String, 'lunch'),
         );
+      }
       }
     } catch (e) {
       debugPrint("Error capturing photo: $e");
@@ -105,6 +109,11 @@ class _ScanningViewState extends State<_ScanningView> {
         listener: (context, state) {
           if (state is DetectSuccess) {
             context.push(AppRoutes.foodDetected, extra: state.result);
+          } else if (state is DetectFridgeSuccess) {
+            context.push('/fridge-scan-result', extra: {
+              'products': state.products,
+              'mode': state.mode,
+            });
           } else if (state is DetectError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

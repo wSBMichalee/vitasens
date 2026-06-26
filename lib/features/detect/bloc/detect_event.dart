@@ -34,3 +34,13 @@ class SwitchMode extends DetectEvent {
   @override
   List<Object?> get props => [mode];
 }
+
+class ScanFridge extends DetectEvent {
+  final String imageBase64;
+  final String mode;
+
+  const ScanFridge(this.imageBase64, this.mode);
+
+  @override
+  List<Object?> get props => [imageBase64, mode];
+}

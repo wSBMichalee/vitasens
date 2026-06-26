@@ -10,6 +10,7 @@ class DetectBloc extends Bloc<DetectEvent, DetectState> {
     on<CapturePhoto>(_onCapturePhoto);
     on<ScanBarcode>(_onScanBarcode);
     on<SwitchMode>(_onSwitchMode);
+    on<ScanFridge>(_onScanFridge);
   }
 
   Future<void> _onCapturePhoto(
@@ -46,5 +47,22 @@ class DetectBloc extends Bloc<DetectEvent, DetectState> {
     Emitter<DetectState> emit,
   ) {
     emit(const DetectInitial());
+  }
+
+  Future<void> _onScanFridge(
+    ScanFridge event,
+    Emitter<DetectState> emit,
+  ) async {
+    emit(const DetectProcessing());
+    try {
+      final result = await repository.scanFridge(
+        imageBase64: event.imageBase64,
+        mode: event.mode,
+      );
+      final products = (result['products'] as List?) ?? [];
+      emit(DetectFridgeSuccess(products, event.mode));
+    } catch (e) {
+      emit(DetectError(e.toString()));
+    }
   }
 }

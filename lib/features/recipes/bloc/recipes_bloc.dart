@@ -7,6 +7,7 @@ import 'recipe_filter_engine.dart';
 class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
   final RecipesRepository repository;
   List<Map<String, dynamic>> _allRecipes = [];
+  List<Map<String, dynamic>> _fullRecipePool = []; // pełna pula przed filtrowaniem
 
   RecipesBloc({required this.repository}) : super(const RecipesInitial()) {
     on<LoadRecipes>(_onLoadRecipes);
@@ -38,6 +39,7 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
       final fastRecipes = rawList.map((e) => Map<String, dynamic>.from(e as Map)).toList();
       final spoonacularIds = <int>[];
       
+      _fullRecipePool = fastRecipes; // zapisz pełną pulę
       _allRecipes = fastRecipes;
       final isPersonalized = fastRecipes.any((r) => r['geminiReason'] != null && r['geminiReason'].toString().isNotEmpty);
       
@@ -61,6 +63,8 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
             ...e,
           };
         }).toList();
+
+        _fullRecipePool = _allRecipes;
 
         final enrichedIsPersonalized = _allRecipes.any((r) => r['geminiReason'] != null && r['geminiReason'].toString().isNotEmpty);
         
@@ -95,7 +99,7 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
     bool isEnriching,
   ) {
     final filtered = RecipeFilterEngine.apply(
-      recipes: _allRecipes,
+      recipes: _fullRecipePool, // ZMIANA: filtruj z pełnej puli
       category: category,
       activeFilters: activeFilters,
       minCookTime: minCookTime,
@@ -141,7 +145,7 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
   void _onClearFilters(ClearRecipeFilters event, Emitter<RecipesState> emit) {
     if (state is RecipesLoaded) {
       final s = state as RecipesLoaded;
-      emit(RecipesLoaded(recipes: _allRecipes, activeFilters: const {}, selectedCategory: 'ALL', geminiPersonalized: s.geminiPersonalized, isEnriching: s.isEnriching));
+      emit(RecipesLoaded(recipes: _fullRecipePool, activeFilters: const {}, selectedCategory: 'ALL', geminiPersonalized: s.geminiPersonalized, isEnriching: s.isEnriching));
     }
   }
 

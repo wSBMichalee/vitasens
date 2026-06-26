@@ -5,7 +5,6 @@ import { getUserId, getSupabaseAdmin } from '../_shared/supabaseClient.ts';
 import { SubscriptionGuard } from '../_shared/SubscriptionGuard.ts';
 import { ProfileRepository } from '../calculate-daily-macros/ProfileRepository.ts';
 import { RecipeRepository } from './RecipeRepository.ts';
-import { GeminiPersonalizer } from './GeminiPersonalizer.ts';
 
 // Pomocnicze funkcje mapowania
 const mapCuisine = (cuisines: string[]): string => {
@@ -97,8 +96,7 @@ serve(async (req: Request) => {
               return { ...recipe, matchPercent, usedCount };
             })
             .filter(r => r.matchPercent >= 30)
-            .sort((a, b) => b.matchPercent - a.matchPercent)
-            .slice(0, 20);
+            .sort((a, b) => b.matchPercent - a.matchPercent);
 
           // Jeśli za mało wyników - obniż próg
           if (recipes.length < 5 && ingredientNames.length > 0) {
@@ -113,12 +111,11 @@ serve(async (req: Request) => {
                 return { ...recipe, matchPercent, usedCount };
               })
               .filter(r => r.matchPercent >= 15)
-              .sort((a, b) => b.matchPercent - a.matchPercent)
-              .slice(0, 20);
+              .sort((a, b) => b.matchPercent - a.matchPercent);
           }
         } else {
           // Brak składników — zwróć losowe przepisy
-          recipes = recipes.sort(() => Math.random() - 0.5).slice(0, 20);
+          recipes = recipes.sort(() => Math.random() - 0.5).slice(0, 100);
         }
 
         // Pobierz składniki z pantry użytkownika
@@ -173,33 +170,16 @@ serve(async (req: Request) => {
           }).map((ing: any) => ({ name: ing.name, amount: ing.amount || '' }))
         }));
 
-        // Gemini personalizacja
-        const recipesForGemini = mappedRecipes.map(r => ({
-          id: r.id,
-          title: r.title,
-          calories: r.calories,
-          proteinG: r.proteinG,
-          carbsG: r.carbsG,
-          fatG: r.fatG,
-          dietTags: r.dietTags || [],
-          matchPercent: r.matchPercent
-        }));
-
-        const ranked = await GeminiPersonalizer.rankRecipes(recipesForGemini, profile).catch(e => {
-          console.error('GeminiPersonalizer error:', e);
-          return recipesForGemini.map(r => ({ id: r.id, reason: '' }));
+        // Sortuj po matchPercent (desc), potem po kaloriach bliskich celowi usera
+        const targetCalories = profile?.dailyCalorieTarget ? profile.dailyCalorieTarget / 3 : 600;
+        const finalRecipes = mappedRecipes.sort((a, b) => {
+          if (b.matchPercent !== a.matchPercent) return b.matchPercent - a.matchPercent;
+          const aDiff = Math.abs((a.calories || 0) - targetCalories);
+          const bDiff = Math.abs((b.calories || 0) - targetCalories);
+          return aDiff - bDiff;
         });
 
-        const finalRecipes = [];
-        for (const rnk of ranked) {
-          const rec = mappedRecipes.find(r => r.id === rnk.id);
-          if (rec) finalRecipes.push({ ...rec, geminiReason: rnk.reason || undefined });
-        }
-        for (const rec of mappedRecipes) {
-          if (!finalRecipes.find(f => f.id === rec.id)) finalRecipes.push(rec);
-        }
-
-        res = { recipes: finalRecipes, totalFound: finalRecipes.length, geminiPersonalized: true };
+        res = { recipes: finalRecipes, totalFound: finalRecipes.length, geminiPersonalized: false };
         break;
       }
       case 'favorites': res = await RecipeRepository.getFavorites(userId); break;

@@ -70,6 +70,16 @@ class RecipeFilterEngine {
             final tags = (r['dietTags'] ?? r['diet_tags'] ?? []) as List;
             return tags.any((t) => t.toString().contains('keto'));
           }).toList();
+        case 'GLUTEN FREE':
+          filtered = filtered.where((r) {
+            final tags = (r['dietTags'] ?? r['diet_tags'] ?? []) as List;
+            return tags.any((t) => t.toString().contains('gluten-free') || t.toString().contains('gluten free'));
+          }).toList();
+        case 'DAIRY FREE':
+          filtered = filtered.where((r) {
+            final tags = (r['dietTags'] ?? r['diet_tags'] ?? []) as List;
+            return tags.any((t) => t.toString().contains('dairy-free') || t.toString().contains('dairy free'));
+          }).toList();
         case 'mild':
         case 'medium':
         case 'hot':

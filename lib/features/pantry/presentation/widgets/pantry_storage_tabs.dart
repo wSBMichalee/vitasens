@@ -4,7 +4,7 @@ import 'package:vitasense/core/theme/app_colors.dart';
 
 class PantryStorageTabs extends StatelessWidget {
   const PantryStorageTabs({super.key, required this.selected, required this.onSelected});
-  final String selected; // 'fridge' lub 'pantry'
+  final String selected; // 'fridge' | 'freezer' | 'pantry'
   final ValueChanged<String> onSelected;
 
   @override
@@ -19,7 +19,9 @@ class PantryStorageTabs extends StatelessWidget {
         children: [
           Expanded(child: _tab(context, 'fridge', Icons.kitchen_outlined, 'Lodówka')),
           SizedBox(width: 4.w),
-          Expanded(child: _tab(context, 'pantry', Icons.inventory_2_outlined, 'Spiżarka')),
+          Expanded(child: _tab(context, 'freezer', Icons.ac_unit_outlined, 'Zamrażarka')),
+          SizedBox(width: 4.w),
+          Expanded(child: _tab(context, 'pantry', Icons.inventory_2_outlined, 'Spiżarnia')),
         ],
       ),
     );

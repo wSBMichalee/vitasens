@@ -55,14 +55,11 @@ class _PantryViewState extends State<_PantryView> {
   String _searchQuery = '';
   String _selectedStorage = 'fridge';
 
-  bool _isPantryCategory(String category) {
-    return category == 'grains' || category == 'other' || category == 'cereal' || category == 'chocolate' || category == 'drinks' || category == 'bread';
+  bool _belongsToStorage(IngredientModel ingredient, String storage) {
+    return ingredient.storageLocation == storage;
   }
 
-  bool _belongsToStorage(IngredientModel ingredient, String storage) {
-    final isPantry = _isPantryCategory(ingredient.category.toLowerCase());
-    return storage == 'pantry' ? isPantry : !isPantry;
-  }
+
 
 
   @override
@@ -242,7 +239,7 @@ class _PantryViewState extends State<_PantryView> {
                   SliverFillRemaining(
                     hasScrollBody: false,
                     child: PantryEmptyState(
-  storageLabel: _selectedStorage == 'fridge' ? 'lodówka' : 'spiżarka',
+  storageLabel: _selectedStorage == 'fridge' ? 'lodówka' : _selectedStorage == 'freezer' ? 'zamrażarka' : 'spiżarnia',
   isFiltered: state.selectedFilter != 'all' || _searchQuery.isNotEmpty,
   onActionPressed: (state.selectedFilter != 'all' || _searchQuery.isNotEmpty)
       ? () {
@@ -303,7 +300,7 @@ class _PantryViewState extends State<_PantryView> {
   
 
   String _sectionTitle(String filter) {
-    final prefix = _selectedStorage == 'fridge' ? 'Lodówka' : 'Spiżarka';
+    final prefix = _selectedStorage == 'fridge' ? 'Lodówka' : _selectedStorage == 'freezer' ? 'Zamrażarka' : 'Spiżarnia';
     switch (filter) {
       case 'expiring':
         return '$prefix: Expiring soon';

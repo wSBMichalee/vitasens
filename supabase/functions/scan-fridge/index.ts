@@ -70,7 +70,13 @@ Extract every food item from the receipt. Skip non-food items.`;
     text = text.replace(/```json/g, '').replace(/```/g, '').trim();
 
     let products = [];
-    try { products = JSON.parse(text); } catch { products = []; }
+    try { 
+      products = JSON.parse(text); 
+      products = products.map((p: any) => ({
+        ...p,
+        storageLocation: mode === 'fridge' ? 'fridge' : 'fridge' // Default to fridge
+      }));
+    } catch { products = []; }
 
     return new Response(JSON.stringify({ success: true, products, mode }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

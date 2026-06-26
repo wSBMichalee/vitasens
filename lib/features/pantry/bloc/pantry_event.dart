@@ -24,6 +24,16 @@ class DeleteIngredient extends PantryEvent {
   List<Object?> get props => [id];
 }
 
+class MoveIngredient extends PantryEvent {
+  final String id;
+  final String storageLocation;
+  
+  const MoveIngredient(this.id, this.storageLocation);
+  
+  @override 
+  List<Object> get props => [id, storageLocation];
+}
+
 class FilterPantry extends PantryEvent {
   final String filter; // 'all' | 'expiring' | 'low_stock'
 
@@ -40,6 +50,7 @@ class AddIngredient extends PantryEvent {
   final String? category;
   final DateTime? expiryDate;
   final String? imageUrl;
+  final String storageLocation;
 
   const AddIngredient({
     required this.name,
@@ -48,8 +59,9 @@ class AddIngredient extends PantryEvent {
     this.category,
     this.expiryDate,
     this.imageUrl,
+    this.storageLocation = 'fridge',
   });
 
   @override
-  List<Object?> get props => [name, quantity, unit, category, expiryDate, imageUrl];
+  List<Object?> get props => [name, quantity, unit, category, expiryDate, imageUrl, storageLocation];
 }

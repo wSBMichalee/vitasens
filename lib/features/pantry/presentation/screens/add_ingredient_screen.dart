@@ -102,6 +102,7 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
   String _selectedExpiry = '3 days';
   DateTime? _customExpiry;
   String? _category;
+  String _storageLocation = 'fridge';
 
   
 
@@ -298,6 +299,7 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
             category: _category ?? 'other',
             expiryDate: _calculateExpiry(),
             imageUrl: _selectedImageUrl,
+            storageLocation: _storageLocation,
           ),
         );
   }

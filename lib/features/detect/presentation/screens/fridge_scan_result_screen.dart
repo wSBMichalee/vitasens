@@ -22,6 +22,7 @@ class FridgeScanResultScreen extends StatefulWidget {
 class _FridgeScanResultScreenState extends State<FridgeScanResultScreen> {
   late Set<int> _selected;
   bool _isAdding = false;
+  String _globalStorageLocation = 'fridge';
 
   // Category emoji map
   static const _categoryEmoji = {
@@ -78,6 +79,7 @@ class _FridgeScanResultScreenState extends State<FridgeScanResultScreen> {
           unit: unit,
           category: category,
           expiryDate: expiryDate,
+          storageLocation: _globalStorageLocation,
         );
         added++;
       } catch (_) {}
@@ -155,6 +157,27 @@ class _FridgeScanResultScreenState extends State<FridgeScanResultScreen> {
                 bottom: PreferredSize(
                   preferredSize: Size.fromHeight(1.h),
                   child: Divider(height: 1, color: AppColors.borderLight),
+                ),
+              ),
+
+              // ── STORAGE SELECTOR ─────────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('GDZIE DODAĆ PRODUKTY?', style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Colors.grey.shade600)),
+                      SizedBox(height: 12.h),
+                      Row(children: [
+                        _StorageChip(label: '🧊 Lodówka', value: 'fridge', selected: _globalStorageLocation == 'fridge', onTap: () => setState(() => _globalStorageLocation = 'fridge')),
+                        SizedBox(width: 8.w),
+                        _StorageChip(label: '❄️ Zamrażarka', value: 'freezer', selected: _globalStorageLocation == 'freezer', onTap: () => setState(() => _globalStorageLocation = 'freezer')),
+                        SizedBox(width: 8.w),
+                        _StorageChip(label: '🗄️ Spiżarnia', value: 'pantry', selected: _globalStorageLocation == 'pantry', onTap: () => setState(() => _globalStorageLocation = 'pantry')),
+                      ]),
+                    ],
+                  ),
                 ),
               ),
 
@@ -475,6 +498,32 @@ class _ProductRow extends StatelessWidget {
             color: AppColors.borderLight,
           ),
       ],
+    );
+  }
+}
+
+class _StorageChip extends StatelessWidget {
+  final String label, value;
+  final bool selected;
+  final VoidCallback onTap;
+  const _StorageChip({required this.label, required this.value, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: EdgeInsets.symmetric(vertical: 10.h),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.primaryLight : AppColors.backgroundWhite,
+            border: Border.all(color: selected ? AppColors.primary : AppColors.border),
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          child: Center(child: Text(label, style: TextStyle(fontSize: 11.sp, fontWeight: selected ? FontWeight.w700 : FontWeight.w500, color: selected ? AppColors.primary : AppColors.textSecondary))),
+        ),
+      ),
     );
   }
 }

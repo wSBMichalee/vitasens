@@ -67,6 +67,7 @@ class PantryRepository {
     String? category,
     DateTime? expiryDate,
     String? imageUrl,
+    String storageLocation = 'fridge',
   }) async {
     final resolvedPantryId = await _getPantryId();
     if (resolvedPantryId == null) throw Exception('Not authenticated');
@@ -78,12 +79,21 @@ class PantryRepository {
       'category': category ?? 'other',
       if (expiryDate != null) 'expiry_date': expiryDate.toIso8601String(),
       if (imageUrl != null && imageUrl.isNotEmpty) 'image_url': imageUrl,
+      'storage_location': storageLocation,
     });
     CacheService().invalidate('pantry_ingredients');
   }
 
   Future<void> deleteIngredient(String id) async {
     await _supabase.from('ingredients').delete().eq('id', id);
+    CacheService().invalidate('pantry_ingredients');
+  }
+
+  Future<void> moveIngredient(String id, String storageLocation) async {
+    await _supabase
+        .from('ingredients')
+        .update({'storage_location': storageLocation})
+        .eq('id', id);
     CacheService().invalidate('pantry_ingredients');
   }
 }

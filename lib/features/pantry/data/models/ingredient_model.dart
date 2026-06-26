@@ -16,6 +16,7 @@ class IngredientModel extends Equatable {
   final String? barcode;
   final String? brand;
   final String? imageUrl;
+  final String storageLocation;
 
   const IngredientModel({
     required this.id,
@@ -32,6 +33,7 @@ class IngredientModel extends Equatable {
     this.barcode,
     this.brand,
     this.imageUrl,
+    this.storageLocation = 'fridge',
   });
 
   factory IngredientModel.fromJson(Map<String, dynamic> json) {
@@ -56,6 +58,7 @@ class IngredientModel extends Equatable {
       barcode: json['barcode'] as String?,
       brand: json['brand'] as String?,
       imageUrl: (json['image_url'] ?? json['imageUrl']) as String?,
+      storageLocation: (json['storage_location'] ?? json['storageLocation'] as String?) ?? 'fridge',
     );
   }
 
@@ -75,6 +78,7 @@ class IngredientModel extends Equatable {
       'barcode': barcode,
       'brand': brand,
       'image_url': imageUrl,
+      'storage_location': storageLocation,
     };
   }
 
@@ -94,5 +98,6 @@ class IngredientModel extends Equatable {
         barcode,
         brand,
         imageUrl,
+        storageLocation,
       ];
 }

@@ -23,6 +23,8 @@ class DetailsStep extends StatelessWidget {
   final String selectedExpiry;
   final VoidCallback onAddIngredient;
   final Future<void> Function(String) onExpiryTap;
+  final String storageLocation;
+  final ValueChanged<String> onStorageChanged;
 
   const DetailsStep({
     super.key,
@@ -39,6 +41,8 @@ class DetailsStep extends StatelessWidget {
     required this.selectedExpiry,
     required this.onAddIngredient,
     required this.onExpiryTap,
+    required this.storageLocation,
+    required this.onStorageChanged,
   });
 
   @override
@@ -168,6 +172,18 @@ class DetailsStep extends StatelessWidget {
           ),
           SizedBox(height: 40.h),
 
+          // ── STORAGE LOCATION ──────────────────────
+          Text('GDZIE PRZECHOWUJESZ?', style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Colors.grey.shade600)),
+          SizedBox(height: 12.h),
+          Row(children: [
+            _StorageChip(label: '🧊 Lodówka', value: 'fridge', selected: storageLocation == 'fridge', onTap: () => onStorageChanged('fridge')),
+            SizedBox(width: 8.w),
+            _StorageChip(label: '❄️ Zamrażarka', value: 'freezer', selected: storageLocation == 'freezer', onTap: () => onStorageChanged('freezer')),
+            SizedBox(width: 8.w),
+            _StorageChip(label: '🗄️ Spiżarnia', value: 'pantry', selected: storageLocation == 'pantry', onTap: () => onStorageChanged('pantry')),
+          ]),
+          SizedBox(height: 24.h),
+
           // Expiry Section
           Text(
             'EXPIRES IN',
@@ -238,6 +254,32 @@ class DetailsStep extends StatelessWidget {
           ),
           SizedBox(height: 32.h),
         ],
+      ),
+    );
+  }
+}
+
+class _StorageChip extends StatelessWidget {
+  final String label, value;
+  final bool selected;
+  final VoidCallback onTap;
+  const _StorageChip({required this.label, required this.value, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: EdgeInsets.symmetric(vertical: 10.h),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.primaryLight : AppColors.backgroundWhite,
+            border: Border.all(color: selected ? AppColors.primary : AppColors.border),
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          child: Center(child: Text(label, style: TextStyle(fontSize: 12.sp, fontWeight: selected ? FontWeight.w700 : FontWeight.w500, color: selected ? AppColors.primary : AppColors.textSecondary))),
+        ),
       ),
     );
   }

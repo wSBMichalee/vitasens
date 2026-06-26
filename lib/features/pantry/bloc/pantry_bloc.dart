@@ -12,6 +12,7 @@ class PantryBloc extends Bloc<PantryEvent, PantryState> {
     on<FilterPantry>(_onFilterPantry);
     on<DeleteIngredient>(_onDeleteIngredient);
     on<AddIngredient>(_onAddIngredient);
+    on<MoveIngredient>(_onMoveIngredient);
   }
 
   Future<void> _onLoadPantry(
@@ -90,8 +91,21 @@ class PantryBloc extends Bloc<PantryEvent, PantryState> {
         category: event.category,
         expiryDate: event.expiryDate,
         imageUrl: event.imageUrl,
+        storageLocation: event.storageLocation,
       );
       emit(const PantryIngredientAdded());
+      add(const RefreshPantry());
+    } catch (e) {
+      emit(PantryError(_parseError(e)));
+    }
+  }
+
+  Future<void> _onMoveIngredient(
+    MoveIngredient event,
+    Emitter<PantryState> emit,
+  ) async {
+    try {
+      await repository.moveIngredient(event.id, event.storageLocation);
       add(const RefreshPantry());
     } catch (e) {
       emit(PantryError(_parseError(e)));

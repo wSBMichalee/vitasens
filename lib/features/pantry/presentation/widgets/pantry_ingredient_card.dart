@@ -75,7 +75,7 @@ class IngredientCard extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             borderRadius: BorderRadius.circular(16.r),
-            onTap: () {},
+            onTap: () => _showOptions(context),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -152,6 +152,123 @@ class IngredientCard extends StatelessWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+  void _showOptions(BuildContext context) {
+    final current = ingredient.storageLocation;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20.r))),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 32.h),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle
+            Center(child: Container(width: 40.w, height: 4.h, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2.r)))),
+            SizedBox(height: 16.h),
+            // Nazwa produktu
+            Text(ingredient.name, style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+            SizedBox(height: 4.h),
+            Text('Przenieś do:', style: TextStyle(fontSize: 13.sp, color: AppColors.textSecondary)),
+            SizedBox(height: 16.h),
+            // 3 opcje przeniesienia
+            if (current != 'fridge')
+              _MoveOption(
+                icon: '🧊',
+                label: 'Lodówka',
+                subtitle: 'Krótki termin przydatności',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  context.read<PantryBloc>().add(MoveIngredient(ingredient.id, 'fridge'));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('${ingredient.name} → Lodówka ✓'),
+                    backgroundColor: AppColors.primary,
+                    duration: const Duration(seconds: 2),
+                  ));
+                },
+              ),
+            if (current != 'freezer')
+              _MoveOption(
+                icon: '❄️',
+                label: 'Zamrażarka',
+                subtitle: 'Długie przechowywanie',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  context.read<PantryBloc>().add(MoveIngredient(ingredient.id, 'freezer'));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('${ingredient.name} → Zamrażarka ✓'),
+                    backgroundColor: AppColors.primary,
+                    duration: const Duration(seconds: 2),
+                  ));
+                },
+              ),
+            if (current != 'pantry')
+              _MoveOption(
+                icon: '🗄️',
+                label: 'Spiżarnia',
+                subtitle: 'Suche produkty, długi termin',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  context.read<PantryBloc>().add(MoveIngredient(ingredient.id, 'pantry'));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('${ingredient.name} → Spiżarnia ✓'),
+                    backgroundColor: AppColors.primary,
+                    duration: const Duration(seconds: 2),
+                  ));
+                },
+              ),
+            Divider(color: AppColors.border, height: 24.h),
+            // Usuń
+            _MoveOption(
+              icon: '🗑️',
+              label: 'Usuń produkt',
+              subtitle: 'Usuń ze spiżarni',
+              isDestructive: true,
+              onTap: () {
+                Navigator.pop(ctx);
+                context.read<PantryBloc>().add(DeleteIngredient(ingredient.id));
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MoveOption extends StatelessWidget {
+  final String icon, label, subtitle;
+  final VoidCallback onTap;
+  final bool isDestructive;
+  const _MoveOption({required this.icon, required this.label, required this.subtitle, required this.onTap, this.isDestructive = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12.r),
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 12.h),
+        child: Row(
+          children: [
+            Text(icon, style: TextStyle(fontSize: 28.sp)),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w700, color: isDestructive ? AppColors.error : AppColors.textPrimary)),
+                  Text(subtitle, style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary)),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: isDestructive ? AppColors.error : AppColors.textMuted, size: 20.r),
+          ],
         ),
       ),
     );

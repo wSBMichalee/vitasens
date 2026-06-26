@@ -15,6 +15,7 @@ class NoInternetOverlay extends StatefulWidget {
 class _NoInternetOverlayState extends State<NoInternetOverlay> {
   bool _isConnected = true;
   late StreamSubscription<List<ConnectivityResult>> _subscription;
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -31,17 +32,20 @@ class _NoInternetOverlayState extends State<NoInternetOverlay> {
   }
 
   void _updateConnectionStatus(List<ConnectivityResult> results) {
-    // If the list only contains 'none', we have no connection.
-    final bool hasConnection = !results.contains(ConnectivityResult.none) || results.length > 1;
-    if (_isConnected != hasConnection) {
-      setState(() {
-        _isConnected = hasConnection;
+    final bool hasConnection = results.any((r) => r != ConnectivityResult.none);
+    _debounce?.cancel();
+    if (!hasConnection) {
+      _debounce = Timer(const Duration(seconds: 3), () {
+        if (mounted) setState(() => _isConnected = false);
       });
+    } else {
+      if (mounted) setState(() => _isConnected = true);
     }
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _subscription.cancel();
     super.dispose();
   }
@@ -51,35 +55,91 @@ class _NoInternetOverlayState extends State<NoInternetOverlay> {
     return Stack(
       children: [
         widget.child,
-        AnimatedPositioned(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOutCubic,
-          left: 0,
-          right: 0,
-          bottom: _isConnected ? -100.h : 0,
-          child: Material(
-            color: Colors.transparent,
-            child: Container(
-              color: Colors.black87,
-              padding: EdgeInsets.fromLTRB(16.w, 12.h, 16.w, 12.h + MediaQuery.of(context).padding.bottom),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.wifi_off_rounded, color: Colors.white, size: 20.r),
-                  SizedBox(width: 8.w),
-                  Text(
-                    'Brak połączenia z internetem',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w500,
+        if (!_isConnected)
+          AnimatedOpacity(
+            opacity: _isConnected ? 0 : 1,
+            duration: const Duration(milliseconds: 300),
+            child: Material(
+              color: Colors.white,
+              child: SafeArea(
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 32.w),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 80.r,
+                          height: 80.r,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF5F5F5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.wifi_off_rounded,
+                            size: 40.r,
+                            color: Colors.grey.shade400,
+                          ),
+                        ),
+                        SizedBox(height: 24.h),
+                        Text(
+                          'Brak połączenia',
+                          style: TextStyle(
+                            fontSize: 24.sp,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF111111),
+                          ),
+                        ),
+                        SizedBox(height: 8.h),
+                        Text(
+                          'Sprawdź połączenie z internetem.\nApka odświeży się automatycznie.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 15.sp,
+                            color: Colors.grey.shade500,
+                            height: 1.5,
+                          ),
+                        ),
+                        SizedBox(height: 32.h),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 52.h,
+                          child: FilledButton(
+                            onPressed: () async {
+                              final results = await Connectivity().checkConnectivity();
+                              _updateConnectionStatus(results);
+                            },
+                            style: FilledButton.styleFrom(
+                              backgroundColor: const Color(0xFF2ECC71),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14.r),
+                              ),
+                            ),
+                            child: Text(
+                              'Odśwież',
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 16.h),
+                        Text(
+                          'Połączenie wróci automatycznie',
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            color: Colors.grey.shade400,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
       ],
     );
   }

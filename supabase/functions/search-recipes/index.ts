@@ -72,7 +72,7 @@ serve(async (req: Request) => {
           .from('recipes')
           .select('id, title, description, image_url, photo_url, meal_type, cuisine_type, diet_tags, calories, protein_g, carbs_g, fat_g, cook_time_minutes, prep_time_minutes, difficulty_level, servings, ingredients, source, source_id, steps')
           .eq('is_public', true)
-          .limit(50);
+          .limit(500);
 
         const { data: allRecipes, error: dbError } = await query;
         if (dbError) throw new Error(dbError.message);
@@ -96,9 +96,26 @@ serve(async (req: Request) => {
               
               return { ...recipe, matchPercent, usedCount };
             })
-            .filter(r => r.usedCount > 0)
+            .filter(r => r.matchPercent >= 30)
             .sort((a, b) => b.matchPercent - a.matchPercent)
             .slice(0, 20);
+
+          // Jeśli za mało wyników - obniż próg
+          if (recipes.length < 5 && ingredientNames.length > 0) {
+            recipes = (allRecipes || [])
+              .map(recipe => {
+                const recipeIngredientNames: string[] = (recipe.ingredients || [])
+                  .map((ing: { name: string }) => ing.name?.toLowerCase() || '');
+                const usedCount = lowerIngredients.filter(pantryIng =>
+                  recipeIngredientNames.some(recipeIng => recipeIng.includes(pantryIng) || pantryIng.includes(recipeIng))
+                ).length;
+                const matchPercent = Math.round((usedCount / Math.max(recipeIngredientNames.length, 1)) * 100);
+                return { ...recipe, matchPercent, usedCount };
+              })
+              .filter(r => r.matchPercent >= 15)
+              .sort((a, b) => b.matchPercent - a.matchPercent)
+              .slice(0, 20);
+          }
         } else {
           // Brak składników — zwróć losowe przepisy
           recipes = recipes.sort(() => Math.random() - 0.5).slice(0, 20);

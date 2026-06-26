@@ -110,8 +110,8 @@ serve(async (req: Request) => {
           const { data: pantryData } = await supabase
             .from('pantries')
             .select('id')
-            .eq('user_id', userId)
-            .single();
+            .eq('owner_id', userId)
+            .maybeSingle();
           
           if (pantryData?.id) {
             const { data: pantryItems } = await supabase

@@ -24,8 +24,8 @@ serve(async (req: Request) => {
     const { data: pantryData } = await supabase
       .from('pantries')
       .select('id')
-      .eq('user_id', userId)
-      .single();
+      .eq('owner_id', userId)
+      .maybeSingle();
 
     let pantryIngredients: string[] = [];
     if (pantryData?.id) {
@@ -46,8 +46,8 @@ serve(async (req: Request) => {
       // Mapuj meal_type na dopuszczalne kategorie z bazy
       const mealTypeMap: Record<string, string[]> = {
         'breakfast': ['breakfast'],
-        'lunch': ['lunch', 'dinner'],
-        'dinner': ['dinner', 'lunch'],
+        'lunch': ['lunch'],
+        'dinner': ['dinner'],
         'snack': ['snack', 'dessert'],
       };
       const allowedTypes = mealTypeMap[mealType] || [mealType];
@@ -64,6 +64,9 @@ serve(async (req: Request) => {
     if (error) throw new Error(error.message);
 
     let recipes = allRecipes || [];
+
+    // Filtruj przepisy bez kalorii (TheMealDB bez makr)
+    recipes = recipes.filter((r: any) => (r.calories || 0) > 0);
 
     // Filtruj po alergiach
     const allergies: string[] = profile?.allergies || [];

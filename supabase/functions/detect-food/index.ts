@@ -25,7 +25,33 @@ serve(async (req: Request) => {
       });
     }
 
-    const prompt = "Analyze this food image and return ONLY a valid JSON object with these exact fields: foodName (string, the name of the food or dish), calories (number, estimated calories for the portion shown), protein (number, grams of protein), carbs (number, grams of carbohydrates), fat (number, grams of fat), portionSize (string, estimated portion e.g. '1 cup', '200g'). Return only the JSON, no other text.";
+    const prompt = `You are a professional nutritionist and food recognition AI, similar to CalAI. Analyze this food image and return ONLY a valid JSON object with NO markdown, no backticks, no explanation.
+
+Return this exact JSON structure:
+{
+  "foodName": "string - specific name of the dish or food item",
+  "confidence": "high|medium|low - how confident you are in the identification",
+  "portionSize": "string - estimated portion size e.g. '1 plate (350g)' or '1 cup (240ml)'",
+  "portionGrams": 0,
+  "calories": 0,
+  "protein": 0,
+  "carbs": 0,
+  "fat": 0,
+  "fiber": 0,
+  "sugar": 0,
+  "sodium": 0,
+  "ingredients": [
+    {"name": "string", "estimatedGrams": 0, "calories": 0}
+  ],
+  "mealType": "breakfast|lunch|dinner|snack - most likely meal type for this food",
+  "cuisineType": "string - e.g. Italian, Polish, Asian, American etc.",
+  "healthScore": 5,
+  "tags": ["array of strings like vegetarian, high-protein, low-carb, gluten-free if applicable"],
+  "alternativeNames": ["other names this dish might be called"],
+  "notes": "string - any important nutritional notes or warnings, max 1 sentence"
+}
+
+Be specific and accurate. For mixed dishes, estimate ingredient portions. If the image is unclear, still provide your best estimate with confidence: "low".`;
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
     
@@ -69,11 +95,23 @@ serve(async (req: Request) => {
       return new Response(JSON.stringify({
         success: true,
         foodName: parsed.foodName,
-        calories: parsed.calories,
-        protein: parsed.protein,
-        carbs: parsed.carbs,
-        fat: parsed.fat,
-        portionSize: parsed.portionSize
+        confidence: parsed.confidence || 'medium',
+        portionSize: parsed.portionSize,
+        portionGrams: parsed.portionGrams || 0,
+        calories: parsed.calories || 0,
+        protein: parsed.protein || 0,
+        carbs: parsed.carbs || 0,
+        fat: parsed.fat || 0,
+        fiber: parsed.fiber || 0,
+        sugar: parsed.sugar || 0,
+        sodium: parsed.sodium || 0,
+        ingredients: parsed.ingredients || [],
+        mealType: parsed.mealType || 'snack',
+        cuisineType: parsed.cuisineType || '',
+        healthScore: parsed.healthScore || 5,
+        tags: parsed.tags || [],
+        alternativeNames: parsed.alternativeNames || [],
+        notes: parsed.notes || '',
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     } catch (parseError) {
       return new Response(JSON.stringify({ success: false, error: 'Could not analyze image' }), {

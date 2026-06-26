@@ -97,7 +97,7 @@ class _LoadingCard extends StatelessWidget {
       child: Center(
         child: SizedBox(
           width: 20.r, height: 20.r,
-          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+          child: const CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
         ),
       ),
     );

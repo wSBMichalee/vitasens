@@ -331,7 +331,7 @@ class FoodDetectedScreen extends StatelessWidget {
                           child: OutlinedButton(
                             onPressed: () => _addToPantry(context),
                             style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: AppColors.border),
+                              side: const BorderSide(color: AppColors.border),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16.r),
                               ),
@@ -353,7 +353,7 @@ class FoodDetectedScreen extends StatelessWidget {
                         child: OutlinedButton(
                           onPressed: () => context.pop(),
                           style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: AppColors.border),
+                            side: const BorderSide(color: AppColors.border),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16.r),
                             ),
@@ -408,7 +408,7 @@ class _HeaderSection extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(20.w, 60.h, 20.w, 24.h),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [AppColors.primary, AppColors.primaryDark],
           begin: Alignment.topLeft,

@@ -11,7 +11,6 @@ import 'package:vitasense/features/recipes/bloc/recipes_event.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_state.dart';
 import 'package:vitasense/features/recipes/data/recipes_repository.dart';
 import 'package:vitasense/features/shopping/data/shopping_repository.dart';
-import 'package:vitasense/features/shopping/data/shopping_repository.dart';
 import 'package:vitasense/features/macros/presentation/widgets/streak_celebration_modal.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_bloc.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_event.dart';

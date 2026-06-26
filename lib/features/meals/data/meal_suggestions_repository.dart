@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'meal_suggestion_model.dart';
 
@@ -46,12 +47,12 @@ class MealSuggestionsRepository {
         'source': 'manual',
         'log_source': 'manual',
       };
-      print('Logging meal: $data');
+      debugPrint('Logging meal: $data');
       final response = await _supabase.from('meals').insert(data).select();
-      print('Meal logged successfully: $response');
+      debugPrint('Meal logged successfully: $response');
     } catch (e, stack) {
-      print('Error logging meal: $e');
-      print('Stack: $stack');
+      debugPrint('Error logging meal: $e');
+      debugPrint('Stack: $stack');
       rethrow;
     }
   }

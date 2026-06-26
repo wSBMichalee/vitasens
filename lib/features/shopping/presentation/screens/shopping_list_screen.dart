@@ -199,7 +199,7 @@ class _ShoppingListViewState extends State<_ShoppingListView> {
           ),
           actions: [
             IconButton(
-              icon: Icon(Icons.add, color: AppColors.textPrimary),
+              icon: const Icon(Icons.add, color: AppColors.textPrimary),
               onPressed: () => _showAddItemSheet(context),
             ),
             SizedBox(width: 8.w),

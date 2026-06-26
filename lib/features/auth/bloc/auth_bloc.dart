@@ -75,7 +75,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         await prefs.remove('onboarding_data');
       }
     } catch (e) {
-      print('Error processing onboarding data during sync: $e');
+      debugPrint('Error processing onboarding data during sync: $e');
     }
   }
 
@@ -104,8 +104,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final user = UserModel.fromJson(profileData);
       emit(AuthAuthenticated(user: user));
     } catch (e, stackTrace) {
-      print('Auth bloc signUp error: $e');
-      print('Auth bloc signUp stack: $stackTrace');
+      debugPrint('Auth bloc signUp error: $e');
+      debugPrint('Auth bloc signUp stack: $stackTrace');
       emit(AuthError(message: _parseError(e)));
     }
   }

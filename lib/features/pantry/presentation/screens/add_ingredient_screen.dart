@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -10,7 +9,6 @@ import 'package:vitasense/features/pantry/bloc/pantry_event.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_state.dart';
 import 'package:vitasense/features/pantry/data/pantry_repository.dart';
 
-import '../../data/models/product_item.dart';
 import '../../data/models/product_item.dart';
 import '../widgets/add_ingredient/search_step.dart';
 import '../widgets/add_ingredient/manual_entry_step.dart';
@@ -314,7 +312,7 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
       },
       child: Material(
         color: Colors.transparent,
-        child: Container(
+        child: SizedBox(
           height: MediaQuery.of(context).size.height * 0.85,
           child: SingleChildScrollView(
             child: Column(

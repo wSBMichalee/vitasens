@@ -36,6 +36,7 @@ class _ScanningViewState extends State<_ScanningView> {
   CameraController? _controller;
   String _mode = 'meal'; // meal/fridge/receipt
   bool _isCameraInitialized = false;
+  bool _flashOn = false;
 
   @override
   void initState() {
@@ -197,7 +198,13 @@ class _ScanningViewState extends State<_ScanningView> {
                       
                       // Flash toggle
                       GestureDetector(
-                        onTap: () {},
+                        onTap: () async {
+                          if (_controller == null) return;
+                          setState(() => _flashOn = !_flashOn);
+                          await _controller!.setFlashMode(
+                            _flashOn ? FlashMode.torch : FlashMode.off,
+                          );
+                        },
                         child: Container(
                           width: 36.w,
                           height: 36.h,
@@ -205,7 +212,11 @@ class _ScanningViewState extends State<_ScanningView> {
                             color: Colors.white.withValues(alpha: 0.2),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.bolt, color: Colors.white, size: 20.r),
+                          child: Icon(
+                            _flashOn ? Icons.bolt : Icons.bolt_outlined,
+                            color: _flashOn ? Colors.yellow : Colors.white,
+                            size: 20.r,
+                          ),
                         ),
                       ),
                     ],

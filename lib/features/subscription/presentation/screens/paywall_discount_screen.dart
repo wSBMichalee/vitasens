@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 class PaywallDiscountScreen extends StatefulWidget {
   const PaywallDiscountScreen({super.key});
@@ -14,6 +15,43 @@ class PaywallDiscountScreen extends StatefulWidget {
 
 class _PaywallDiscountScreenState extends State<PaywallDiscountScreen> {
   int _selectedPlanIndex = 0;
+  bool _isPurchasing = false;
+
+  Future<void> _purchase(BuildContext context) async {
+    if (_isPurchasing) return;
+    setState(() => _isPurchasing = true);
+    try {
+      final offerings = await Purchases.getOfferings();
+      final current = offerings.current;
+      if (current == null) {
+        throw Exception('No offerings available. Configure products in RevenueCat dashboard.');
+      }
+      // Yearly = index 0, Monthly = index 1
+      final package = _selectedPlanIndex == 0
+          ? (current.annual ?? current.availablePackages.first)
+          : (current.monthly ?? current.availablePackages.last);
+      await Purchases.purchasePackage(package);
+      if (context.mounted) context.go(AppRoutes.successPurchase);
+    } on PurchasesErrorCode catch (e) {
+      if (e == PurchasesErrorCode.purchaseCancelledError) {
+        // User cancelled — cicho wróć
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Purchase failed: ${e.name}'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isPurchasing = false);
+    }
+  }
 
   static const List<String> _features = [
     'Meals from your pantry',
@@ -100,24 +138,23 @@ class _PaywallDiscountScreenState extends State<PaywallDiscountScreen> {
                     width: double.infinity,
                     height: 56.h,
                     child: FilledButton(
-                      onPressed: () {
-                        // TODO: RevenueCat purchase
-                        context.go(AppRoutes.home);
-                      },
+                      onPressed: _isPurchasing ? null : () => _purchase(context),
                       style: FilledButton.styleFrom(
                         backgroundColor: const Color(0xFF2ECC71),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14.r),
                         ),
                       ),
-                      child: Text(
-                        _selectedPlanIndex == 0 ? 'Start My 3-Day Free Trial' : 'Start Monthly Plan',
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
+                      child: _isPurchasing
+                          ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                          : Text(
+                              _selectedPlanIndex == 0 ? 'Start My 3-Day Free Trial' : 'Start Monthly Plan',
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
                     ),
                   ).animate(delay: 360.ms).fadeIn(duration: 400.ms),
 

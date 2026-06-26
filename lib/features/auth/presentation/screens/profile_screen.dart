@@ -52,7 +52,7 @@ class _ProfileView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('goalPace: ${user.goalPace}, activityLevel: ${user.activityLevel}');
+    debugPrint('goalPace: ${user.goalPace}, activityLevel: ${user.activityLevel}');
     
     return GradientScaffold(
       body: SafeArea(

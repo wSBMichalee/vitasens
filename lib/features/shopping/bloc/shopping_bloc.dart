@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:vitasense/features/shopping/bloc/shopping_event.dart';
 import 'package:vitasense/features/shopping/bloc/shopping_state.dart';
@@ -107,7 +108,7 @@ class ShoppingBloc extends Bloc<ShoppingEvent, ShoppingState> {
 
   // ─── Error Parser ──────────────────────────────────────────────────────────────
   String _parseError(dynamic e) {
-    print('ShoppingBloc error: $e');
+    debugPrint('ShoppingBloc error: $e');
     final raw = e.toString().toLowerCase();
 
     if (raw.contains('network') ||

@@ -156,7 +156,7 @@ class _FridgeScanResultScreenState extends State<FridgeScanResultScreen> {
                 ],
                 bottom: PreferredSize(
                   preferredSize: Size.fromHeight(1.h),
-                  child: Divider(height: 1, color: AppColors.borderLight),
+                  child: const Divider(height: 1, color: AppColors.borderLight),
                 ),
               ),
 

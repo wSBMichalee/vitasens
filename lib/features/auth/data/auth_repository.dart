@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -21,8 +22,8 @@ class AuthRepository {
         'fullName': fullName,
       },
     );
-    print('SignUp response: ${response.data}');
-    print('SignUp status: ${response.status}');
+    debugPrint('SignUp response: ${response.data}');
+    debugPrint('SignUp status: ${response.status}');
     final responseData = response.data as Map;
     return Map<String, dynamic>.from(responseData['data'] as Map);
   }

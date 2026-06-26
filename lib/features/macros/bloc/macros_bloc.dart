@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:vitasense/features/macros/bloc/macros_event.dart';
 import 'package:vitasense/features/macros/bloc/macros_state.dart';
@@ -35,7 +36,7 @@ class MacrosBloc extends Bloc<MacrosEvent, MacrosState> {
         streakDays: streakDays,
       ));
     } catch (e) {
-      print("LoadDailyMacros Error: $e"); print(StackTrace.current); emit(MacrosError(_parseError(e)));
+      debugPrint("LoadDailyMacros Error: $e"); debugPrint(StackTrace.current.toString()); emit(MacrosError(_parseError(e)));
     }
   }
 

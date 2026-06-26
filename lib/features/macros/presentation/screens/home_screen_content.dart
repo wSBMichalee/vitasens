@@ -61,7 +61,7 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
     _macrosBloc.add(LoadDailyMacros(dateStr));
     _waterBloc.add(LoadWater(today));
     _dailyLogBloc.add(LoadDailyLog(today));
-    _pantryBloc.add(LoadPantry());
+    _pantryBloc.add(const LoadPantry());
   }
 
   @override
@@ -298,8 +298,7 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
                           return BlocBuilder<PantryBloc, PantryState>(
                             builder: (context, pantryState) {
                               final pantryIsEmpty = pantryState is! PantryLoaded || (() {
-                                if (pantryState is! PantryLoaded) return true;
-                                final ingredients = (pantryState as PantryLoaded).ingredients;
+                                final ingredients = (pantryState).ingredients;
                                 if (ingredients.isEmpty) return true;
                                 // Sprawdź czy są jakieś nieexpired produkty
                                 final now = DateTime.now();
@@ -365,7 +364,7 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
                     labelStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
                     labelBackgroundColor: Colors.white,
                     shape: const CircleBorder(),
-                    onTap: () => context.go(AppRoutes.extract),
+                    onTap: () => context.push(AppRoutes.extract),
                   ),
                   SpeedDialChild(
                     child: const Icon(Icons.qr_code_scanner, color: Colors.white),
@@ -374,7 +373,7 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
                     labelStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
                     labelBackgroundColor: Colors.white,
                     shape: const CircleBorder(),
-                    onTap: () => context.go(AppRoutes.scanning),
+                    onTap: () => context.push(AppRoutes.scanning),
                   ),
                   SpeedDialChild(
                     child: const Icon(Icons.restaurant_menu, color: Colors.white),

@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
+import 'package:vitasense/features/recipes/bloc/recipes_bloc.dart';
 
 class RecipeCard extends StatefulWidget {
   const RecipeCard({super.key, required this.recipe});
@@ -18,10 +20,14 @@ class RecipeCard extends StatefulWidget {
 class _RecipeCardState extends State<RecipeCard> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _scaleAnimation;
+  bool _isFavorite = false;
+  bool _checkingFavorite = true;
+  late String _recipeId;
 
   @override
   void initState() {
     super.initState();
+    _recipeId = widget.recipe['id']?.toString() ?? UniqueKey().toString();
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 150),
@@ -29,6 +35,9 @@ class _RecipeCardState extends State<RecipeCard> with SingleTickerProviderStateM
     _scaleAnimation = Tween<double>(begin: 1.0, end: 0.97).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<RecipesBloc>().add(CheckFavorite(_recipeId));
+    });
   }
 
   @override
@@ -54,7 +63,6 @@ class _RecipeCardState extends State<RecipeCard> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final recipe = widget.recipe;
-    final recipeId = recipe['id']?.toString() ?? UniqueKey().toString();
     final imageUrl = recipe['imageUrl'] as String?;
     final title = recipe['title'] as String? ?? 'Brak tytułu';
     final cookTime = recipe['cookTimeMinutes'] as int? ?? 0;
@@ -85,19 +93,33 @@ class _RecipeCardState extends State<RecipeCard> with SingleTickerProviderStateM
           scale: _scaleAnimation.value,
           child: child,
         ),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.backgroundWhite,
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: AppColors.borderLight),
-            boxShadow: [
-              BoxShadow(
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-                color: Colors.black.withValues(alpha: 0.05),
-              ),
-            ],
-          ),
+        child: BlocListener<RecipesBloc, RecipesState>(
+          listenWhen: (previous, current) => current is FavoriteChecked || current is FavoriteToggled,
+          listener: (context, state) {
+            if (state is FavoriteChecked && state.recipeId == _recipeId) {
+              setState(() {
+                _isFavorite = state.isFavorite;
+                _checkingFavorite = false;
+              });
+            } else if (state is FavoriteToggled && state.recipeId == _recipeId) {
+              setState(() {
+                _isFavorite = state.isFavorite;
+              });
+            }
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.backgroundWhite,
+              borderRadius: BorderRadius.circular(16.r),
+              border: Border.all(color: AppColors.borderLight),
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                  color: Colors.black.withValues(alpha: 0.05),
+                ),
+              ],
+            ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -107,7 +129,7 @@ class _RecipeCardState extends State<RecipeCard> with SingleTickerProviderStateM
                   fit: StackFit.expand,
                   children: [
                     Hero(
-                      tag: 'recipe_image_$recipeId',
+                      tag: 'recipe_image_$_recipeId',
                       child: ClipRRect(
                         borderRadius: BorderRadius.vertical(top: Radius.circular(15.r)),
                         child: imageUrl != null && imageUrl.isNotEmpty
@@ -175,13 +197,27 @@ class _RecipeCardState extends State<RecipeCard> with SingleTickerProviderStateM
                     Positioned(
                       top: 8.h,
                       right: 8.w,
-                      child: Container(
-                        padding: EdgeInsets.all(4.r),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.8),
-                          shape: BoxShape.circle,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          context.read<RecipesBloc>().add(ToggleFavorite(_recipeId, currentlyFavorited: _isFavorite));
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(6.r),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            shape: BoxShape.circle,
+                            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4.r)],
+                          ),
+                          child: _checkingFavorite
+                              ? SizedBox(width: 18.r, height: 18.r, child: const CircularProgressIndicator(strokeWidth: 2, color: AppColors.error))
+                              : Icon(
+                                  _isFavorite ? Icons.favorite : Icons.favorite_border,
+                                  size: 18.r,
+                                  color: _isFavorite ? AppColors.error : AppColors.textPrimary,
+                                ),
                         ),
-                        child: Icon(Icons.favorite_border, size: 16.r, color: AppColors.textPrimary),
                       ),
                     ),
                   ],

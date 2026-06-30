@@ -237,10 +237,10 @@ class _RecipeDetailViewState extends State<_RecipeDetailView> {
                             boxShadow: [BoxShadow(color: AppColors.textPrimary.withValues(alpha: 0.1), blurRadius: 8.r)],
                           ),
                           child: _checkingFavorite
-                              ? SizedBox(width: 16.r, height: 16.r, child: const CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary))
+                              ? SizedBox(width: 16.r, height: 16.r, child: const CircularProgressIndicator(strokeWidth: 2, color: AppColors.error))
                               : Icon(
-                                  _isFavorite ? Icons.bookmark_rounded : Icons.bookmark_border,
-                                  color: _isFavorite ? AppColors.primary : AppColors.textPrimary,
+                                  _isFavorite ? Icons.favorite : Icons.favorite_border,
+                                  color: _isFavorite ? AppColors.error : AppColors.textPrimary,
                                   size: 20.r,
                                 ),
                         ),

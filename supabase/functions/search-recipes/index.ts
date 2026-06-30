@@ -69,7 +69,7 @@ serve(async (req: Request) => {
 
         let query = supabase
           .from('recipes')
-          .select('id, title, description, image_url, photo_url, meal_type, cuisine_type, diet_tags, calories, protein_g, carbs_g, fat_g, cook_time_minutes, prep_time_minutes, difficulty_level, servings, ingredients, source, source_id, steps')
+          .select('id, title, description, image_url, photo_url, meal_type, cuisine_type, diet_tags, calories, protein_g, carbs_g, fat_g, cook_time_minutes, prep_time_minutes, difficulty_level, servings, ingredients, source, source_id, steps, created_at')
           .eq('is_public', true)
           .limit(500);
 
@@ -159,6 +159,7 @@ serve(async (req: Request) => {
           source: r.source,
           sourceId: r.source_id,
           steps: r.steps || [],
+          createdAt: r.created_at,
           matchPercent: (r as any).matchPercent || 0,
           usedIngredients: (r.ingredients || []).filter((ing: any) => {
             const name = (ing.name || '').toLowerCase();

@@ -28,7 +28,7 @@ class Step16 extends StatelessWidget {
           SizedBox(height: 24.h),
           Expanded(
             child: ListView(
-              children: options.map((e) => OptionCard(title: e.$1, subtitle: e.$2, selected: selected == e.$1, onTap: () => onSelected(e.$1))).toList(),
+              children: options.map((e) => OptionCard(title: e.$1, subtitle: e.$2, selected: selected == e.$1, onTap: () => onSelected(e.$1))).toList().animate(interval: 60.ms).fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad),
             ),
           ),
           CtaButton(onPressed: onNext, label: "Continue"),
@@ -91,7 +91,7 @@ class Step16b extends StatelessWidget {
                     ),
                   ),
                 ),
-              )).toList(),
+              )).toList().animate(interval: 60.ms).fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad),
             ),
           ),
           CtaButton(onPressed: onNext, label: "Continue"),

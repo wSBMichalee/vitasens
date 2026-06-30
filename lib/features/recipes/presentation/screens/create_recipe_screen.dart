@@ -1,3 +1,4 @@
+import 'package:vitasense/core/utils/snackbar_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -80,21 +81,15 @@ class _CreateRecipeViewState extends State<_CreateRecipeView> with SingleTickerP
   void _saveRecipe() {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Title is required'), backgroundColor: AppColors.error),
-      );
+      SnackbarUtils.showError(context, 'Title is required');
       return;
     }
     if (_ingredients.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('At least 1 ingredient is required'), backgroundColor: AppColors.error),
-      );
+      SnackbarUtils.showError(context, 'At least 1 ingredient is required');
       return;
     }
     if (_stepControllers.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('At least 1 step is required'), backgroundColor: AppColors.error),
-      );
+      SnackbarUtils.showError(context, 'At least 1 step is required');
       return;
     }
 
@@ -164,17 +159,13 @@ class _CreateRecipeViewState extends State<_CreateRecipeView> with SingleTickerP
     return BlocListener<RecipesBloc, RecipesState>(
       listener: (context, state) {
         if (state is RecipeCreated) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Recipe saved! 🎉'), backgroundColor: AppColors.primary),
-          );
+          SnackbarUtils.showSuccess(context, 'Recipe saved! 🎉');
           _clearForm();
           _tabController.animateTo(0);
           context.read<RecipesBloc>().add(const LoadMyRecipes());
         }
         if (state is RecipesError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: AppColors.error),
-          );
+          SnackbarUtils.showError(context, state.message);
         }
       },
       child: Scaffold(

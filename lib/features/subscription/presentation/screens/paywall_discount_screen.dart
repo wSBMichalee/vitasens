@@ -1,3 +1,4 @@
+import 'package:vitasense/core/utils/snackbar_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -37,9 +38,7 @@ class _PaywallDiscountScreenState extends State<PaywallDiscountScreen> {
         // User cancelled — cicho wróć
       } else {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Purchase failed: ${e.name}'), backgroundColor: Colors.red),
-          );
+          SnackbarUtils.showError(context, 'Purchase failed: ${e.name}');
         }
       }
     } catch (e) {

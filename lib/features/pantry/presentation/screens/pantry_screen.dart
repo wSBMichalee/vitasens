@@ -1,3 +1,4 @@
+import 'package:vitasense/core/utils/snackbar_utils.dart';
 import 'package:flutter/material.dart' hide FilterChip;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -104,12 +105,7 @@ class _PantryViewState extends State<_PantryView> {
         child: BlocConsumer<PantryBloc, PantryState>(
           listener: (context, state) {
             if (state is PantryError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: AppColors.error,
-                ),
-              );
+              SnackbarUtils.showError(context, state.message);
             }
           },
           builder: (context, state) {

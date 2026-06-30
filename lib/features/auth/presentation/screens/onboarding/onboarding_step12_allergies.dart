@@ -108,7 +108,7 @@ class Step12State extends State<Step12> {
                     ),
                   ),
                 );
-              }).toList(),
+              }).toList().animate(interval: 60.ms).fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad),
             ),
           ),
         ),

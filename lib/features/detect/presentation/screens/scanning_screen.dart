@@ -1,3 +1,4 @@
+import 'package:vitasense/core/utils/snackbar_utils.dart';
 import 'dart:convert';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -116,12 +117,7 @@ class _ScanningViewState extends State<_ScanningView> {
               'mode': state.mode,
             });
           } else if (state is DetectError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.error,
-              ),
-            );
+            SnackbarUtils.showError(context, state.message);
           }
         },
         child: Stack(

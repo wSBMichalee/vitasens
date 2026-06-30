@@ -106,7 +106,7 @@ class Step19b extends StatelessWidget {
                     ],
                   ),
                 ),
-              )).toList(),
+              )).toList().animate(interval: 60.ms).fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad),
             ),
           ),
           CtaButton(onPressed: onNext, label: "Continue"),

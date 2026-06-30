@@ -1,3 +1,4 @@
+import 'package:vitasense/core/utils/snackbar_utils.dart';
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -108,14 +109,10 @@ class _ExtractViewState extends State<_ExtractView> with WidgetsBindingObserver 
               child: BlocConsumer<ExtractBloc, ExtractState>(
                 listener: (context, state) {
                   if (state is ExtractError) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(state.message), backgroundColor: AppColors.error),
-                    );
+                    SnackbarUtils.showError(context, state.message);
                   }
                   if (state is ExtractSaveSuccess) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Recipe saved!'), backgroundColor: AppColors.primary),
-                    );
+                    SnackbarUtils.showSuccess(context, 'Recipe saved!');
                     context.read<ExtractBloc>().add(const ResetExtract());
                     _urlController.clear();
                   }

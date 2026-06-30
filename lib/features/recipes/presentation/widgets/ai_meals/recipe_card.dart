@@ -1,230 +1,247 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shimmer/shimmer.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
-import 'package:vitasense/core/theme/app_text_styles.dart';
 
-class RecipeCard extends StatelessWidget {
+class RecipeCard extends StatefulWidget {
   const RecipeCard({super.key, required this.recipe});
 
   final Map<String, dynamic> recipe;
 
   @override
+  State<RecipeCard> createState() => _RecipeCardState();
+}
+
+class _RecipeCardState extends State<RecipeCard> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.97).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onTapDown(TapDownDetails details) {
+    HapticFeedback.lightImpact();
+    _controller.forward();
+  }
+
+  void _onTapUp(TapUpDetails details) {
+    _controller.reverse();
+    context.push(AppRoutes.recipeDetails, extra: widget.recipe);
+  }
+
+  void _onTapCancel() {
+    _controller.reverse();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final recipe = widget.recipe;
+    final recipeId = recipe['id']?.toString() ?? UniqueKey().toString();
     final imageUrl = recipe['imageUrl'] as String?;
     final title = recipe['title'] as String? ?? 'Brak tytułu';
     final cookTime = recipe['cookTimeMinutes'] as int? ?? 0;
     final calories = (recipe['calories'] as num?)?.toInt() ?? 0;
-    final proteinG = (recipe['proteinG'] as num?)?.toInt() ?? 0;
-    final carbsG = (recipe['carbsG'] as num?)?.toInt() ?? 0;
-    final fatG = (recipe['fatG'] as num?)?.toInt() ?? 0;
-    final geminiReason = recipe['geminiReason'] as String?;
-    final missedIngredientsRaw = recipe['missedIngredients'] as List<dynamic>? ?? [];
     
-    final isEnriching = calories == 0;
+    final matchPercent = (recipe['matchPercent'] as num?)?.toInt();
+    final createdAtStr = recipe['createdAt'] as String?;
+    final source = recipe['source'] as String?;
     
-    final missedIngredients = missedIngredientsRaw
-        .map((e) => (e as Map<String, dynamic>)['name'] as String?)
-        .where((e) => e != null)
-        .cast<String>()
-        .take(2)
-        .toList();
+    bool isNew = false;
+    if (createdAtStr != null && source != null && source != 'spoonacular' && source != 'themealdb') {
+      final createdAt = DateTime.tryParse(createdAtStr);
+      if (createdAt != null) {
+        final diff = DateTime.now().difference(createdAt);
+        if (diff.inDays <= 7) {
+          isNew = true;
+        }
+      }
+    }
 
-    return Container(
-      margin: EdgeInsets.only(bottom: 16.h),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundWhite,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-            color: Colors.black.withValues(alpha: 0.04),
+    return GestureDetector(
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
+      child: AnimatedBuilder(
+        animation: _scaleAnimation,
+        builder: (context, child) => Transform.scale(
+          scale: _scaleAnimation.value,
+          child: child,
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.backgroundWhite,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: AppColors.borderLight),
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+                color: Colors.black.withValues(alpha: 0.05),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Image
-          ClipRRect(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
-            child: imageUrl != null && imageUrl.isNotEmpty
-                ? Image.network(
-                    imageUrl,
-                    height: 180.h,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
-                  )
-                : _buildPlaceholder(),
-          ),
-          
-          // Content
-          Padding(
-            padding: EdgeInsets.all(14.r),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Title
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                SizedBox(height: 8.h),
-                
-                // Clock & Flame row
-                Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Image
+              Expanded(
+                child: Stack(
+                  fit: StackFit.expand,
                   children: [
-                    Icon(Icons.schedule, size: 14.r, color: AppColors.textSecondary),
-                    SizedBox(width: 4.w),
-                    Text(
-                      '$cookTime min',
-                      style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary),
+                    Hero(
+                      tag: 'recipe_image_$recipeId',
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(15.r)),
+                        child: imageUrl != null && imageUrl.isNotEmpty
+                            ? CachedNetworkImage(
+                                imageUrl: imageUrl,
+                                fit: BoxFit.cover,
+                                fadeInDuration: const Duration(milliseconds: 300),
+                                placeholder: (context, url) => _buildPlaceholder(),
+                                errorWidget: (context, url, error) => _buildPlaceholder(),
+                              )
+                            : _buildPlaceholder(),
+                      ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w),
-                      child: Text('|', style: TextStyle(fontSize: 12.sp, color: AppColors.textMuted)),
-                    ),
-                    Icon(Icons.local_fire_department_outlined, size: 14.r, color: AppColors.textSecondary),
-                    SizedBox(width: 4.w),
-                    Text(
-                      '$calories kcal',
-                      style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary),
+                    
+                    // Match Badge & NEW Badge
+                    if (matchPercent != null)
+                      Positioned(
+                        top: 8.h,
+                        left: 8.w,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 4.h),
+                              decoration: BoxDecoration(
+                                color: matchPercent >= 80 ? AppColors.successLight : (matchPercent >= 40 ? Colors.orange[100] : AppColors.errorLight),
+                                borderRadius: BorderRadius.circular(8.r),
+                                border: Border.all(
+                                  color: matchPercent >= 80 ? AppColors.success : (matchPercent >= 40 ? Colors.orange : AppColors.error),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                '${matchPercent >= 80 ? '🟢' : (matchPercent >= 40 ? '🟡' : '🔴')} $matchPercent%',
+                                style: TextStyle(
+                                  fontSize: 10.sp,
+                                  fontWeight: FontWeight.w700,
+                                  color: matchPercent >= 80 ? AppColors.successDark : (matchPercent >= 40 ? Colors.orange[900] : AppColors.error),
+                                ),
+                              ),
+                            ),
+                            if (isNew)
+                              Container(
+                                margin: EdgeInsets.only(top: 4.h),
+                                padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                                decoration: BoxDecoration(
+                                  color: Colors.purple[100],
+                                  borderRadius: BorderRadius.circular(8.r),
+                                  border: Border.all(color: Colors.purple, width: 1),
+                                ),
+                                child: Text(
+                                  'NOWY',
+                                  style: TextStyle(
+                                    fontSize: 9.sp,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.purple[900],
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    
+                    // Favorite icon
+                    Positioned(
+                      top: 8.h,
+                      right: 8.w,
+                      child: Container(
+                        padding: EdgeInsets.all(4.r),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.favorite_border, size: 16.r, color: AppColors.textPrimary),
+                      ),
                     ),
                   ],
                 ),
-                SizedBox(height: 12.h),
-                
-                // Macros row
-                if (isEnriching)
-                  _buildMacroSkeleton()
-                else
-                  Row(
-                    children: [
-                      _buildMacroPill('P: ${proteinG}g'),
-                      SizedBox(width: 8.w),
-                      _buildMacroPill('C: ${carbsG}g'),
-                      SizedBox(width: 8.w),
-                      _buildMacroPill('F: ${fatG}g'),
-                    ],
-                  ),
-                
-                if (geminiReason != null && geminiReason.isNotEmpty) ...[
-                  SizedBox(height: 12.h),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryLight,
-                      borderRadius: BorderRadius.circular(8.r),
+              ),
+              
+              // Content
+              Padding(
+                padding: EdgeInsets.all(10.r),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Title
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                        height: 1.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                    SizedBox(height: 6.h),
+                    
+                    // Clock & Flame row
+                    Row(
                       children: [
-                        Icon(Icons.auto_awesome, size: 12.r, color: AppColors.primaryDark),
+                        Icon(Icons.schedule, size: 12.r, color: AppColors.textSecondary),
                         SizedBox(width: 4.w),
-                        Expanded(
-                          child: Text(
-                            geminiReason,
-                            style: TextStyle(
-                              fontSize: 11.sp,
-                              fontStyle: FontStyle.italic,
-                              color: AppColors.primaryDark,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                        Text(
+                          '$cookTime min',
+                          style: TextStyle(fontSize: 11.sp, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                        ),
+                        Spacer(),
+                        Icon(Icons.local_fire_department_outlined, size: 12.r, color: AppColors.textSecondary),
+                        SizedBox(width: 4.w),
+                        Text(
+                          '$calories kcal',
+                          style: TextStyle(fontSize: 11.sp, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
-                  ),
-                ],
-                
-                if (missedIngredients.isNotEmpty) ...[
-                  SizedBox(height: 8.h),
-                  Text(
-                    'Brakuje: ${missedIngredients.join(', ')}',
-                    style: TextStyle(fontSize: 11.sp, color: AppColors.textMuted),
-                  ),
-                ],
-                
-                SizedBox(height: 16.h),
-                // Button
-                SizedBox(
-                  height: 44.h,
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: () => context.push(AppRoutes.recipeDetails, extra: recipe),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16.r),
-                      ),
-                    ),
-                    child: Text(
-                      'Zacznij gotować',
-                      style: AppTextStyles.labelMedium.copyWith(color: AppColors.textWhite),
-                    ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildPlaceholder() {
     return Container(
-      height: 180.h,
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-      ),
+      color: Colors.grey[200],
       child: Center(
-        child: Icon(Icons.restaurant, size: 40.r, color: AppColors.textMuted),
-      ),
-    );
-  }
-
-  Widget _buildMacroPill(String text) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8.r),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 12.sp,
-          fontWeight: FontWeight.w600,
-          color: AppColors.primary,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMacroSkeleton() {
-    return Shimmer.fromColors(
-      baseColor: AppColors.borderLight,
-      highlightColor: AppColors.border,
-      child: Row(
-        children: [
-          Container(width: 60.w, height: 24.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8.r))),
-          SizedBox(width: 8.w),
-          Container(width: 60.w, height: 24.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8.r))),
-          SizedBox(width: 8.w),
-          Container(width: 60.w, height: 24.h, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8.r))),
-        ],
+        child: Icon(Icons.restaurant, size: 32.r, color: AppColors.textMuted),
       ),
     );
   }

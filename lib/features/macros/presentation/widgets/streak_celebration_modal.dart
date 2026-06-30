@@ -5,6 +5,7 @@ import 'package:vitasense/core/services/cache_service.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/features/macros/data/macros_repository.dart';
 import 'package:vitasense/core/utils/bottom_sheet_utils.dart';
+import 'package:flutter/services.dart';
 
 /// Sprawdza czy pokazać modal celebracji streaka i ewentualnie go wyświetla.
 /// Wywołać po udanym zalogowaniu posiłku.
@@ -51,6 +52,7 @@ Future<void> maybeShowStreakCelebration(BuildContext context) async {
     if (!context.mounted) return;
 
     debugPrint('STREAK CHECK: SHOWING MODAL');
+    HapticFeedback.heavyImpact();
     await showAppBottomSheet(
       context: context,
       builder: (_) => StreakCelebrationModal(streakDays: streakDays, weekDays: days),

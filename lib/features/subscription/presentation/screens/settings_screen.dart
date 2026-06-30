@@ -1,3 +1,4 @@
+import 'package:vitasense/core/utils/snackbar_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -41,12 +42,7 @@ class _SettingsView extends StatelessWidget {
           // Odśwież status
           context.read<SubscriptionBloc>().add(const LoadSubscription());
         } else if (state is SubscriptionError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          SnackbarUtils.showError(context, state.message);
         }
       },
       child: Scaffold(

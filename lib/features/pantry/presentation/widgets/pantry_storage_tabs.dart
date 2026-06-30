@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 
@@ -30,7 +31,10 @@ class PantryStorageTabs extends StatelessWidget {
   Widget _tab(BuildContext context, String value, IconData icon, String label) {
     final isSelected = selected == value;
     return GestureDetector(
-      onTap: () => onSelected(value),
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onSelected(value);
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(vertical: 12.h),

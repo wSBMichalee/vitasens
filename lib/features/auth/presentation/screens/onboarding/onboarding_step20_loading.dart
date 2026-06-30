@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
-import 'package:vitasense/features/auth/presentation/screens/onboarding/onboarding_shared_widgets.dart';
 
 class Step20 extends StatefulWidget {
   final VoidCallback onNext;
@@ -13,72 +12,7 @@ class Step20 extends StatefulWidget {
   State<Step20> createState() => Step20State();
 }
 
-class Step20State extends State<Step20> with SingleTickerProviderStateMixin {
-  late AnimationController _animController;
-
-  @override
-  void initState() {
-    super.initState();
-    _animController = AnimationController(vsync: this, duration: const Duration(milliseconds: 800))..repeat(reverse: true);
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) widget.onNext();
-    });
-  }
-
-  @override
-  void dispose() {
-    _animController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 24.h),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Spacer(),
-          ScaleTransition(
-            scale: Tween<double>(begin: 0.95, end: 1.05).animate(_animController),
-            child: Text("⚡", style: TextStyle(fontSize: 64.sp)),
-          ),
-          SizedBox(height: 32.h),
-          const Heading("Setting up your plan...", textAlign: TextAlign.center),
-          SizedBox(height: 16.h),
-          const Subtitle("Customizing your meal suggestions.", textAlign: TextAlign.center),
-          SizedBox(height: 32.h),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 40.w),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8.r),
-              child: SizedBox(
-                height: 6.h,
-                child: const LinearProgressIndicator(color: AppColors.primary, backgroundColor: Color(0xFFE5E5EA)),
-              ),
-            ),
-          ),
-          SizedBox(height: 32.h),
-          const AnimatedListItem(text: "✓ Calculating your calories", delay: 600),
-          const AnimatedListItem(text: "✓ Matching your preferences", delay: 1200),
-          const AnimatedListItem(text: "✓ Filtering allergens", delay: 1800),
-          const AnimatedListItem(text: "✓ Building your meal plan", delay: 2400),
-          const Spacer(),
-        ],
-      ),
-    );
-  }
-}
-
-class Step20b extends StatefulWidget {
-  final VoidCallback onNext;
-  const Step20b({super.key, required this.onNext});
-
-  @override
-  State<Step20b> createState() => Step20bState();
-}
-
-class Step20bState extends State<Step20b> {
+class Step20State extends State<Step20> {
   double _progress = 0.0;
   int _currentItem = 0;
   Timer? _timer;

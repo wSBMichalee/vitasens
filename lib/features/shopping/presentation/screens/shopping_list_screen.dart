@@ -1,3 +1,4 @@
+import 'package:vitasense/core/utils/snackbar_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -173,12 +174,7 @@ class _ShoppingListViewState extends State<_ShoppingListView> {
     return BlocListener<ShoppingBloc, ShoppingState>(
       listener: (context, state) {
         if (state is ShoppingError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          SnackbarUtils.showError(context, state.message);
         } else if (state is ShoppingMovedToPantry) {
           context.read<PantryBloc>().add(const LoadPantry());
         }

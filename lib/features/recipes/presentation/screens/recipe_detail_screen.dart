@@ -1,4 +1,6 @@
+import 'package:vitasense/core/utils/snackbar_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -156,12 +158,7 @@ class _RecipeDetailViewState extends State<_RecipeDetailView> {
           }
           if (context.mounted) context.go(AppRoutes.home);
         } else if (state is RecipesError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.error,
-            ),
-          );
+          SnackbarUtils.showError(context, state.message);
         } else if (state is FavoriteChecked) {
           if (state.recipeId == (widget.recipe['id']?.toString() ?? '')) {
             setState(() {
@@ -426,9 +423,7 @@ class _RecipeDetailViewState extends State<_RecipeDetailView> {
                                     }
                                   } catch (e) {
                                     if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Błąd: $e'), backgroundColor: AppColors.error),
-                                      );
+                                      SnackbarUtils.showError(context, 'Błąd: $e');
                                     }
                                   }
                                 },
@@ -483,7 +478,10 @@ class _RecipeDetailViewState extends State<_RecipeDetailView> {
               child: BlocBuilder<RecipesBloc, RecipesState>(
                 builder: (context, state) {
                   return RecipeCookButton(
-                    onCook: () => _cookRecipe(context),
+                    onCook: () {
+                      HapticFeedback.mediumImpact();
+                      _cookRecipe(context);
+                    },
                     isCooking: state is RecipesCooking,
                   );
                 },

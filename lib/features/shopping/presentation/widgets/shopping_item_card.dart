@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/features/shopping/data/models/shopping_item_model.dart';
@@ -17,6 +18,7 @@ class ShoppingItemCard extends StatelessWidget {
       key: Key(item.id),
       direction: DismissDirection.endToStart,
       onDismissed: (_) {
+        HapticFeedback.lightImpact();
         context.read<ShoppingBloc>().add(DeleteShoppingItem(item.id));
       },
       background: Container(
@@ -46,7 +48,10 @@ class ShoppingItemCard extends StatelessWidget {
         child: Row(
           children: [
             GestureDetector(
-              onTap: () => context.read<ShoppingBloc>().add(MarkItemPurchased(item.id)),
+              onTap: () {
+                HapticFeedback.selectionClick();
+                context.read<ShoppingBloc>().add(MarkItemPurchased(item.id));
+              },
               child: Container(
                 width: 24.r,
                 height: 24.r,

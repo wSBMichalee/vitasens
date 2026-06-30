@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -10,6 +11,7 @@ import 'package:vitasense/features/meals/data/meal_suggestions_repository.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vitasense/core/router/app_routes.dart';
 import 'package:vitasense/features/macros/presentation/widgets/streak_celebration_modal.dart';
+
 class MealSuggestionCard extends StatelessWidget {
   final String mealType;
   final VoidCallback? onLogged;
@@ -242,7 +244,10 @@ class _SuggestionCard extends StatelessWidget {
                       SizedBox(width: 6.w),
                       // Zjedzone
                       GestureDetector(
-                        onTap: () => _showLogDialog(context),
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          _showLogDialog(context);
+                        },
                         child: Container(
                           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                           decoration: BoxDecoration(

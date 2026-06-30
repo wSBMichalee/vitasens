@@ -186,40 +186,56 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
                     return RefreshIndicator(
                       onRefresh: _onRefresh,
                       color: AppColors.primary,
-                      child: ListView.builder(
-                        padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 100.h),
-                        itemCount: state.recipes.length + (state.geminiPersonalized ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (state.geminiPersonalized && index == 0) {
-                            return Padding(
-                              padding: EdgeInsets.only(bottom: 16.h),
-                              child: Container(
-                                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                                decoration: BoxDecoration(
-                                  color: AppColors.successLight,
-                                  borderRadius: BorderRadius.circular(8.r),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.auto_awesome, size: 16.r, color: AppColors.successDark),
-                                    SizedBox(width: 8.w),
-                                    Text(
-                                      'Dopasowane do Twojego profilu',
-                                      style: TextStyle(
-                                        fontSize: 13.sp,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.successDark,
+                      child: CustomScrollView(
+                        slivers: [
+                          if (state.geminiPersonalized)
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 16.h),
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.successLight,
+                                    borderRadius: BorderRadius.circular(8.r),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.auto_awesome, size: 16.r, color: AppColors.successDark),
+                                      SizedBox(width: 8.w),
+                                      Text(
+                                        'Dopasowane do Twojego profilu',
+                                        style: TextStyle(
+                                          fontSize: 13.sp,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.successDark,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
-                            );
-                          }
-                          final recipeIndex = state.geminiPersonalized ? index - 1 : index;
-                          return RecipeCard(recipe: state.recipes[recipeIndex]);
-                        },
+                            ),
+                          SliverPadding(
+                            padding: state.geminiPersonalized
+                                ? EdgeInsets.fromLTRB(24.w, 0, 24.w, 100.h)
+                                : EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 100.h),
+                            sliver: SliverGrid(
+                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 16.w,
+                                mainAxisSpacing: 16.h,
+                                childAspectRatio: 0.75,
+                              ),
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  return RecipeCard(recipe: state.recipes[index]);
+                                },
+                                childCount: state.recipes.length,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     );
                   }
@@ -269,21 +285,23 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
   }
 
   Widget _buildLoadingState() {
-    return ListView.builder(
+    return GridView.builder(
       padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 100.h),
-      itemCount: 3,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 16.w,
+        mainAxisSpacing: 16.h,
+        childAspectRatio: 0.75,
+      ),
+      itemCount: 6,
       itemBuilder: (context, index) {
-        return Padding(
-          padding: EdgeInsets.only(bottom: 16.h),
-          child: Shimmer.fromColors(
-            baseColor: AppColors.borderLight,
-            highlightColor: AppColors.border,
-            child: Container(
-              height: 290.h,
-              decoration: BoxDecoration(
-                color: AppColors.backgroundWhite,
-                borderRadius: BorderRadius.circular(16.r),
-              ),
+        return Shimmer.fromColors(
+          baseColor: AppColors.borderLight,
+          highlightColor: AppColors.border,
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.backgroundWhite,
+              borderRadius: BorderRadius.circular(16.r),
             ),
           ),
         );

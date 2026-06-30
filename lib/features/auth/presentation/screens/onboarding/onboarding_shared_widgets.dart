@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
@@ -42,54 +43,107 @@ class Subtitle extends StatelessWidget {
   }
 }
 
-class CtaButton extends StatelessWidget {
+class CtaButton extends StatefulWidget {
   final VoidCallback? onPressed;
   final String label;
   final bool isLoading;
 
-  const CtaButton({super.key, 
+  const CtaButton({
+    super.key,
     required this.onPressed,
     required this.label,
     this.isLoading = false,
   });
 
   @override
+  State<CtaButton> createState() => _CtaButtonState();
+}
+
+class _CtaButtonState extends State<CtaButton> with SingleTickerProviderStateMixin {
+  late final AnimationController _pressController;
+  late final Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pressController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.96).animate(
+      CurvedAnimation(parent: _pressController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pressController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 56.h,
-      child: FilledButton(
-        onPressed: isLoading ? null : onPressed,
-        style: FilledButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28.r),
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: SizedBox(
+        width: double.infinity,
+        height: 56.h,
+        child: FilledButton(
+          onPressed: widget.isLoading ? null : () {
+            HapticFeedback.lightImpact();
+            if (widget.onPressed != null) widget.onPressed!();
+          },
+          onFocusChange: (hasFocus) {
+            if (hasFocus) _pressController.forward();
+            else _pressController.reverse();
+          },
+          onHover: (isHovered) {
+            if (isHovered) _pressController.forward();
+            else _pressController.reverse();
+          },
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(28.r),
+            ),
+          ).copyWith(
+            overlayColor: WidgetStateProperty.all(Colors.transparent),
+          ),
+          child: GestureDetector(
+            onTapDown: (_) => _pressController.forward(),
+            onTapUp: (_) => _pressController.reverse(),
+            onTapCancel: () => _pressController.reverse(),
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              alignment: Alignment.center,
+              child: widget.isLoading
+                  ? SizedBox(
+                      width: 24.r,
+                      height: 24.r,
+                      child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    )
+                  : Text(
+                      widget.label,
+                      style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+            ),
           ),
         ),
-        child: isLoading
-            ? SizedBox(
-                width: 24.r,
-                height: 24.r,
-                child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-              )
-            : Text(
-                label,
-                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
       ),
     );
   }
 }
 
-class OptionCard extends StatelessWidget {
+class OptionCard extends StatefulWidget {
   final String title;
   final String? subtitle;
   final IconData? icon;
   final bool selected;
   final VoidCallback onTap;
 
-  const OptionCard({super.key, 
+  const OptionCard({
+    super.key,
     required this.title,
     this.subtitle,
     this.icon,
@@ -98,41 +152,102 @@ class OptionCard extends StatelessWidget {
   });
 
   @override
+  State<OptionCard> createState() => _OptionCardState();
+}
+
+class _OptionCardState extends State<OptionCard> with SingleTickerProviderStateMixin {
+  late final AnimationController _pressController;
+  late final Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pressController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.97).animate(
+      CurvedAnimation(parent: _pressController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pressController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: EdgeInsets.only(bottom: 12.h),
-        padding: EdgeInsets.all(16.r),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.primary : const Color(0xFFF2F2F7),
-          borderRadius: BorderRadius.circular(14.r),
-        ),
-        child: Row(
-          children: [
-            if (icon != null) ...[
-              Icon(icon, color: selected ? Colors.white : Colors.black, size: 20.r),
-              SizedBox(width: 12.w),
-            ],
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w500, color: selected ? Colors.white : Colors.black),
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: GestureDetector(
+        onTapDown: (_) => _pressController.forward(),
+        onTapUp: (_) {
+          _pressController.reverse();
+          HapticFeedback.selectionClick();
+          widget.onTap();
+        },
+        onTapCancel: () => _pressController.reverse(),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          margin: EdgeInsets.only(bottom: 12.h),
+          padding: EdgeInsets.all(16.r),
+          decoration: BoxDecoration(
+            color: widget.selected ? AppColors.primary : const Color(0xFFF2F2F7),
+            borderRadius: BorderRadius.circular(14.r),
+            boxShadow: widget.selected ? [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              )
+            ] : [],
+          ),
+          child: Row(
+            children: [
+              if (widget.icon != null) ...[
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    widget.icon,
+                    key: ValueKey(widget.selected),
+                    color: widget.selected ? Colors.white : Colors.black,
+                    size: 20.r,
                   ),
-                  if (subtitle != null) ...[
-                    SizedBox(height: 4.h),
-                    Text(
-                      subtitle!,
-                      style: TextStyle(fontSize: 14.sp, color: selected ? Colors.white.withValues(alpha: 0.7) : const Color(0xFF8A8A8E)),
+                ),
+                SizedBox(width: 12.w),
+              ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 200),
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w500,
+                        color: widget.selected ? Colors.white : Colors.black,
+                      ),
+                      child: Text(widget.title),
                     ),
+                    if (widget.subtitle != null) ...[
+                      SizedBox(height: 4.h),
+                      AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 200),
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: widget.selected ? Colors.white.withValues(alpha: 0.7) : const Color(0xFF8A8A8E),
+                        ),
+                        child: Text(widget.subtitle!),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -179,7 +294,10 @@ class UnitTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
       child: Container(
         padding: EdgeInsets.symmetric(vertical: 8.h),
         decoration: BoxDecoration(

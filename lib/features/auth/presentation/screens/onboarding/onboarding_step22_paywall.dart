@@ -35,27 +35,29 @@ class Step22State extends State<Step22> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    _buildTimelineStep(
-                      icon: Icons.lock_open,
-                      color: AppColors.primary,
-                      title: "Today",
-                      subtitle: "Unlock all features — meals, pantry matching, and AI suggestions.",
-                      isLast: false,
-                    ),
-                    _buildTimelineStep(
-                      icon: Icons.notifications,
-                      color: Colors.orange,
-                      title: "In 2 Days — Reminder",
-                      subtitle: "We'll remind you before your trial ends.",
-                      isLast: false,
-                    ),
-                    _buildTimelineStep(
-                      icon: Icons.workspace_premium,
-                      color: Colors.black,
-                      title: "In 3 Days — Billing Starts",
-                      subtitle: "You'll be charged unless you cancel anytime before.",
-                      isLast: true,
-                    ),
+                    ...[
+                      _buildTimelineStep(
+                        icon: Icons.lock_open,
+                        color: AppColors.primary,
+                        title: "Today",
+                        subtitle: "Unlock all features — meals, pantry matching, and AI suggestions.",
+                        isLast: false,
+                      ),
+                      _buildTimelineStep(
+                        icon: Icons.notifications,
+                        color: Colors.orange,
+                        title: "In 2 Days — Reminder",
+                        subtitle: "We'll remind you before your trial ends.",
+                        isLast: false,
+                      ),
+                      _buildTimelineStep(
+                        icon: Icons.workspace_premium,
+                        color: Colors.black,
+                        title: "In 3 Days — Billing Starts",
+                        subtitle: "You'll be charged unless you cancel anytime before.",
+                        isLast: true,
+                      ),
+                    ].animate(interval: 150.ms).fadeIn(duration: 400.ms).slideX(begin: -0.05, end: 0, curve: Curves.easeOutQuad),
                     SizedBox(height: 32.h),
                     Row(
                       children: [
@@ -140,7 +142,7 @@ class Step22State extends State<Step22> {
                         SizedBox(width: 8.w),
                         Text("No Payment Due Now", style: TextStyle(color: const Color(0xFF8A8A8E), fontSize: 14.sp)),
                       ],
-                    ),
+                    ).animate(delay: 600.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad),
                   ],
                 ),
               ),
@@ -163,7 +165,7 @@ class Step22State extends State<Step22> {
                         style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
               ),
-            ),
+            ).animate(delay: 700.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad),
             SizedBox(height: 16.h),
             Text(
               _selectedPlan == 'yearly'
@@ -182,7 +184,7 @@ class Step22State extends State<Step22> {
                 Text(" · ", style: TextStyle(fontSize: 12.sp, color: const Color(0xFF8A8A8E))),
                 Text("Restore", style: TextStyle(fontSize: 12.sp, color: const Color(0xFF8A8A8E))),
               ],
-            ),
+            ).animate(delay: 800.ms).fadeIn(duration: 400.ms),
           ],
         ),
       ),

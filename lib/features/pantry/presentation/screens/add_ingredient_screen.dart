@@ -1,5 +1,7 @@
+import 'package:vitasense/core/utils/snackbar_utils.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vitasense/core/services/spoonacular_service.dart';
@@ -303,11 +305,10 @@ class _AddIngredientViewState extends State<_AddIngredientView> {
     return BlocListener<PantryBloc, PantryState>(
       listener: (context, state) {
         if (state is PantryIngredientAdded) {
+          HapticFeedback.mediumImpact();
           Navigator.of(context).pop();
         } else if (state is PantryError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: AppColors.error),
-          );
+          SnackbarUtils.showError(context, state.message);
         }
       },
       child: Material(

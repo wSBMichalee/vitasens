@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_bloc.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_event.dart';
@@ -102,7 +103,10 @@ class FilterBottomSheetState extends State<FilterBottomSheet> {
                   children: _categories.map((cat) {
                     final selected = selectedCategory == cat;
                     return GestureDetector(
-                      onTap: () => context.read<RecipesBloc>().add(SetRecipeCategory(cat)),
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        context.read<RecipesBloc>().add(SetRecipeCategory(cat));
+                      },
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 150),
                         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
@@ -127,7 +131,10 @@ class FilterBottomSheetState extends State<FilterBottomSheet> {
                 SizedBox(height: 12.h),
                 _FilterChipsSection(
                   activeFilters: activeFilters,
-                  onToggle: (filter) => context.read<RecipesBloc>().add(ToggleRecipeFilter(filter)),
+                  onToggle: (filter) {
+                    HapticFeedback.selectionClick();
+                    context.read<RecipesBloc>().add(ToggleRecipeFilter(filter));
+                  },
                 ),
                 SizedBox(height: 24.h),
 
@@ -168,7 +175,10 @@ class FilterBottomSheetState extends State<FilterBottomSheet> {
                 SizedBox(height: 12.h),
                 _CuisineChipsSection(
                   activeFilters: activeFilters,
-                  onToggle: (filter) => context.read<RecipesBloc>().add(ToggleRecipeFilter(filter)),
+                  onToggle: (filter) {
+                    HapticFeedback.selectionClick();
+                    context.read<RecipesBloc>().add(ToggleRecipeFilter(filter));
+                  },
                 ),
                 SizedBox(height: 20.h),
 
@@ -190,7 +200,10 @@ class FilterBottomSheetState extends State<FilterBottomSheet> {
                   ].map((s) {
                     final active = activeFilters.contains(s.$2);
                     return GestureDetector(
-                      onTap: () => context.read<RecipesBloc>().add(ToggleRecipeFilter(s.$2)),
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        context.read<RecipesBloc>().add(ToggleRecipeFilter(s.$2));
+                      },
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 150),
                         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),

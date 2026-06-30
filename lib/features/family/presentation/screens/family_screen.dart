@@ -1,3 +1,4 @@
+import 'package:vitasense/core/utils/snackbar_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -136,16 +137,12 @@ class _FamilyView extends StatelessWidget {
               child: BlocConsumer<FamilyBloc, FamilyState>(
                 listener: (context, state) {
                   if (state is FamilyError) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(state.message), backgroundColor: AppColors.error),
-                    );
+                    SnackbarUtils.showError(context, state.message);
                   } else if (state is FamilyLoaded) {
                     // It can be triggered just on load, but spec asks for 'Success!'
                     // To avoid showing it on initial load, we ideally need to know action.
                     // Assuming basic listener for now.
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Success!'), backgroundColor: AppColors.primary),
-                    );
+                    SnackbarUtils.showSuccess(context, 'Success!');
                   }
                 },
                 builder: (context, state) {
@@ -251,9 +248,7 @@ class _FamilyView extends StatelessWidget {
   Widget _buildFamilyLoadedView(BuildContext context, FamilyModel family, String currentUserId) {
     void copyCode() {
       Clipboard.setData(ClipboardData(text: family.inviteCode));
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invite code copied!'), backgroundColor: AppColors.primary),
-      );
+      SnackbarUtils.showSuccess(context, 'Invite code copied!');
     }
 
     void showLeaveDialog() {

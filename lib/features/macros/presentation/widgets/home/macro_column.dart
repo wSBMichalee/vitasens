@@ -10,6 +10,7 @@ class MacroColumn extends StatelessWidget {
     required this.goal,
     required this.color,
     this.isLow = false,
+    this.animationValue = 1.0,
   });
 
   final String label;
@@ -17,10 +18,13 @@ class MacroColumn extends StatelessWidget {
   final int goal;
   final Color color;
   final bool isLow;
+  final double animationValue;
 
   @override
   Widget build(BuildContext context) {
-    final double progress = (consumed / goal).clamp(0.0, 1.0);
+    final int animatedConsumed = (consumed * animationValue).round();
+    final double targetProgress = (consumed / goal).clamp(0.0, 1.0);
+    final double progress = targetProgress * animationValue;
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 12.w),
@@ -62,7 +66,7 @@ class MacroColumn extends StatelessWidget {
           SizedBox(height: 6.h),
           // Wartość
           Text(
-            '${consumed}g',
+            '${animatedConsumed}g',
             style: TextStyle(
               fontSize: 20.sp,
               height: 1.1,

@@ -1,3 +1,4 @@
+import 'package:vitasense/core/utils/snackbar_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -81,9 +82,7 @@ class FoodDetectedScreen extends StatelessWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to log meal: $e'), backgroundColor: AppColors.error),
-        );
+        SnackbarUtils.showError(context, 'Failed to log meal: $e');
       }
     }
   }
@@ -103,9 +102,7 @@ class FoodDetectedScreen extends StatelessWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add to pantry: $e'), backgroundColor: AppColors.error),
-        );
+        SnackbarUtils.showError(context, 'Failed to add to pantry: $e');
       }
     }
   }

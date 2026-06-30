@@ -1,3 +1,4 @@
+import 'package:vitasense/core/utils/snackbar_utils.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -149,7 +150,8 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
   int _rating = 0;
   String _pace = 'Moderate';
 
-  static const int _totalPages = 28;
+  // 27 ekranów: od powitania (Step1), przez pytania, ładownie (Step20), wynik (Step21) po Paywall (Step22)
+  static const int _totalPages = 27;
 
   @override
   void dispose() {
@@ -179,7 +181,7 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
         setState(() => _currentStep = 21);
         return;
       }
-      if (_currentStep == 26) {
+      if (_currentStep == 25) {
         return; // od planu w dol nie wracamy do ladowania
       }
 
@@ -257,9 +259,7 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
     } catch (e) {
       debugPrint("Error saving onboarding data: $e");
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Something went wrong. Please try again.'), backgroundColor: Colors.red),
-        );
+        SnackbarUtils.showError(context, 'Something went wrong. Please try again.');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -370,7 +370,6 @@ class _UserOnboardingScreenState extends State<UserOnboardingScreen> {
                   Step19(rating: _rating, onRatingChanged: (v) => setState(() => _rating = v), onNext: _nextStep),
                   Step19b(onNext: _nextStep),
                   Step20(onNext: _nextStep),
-                  Step20b(onNext: _nextStep),
                   Step21(gender: _gender, heightUnit: _heightUnit, heightCm: _heightCm, heightFt: _heightFt, heightIn: _heightIn, weightUnit: _weightUnit, weightKg: _weightKg, weightLbs: _weightLbs, age: _age, goal: _goal, activity: _activity, dietary: _dietary, onNext: _nextStep),
                   Step22(onNext: _completeOnboarding, isLoading: _isLoading),
                 ],

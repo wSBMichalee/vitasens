@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:native_glass_navbar/native_glass_navbar.dart';
@@ -61,7 +62,10 @@ class _ScaffoldWithBottomNavState extends State<ScaffoldWithBottomNav>
       body: widget.navigationShell,
       bottomNavigationBar: NativeGlassNavBar(
         currentIndex: currentIndex,
-        onTap: (index) => _onTap(index, context),
+        onTap: (index) {
+          HapticFeedback.selectionClick();
+          _onTap(index, context);
+        },
         tabs: const [
           NativeGlassNavBarItem(label: 'Home',     symbol: 'house.fill'),
           NativeGlassNavBarItem(label: 'Pantry',   symbol: 'cart.fill'),
@@ -97,7 +101,10 @@ class _ScaffoldWithBottomNavState extends State<ScaffoldWithBottomNav>
                     final isActive = currentIndex == i;
                     return Expanded(
                       child: GestureDetector(
-                        onTap: () => _onTap(i, context),
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          _onTap(i, context);
+                        },
                         behavior: HitTestBehavior.opaque,
                         child: SizedBox(
                           height: 60.h,

@@ -177,37 +177,56 @@ class _SuggestionCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Zdjęcie
-          if (suggestion.imageUrl != null)
-            ClipRRect(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12.r),
-                bottomLeft: Radius.circular(12.r),
-              ),
-              child: CachedNetworkImage(
-                imageUrl: suggestion.imageUrl!,
-                width: 80.r,
-                height: 80.r,
-                fit: BoxFit.cover,
-                errorWidget: (_, __, ___) => Container(
+          // Zdjęcie z badgem
+          Stack(
+            children: [
+              if (suggestion.imageUrl != null)
+                ClipRRect(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(12.r),
+                    bottomLeft: Radius.circular(12.r),
+                  ),
+                  child: CachedNetworkImage(
+                    imageUrl: suggestion.imageUrl!,
+                    width: 80.r,
+                    height: 80.r,
+                    fit: BoxFit.cover,
+                    errorWidget: (_, __, ___) => Container(
+                      width: 80.r, height: 80.r,
+                      color: AppColors.primaryLight,
+                      child: Icon(Icons.restaurant, color: AppColors.primary, size: 30.r),
+                    ),
+                  ),
+                )
+              else
+                Container(
                   width: 80.r, height: 80.r,
-                  color: AppColors.primaryLight,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryLight,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(12.r),
+                      bottomLeft: Radius.circular(12.r),
+                    ),
+                  ),
                   child: Icon(Icons.restaurant, color: AppColors.primary, size: 30.r),
                 ),
-              ),
-            )
-          else
-            Container(
-              width: 80.r, height: 80.r,
-              decoration: BoxDecoration(
-                color: AppColors.primaryLight,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(12.r),
-                  bottomLeft: Radius.circular(12.r),
+              Positioned(
+                top: 4.h,
+                left: 4.w,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF8E44AD).withValues(alpha: 0.9), // Purple color for AI
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
+                  child: Text(
+                    "SUGESTIA",
+                    style: TextStyle(fontSize: 8.sp, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 0.5),
+                  ),
                 ),
               ),
-              child: Icon(Icons.restaurant, color: AppColors.primary, size: 30.r),
-            ),
+            ],
+          ),
           // Info
           Expanded(
             child: Padding(

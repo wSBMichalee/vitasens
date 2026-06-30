@@ -35,9 +35,15 @@ class PantryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => PantryBloc(
-        repository: PantryRepository(),
-      )..add(const LoadPantry()),
+      create: (context) {
+        final bloc = PantryBloc(repository: PantryRepository());
+        Future.delayed(const Duration(milliseconds: 250), () {
+          if (!bloc.isClosed) {
+            bloc.add(const LoadPantry());
+          }
+        });
+        return bloc;
+      },
       child: const _PantryView(),
     );
   }

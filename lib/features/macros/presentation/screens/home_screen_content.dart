@@ -58,10 +58,15 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
 
     final today = DateTime.now();
     final dateStr = today.toIso8601String().split('T')[0];
-    _macrosBloc.add(LoadDailyMacros(dateStr));
-    _waterBloc.add(LoadWater(today));
-    _dailyLogBloc.add(LoadDailyLog(today));
-    _pantryBloc.add(const LoadPantry());
+    
+    Future.delayed(const Duration(milliseconds: 350), () {
+      if (mounted) {
+        _macrosBloc.add(LoadDailyMacros(dateStr));
+        _waterBloc.add(LoadWater(today));
+        _dailyLogBloc.add(LoadDailyLog(today));
+        _pantryBloc.add(const LoadPantry());
+      }
+    });
   }
 
   @override

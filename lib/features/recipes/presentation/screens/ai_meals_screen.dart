@@ -27,6 +27,7 @@ class AiMealsScreen extends StatefulWidget {
 class _AiMealsScreenState extends State<AiMealsScreen> {
   bool _isLoadingIngredients = true;
   bool _hasNoIngredients = false;
+  RecipesLoaded? _lastLoadedState;
 
   @override
   void initState() {
@@ -34,16 +35,22 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (widget.ingredients != null && widget.ingredients!.isNotEmpty) {
-        setState(() => _isLoadingIngredients = false);
-        context.read<RecipesBloc>().add(LoadRecipes(widget.ingredients!));
+        Future.delayed(const Duration(milliseconds: 450), () {
+          if (!mounted) return;
+          setState(() => _isLoadingIngredients = false);
+          context.read<RecipesBloc>().add(LoadRecipes(widget.ingredients!));
+        });
       } else {
         _loadIngredients();
       }
     });
   }
 
-  Future<void> _loadIngredients() async {
+  Future<void> _loadIngredients({bool isRefresh = false}) async {
     try {
+      if (!isRefresh) {
+        await Future.delayed(const Duration(milliseconds: 450));
+      }
       final supabase = Supabase.instance.client;
       final userId = supabase.auth.currentUser?.id;
       debugPrint('_loadIngredients: userId=$userId');
@@ -105,7 +112,7 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
     if (widget.ingredients != null && widget.ingredients!.isNotEmpty) {
       context.read<RecipesBloc>().add(LoadRecipes(widget.ingredients!));
     } else {
-      await _loadIngredients();
+      await _loadIngredients(isRefresh: true);
     }
   }
 
@@ -173,14 +180,20 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
                     return _buildEmptyState();
                   }
                   
-                  if (state is RecipesInitial || state is RecipesLoading) {
+                  if (state is RecipesInitial || (state is RecipesLoading && _lastLoadedState == null)) {
                     return _buildLoadingState();
                   }
-                  if (state is RecipesError) {
+                  if (state is RecipesError && _lastLoadedState == null) {
                     return _buildErrorState(state.message);
                   }
+                  
                   if (state is RecipesLoaded) {
-                    if (state.recipes.isEmpty) {
+                    _lastLoadedState = state;
+                  }
+                  
+                  if (_lastLoadedState != null) {
+                    final currentState = _lastLoadedState!;
+                    if (currentState.recipes.isEmpty) {
                       return _buildNoResultsState();
                     }
                     return RefreshIndicator(
@@ -188,7 +201,7 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
                       color: AppColors.primary,
                       child: CustomScrollView(
                         slivers: [
-                          if (state.geminiPersonalized)
+                          if (currentState.geminiPersonalized)
                             SliverToBoxAdapter(
                               child: Padding(
                                 padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 16.h),
@@ -217,7 +230,7 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
                               ),
                             ),
                           SliverPadding(
-                            padding: state.geminiPersonalized
+                            padding: currentState.geminiPersonalized
                                 ? EdgeInsets.fromLTRB(24.w, 0, 24.w, 100.h)
                                 : EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 100.h),
                             sliver: SliverGrid(
@@ -229,9 +242,9 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
                               ),
                               delegate: SliverChildBuilderDelegate(
                                 (context, index) {
-                                  return RecipeCard(recipe: state.recipes[index]);
+                                  return RecipeCard(recipe: currentState.recipes[index]);
                                 },
-                                childCount: state.recipes.length,
+                                childCount: currentState.recipes.length,
                               ),
                             ),
                           ),

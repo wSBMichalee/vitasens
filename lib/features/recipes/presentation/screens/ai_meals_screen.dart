@@ -128,7 +128,7 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
                       color: AppColors.borderLight,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.bookmark_border, color: AppColors.textPrimary, size: 20.r),
+                    child: Icon(Icons.favorite_border, color: AppColors.textPrimary, size: 20.r),
                   ),
                 ),
                 SizedBox(width: 8.w),

@@ -40,7 +40,7 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
       ]);
       
       final fastResponse = results[0] as Map<String, dynamic>;
-      final favoriteIds = results[1] as Set<String>;
+      final favoriteIds = (results[1] as Set<String>?) ?? <String>{};
       
       final rawList = fastResponse['recipes'] as List<dynamic>? ?? [];
       final fastRecipes = rawList.map((e) => Map<String, dynamic>.from(e as Map)).toList();

@@ -164,13 +164,21 @@ class RecipesRepository {
   }
 
   Future<Set<String>> getFavoriteIds() async {
-    final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) return {};
-    final data = await _supabase
-        .from('favorite_recipes')
-        .select('recipe_id')
-        .eq('user_id', userId);
-    return (data as List).map((row) => row['recipe_id'].toString()).toSet();
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) return {};
+      final data = await _supabase
+          .from('favorite_recipes')
+          .select('recipe_id')
+          .eq('user_id', userId);
+      if (data == null) return {};
+      return (data as List)
+          .map((row) => row['recipe_id']?.toString() ?? '')
+          .where((id) => id.isNotEmpty)
+          .toSet();
+    } catch (e) {
+      return {};
+    }
   }
 
   Future<List<Map<String, dynamic>>> getFavorites() async {

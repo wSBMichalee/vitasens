@@ -7,6 +7,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_bloc.dart';
+import 'package:vitasense/features/recipes/bloc/recipes_event.dart';
+import 'package:vitasense/features/recipes/bloc/recipes_state.dart';
 
 class RecipeCard extends StatefulWidget {
   const RecipeCard({super.key, required this.recipe});
@@ -268,6 +270,7 @@ class _RecipeCardState extends State<RecipeCard> with SingleTickerProviderStateM
               ),
             ],
           ),
+        ),
         ),
       ),
     );

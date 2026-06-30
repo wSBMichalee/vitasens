@@ -242,7 +242,10 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
                               ),
                               delegate: SliverChildBuilderDelegate(
                                 (context, index) {
-                                  return RecipeCard(recipe: currentState.recipes[index]);
+                                  final recipe = currentState.recipes[index];
+                                  final recipeId = recipe['id']?.toString() ?? '';
+                                  final isFav = currentState.favoriteIds.contains(recipeId);
+                                  return RecipeCard(recipe: recipe, isFavorite: isFav);
                                 },
                                 childCount: currentState.recipes.length,
                               ),

@@ -8,12 +8,12 @@ import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_bloc.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_event.dart';
-import 'package:vitasense/features/recipes/bloc/recipes_state.dart';
 
 class RecipeCard extends StatefulWidget {
-  const RecipeCard({super.key, required this.recipe});
+  const RecipeCard({super.key, required this.recipe, required this.isFavorite});
 
   final Map<String, dynamic> recipe;
+  final bool isFavorite;
 
   @override
   State<RecipeCard> createState() => _RecipeCardState();
@@ -22,8 +22,6 @@ class RecipeCard extends StatefulWidget {
 class _RecipeCardState extends State<RecipeCard> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _scaleAnimation;
-  bool _isFavorite = false;
-  bool _checkingFavorite = true;
   late String _recipeId;
 
   @override
@@ -37,9 +35,6 @@ class _RecipeCardState extends State<RecipeCard> with SingleTickerProviderStateM
     _scaleAnimation = Tween<double>(begin: 1.0, end: 0.97).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) context.read<RecipesBloc>().add(CheckFavorite(_recipeId));
-    });
   }
 
   @override
@@ -95,21 +90,7 @@ class _RecipeCardState extends State<RecipeCard> with SingleTickerProviderStateM
           scale: _scaleAnimation.value,
           child: child,
         ),
-        child: BlocListener<RecipesBloc, RecipesState>(
-          listenWhen: (previous, current) => current is FavoriteChecked || current is FavoriteToggled,
-          listener: (context, state) {
-            if (state is FavoriteChecked && state.recipeId == _recipeId) {
-              setState(() {
-                _isFavorite = state.isFavorite;
-                _checkingFavorite = false;
-              });
-            } else if (state is FavoriteToggled && state.recipeId == _recipeId) {
-              setState(() {
-                _isFavorite = state.isFavorite;
-              });
-            }
-          },
-          child: Container(
+        child: Container(
             decoration: BoxDecoration(
               color: AppColors.backgroundWhite,
               borderRadius: BorderRadius.circular(16.r),
@@ -203,7 +184,7 @@ class _RecipeCardState extends State<RecipeCard> with SingleTickerProviderStateM
                         behavior: HitTestBehavior.opaque,
                         onTap: () {
                           HapticFeedback.lightImpact();
-                          context.read<RecipesBloc>().add(ToggleFavorite(_recipeId, currentlyFavorited: _isFavorite));
+                          context.read<RecipesBloc>().add(ToggleFavorite(_recipeId, currentlyFavorited: widget.isFavorite));
                         },
                         child: Container(
                           padding: EdgeInsets.all(6.r),
@@ -212,13 +193,11 @@ class _RecipeCardState extends State<RecipeCard> with SingleTickerProviderStateM
                             shape: BoxShape.circle,
                             boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4.r)],
                           ),
-                          child: _checkingFavorite
-                              ? SizedBox(width: 18.r, height: 18.r, child: const CircularProgressIndicator(strokeWidth: 2, color: AppColors.error))
-                              : Icon(
-                                  _isFavorite ? Icons.favorite : Icons.favorite_border,
-                                  size: 18.r,
-                                  color: _isFavorite ? AppColors.error : AppColors.textPrimary,
-                                ),
+                          child: Icon(
+                            widget.isFavorite ? Icons.favorite : Icons.favorite_border,
+                            size: 18.r,
+                            color: widget.isFavorite ? AppColors.error : AppColors.textPrimary,
+                          ),
                         ),
                       ),
                     ),
@@ -270,7 +249,6 @@ class _RecipeCardState extends State<RecipeCard> with SingleTickerProviderStateM
               ),
             ],
           ),
-        ),
         ),
       ),
     );

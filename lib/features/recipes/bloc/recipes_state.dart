@@ -28,6 +28,7 @@ class RecipesLoaded extends RecipesState {
     this.minIngredients = 0,
     this.geminiPersonalized = false,
     this.isEnriching = false,
+    this.favoriteIds = const {},
   });
   final List<Map<String, dynamic>> recipes;
   final Set<String> activeFilters;
@@ -39,6 +40,7 @@ class RecipesLoaded extends RecipesState {
   final int minIngredients;
   final bool geminiPersonalized;
   final bool isEnriching;
+  final Set<String> favoriteIds;
 
   RecipesLoaded copyWith({
     List<Map<String, dynamic>>? recipes,
@@ -51,6 +53,7 @@ class RecipesLoaded extends RecipesState {
     int? minIngredients,
     bool? geminiPersonalized,
     bool? isEnriching,
+    Set<String>? favoriteIds,
   }) => RecipesLoaded(
     recipes: recipes ?? this.recipes,
     activeFilters: activeFilters ?? this.activeFilters,
@@ -62,12 +65,13 @@ class RecipesLoaded extends RecipesState {
     minIngredients: minIngredients ?? this.minIngredients,
     geminiPersonalized: geminiPersonalized ?? this.geminiPersonalized,
     isEnriching: isEnriching ?? this.isEnriching,
+    favoriteIds: favoriteIds ?? this.favoriteIds,
   );
 
   @override
   List<Object?> get props => [
     recipes, activeFilters, selectedCategory,
-    minCookTime, maxCookTime, minCalories, maxCalories, minIngredients, geminiPersonalized, isEnriching
+    minCookTime, maxCookTime, minCalories, maxCalories, minIngredients, geminiPersonalized, isEnriching, favoriteIds
   ];
 }
 

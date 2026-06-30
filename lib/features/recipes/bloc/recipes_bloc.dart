@@ -33,8 +33,15 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
   ) async {
     emit(const RecipesLoading());
     try {
-      // Faza 1 — szybkie pobranie z Spoonacular bez makr
-      final fastResponse = await repository.searchRecipesFast(event.pantryIngredients);
+      // Faza 1 — szybkie pobranie z Spoonacular bez makr i ulubionych
+      final results = await Future.wait([
+        repository.searchRecipesFast(event.pantryIngredients),
+        repository.getFavoriteIds(),
+      ]);
+      
+      final fastResponse = results[0] as Map<String, dynamic>;
+      final favoriteIds = results[1] as Set<String>;
+      
       final rawList = fastResponse['recipes'] as List<dynamic>? ?? [];
       final fastRecipes = rawList.map((e) => Map<String, dynamic>.from(e as Map)).toList();
       final spoonacularIds = <int>[];
@@ -49,6 +56,7 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
         selectedCategory: 'ALL',
         geminiPersonalized: isPersonalized,
         isEnriching: spoonacularIds.isNotEmpty,
+        favoriteIds: favoriteIds,
       ));
 
       // Faza 2 — w tle doładuj makra i Gemini
@@ -74,6 +82,7 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
           selectedCategory: 'ALL',
           geminiPersonalized: enrichedIsPersonalized,
           isEnriching: false,
+          favoriteIds: favoriteIds,
         ));
       }
     } catch (e) {
@@ -119,6 +128,7 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
       minIngredients: minIngredients,
       geminiPersonalized: geminiPersonalized,
       isEnriching: isEnriching,
+      favoriteIds: state is RecipesLoaded ? (state as RecipesLoaded).favoriteIds : const {},
     ));
   }
 
@@ -145,7 +155,7 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
   void _onClearFilters(ClearRecipeFilters event, Emitter<RecipesState> emit) {
     if (state is RecipesLoaded) {
       final s = state as RecipesLoaded;
-      emit(RecipesLoaded(recipes: _fullRecipePool, activeFilters: const {}, selectedCategory: 'ALL', geminiPersonalized: s.geminiPersonalized, isEnriching: s.isEnriching));
+      emit(RecipesLoaded(recipes: _fullRecipePool, activeFilters: const {}, selectedCategory: 'ALL', geminiPersonalized: s.geminiPersonalized, isEnriching: s.isEnriching, favoriteIds: s.favoriteIds));
     }
   }
 
@@ -255,11 +265,24 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
 
   Future<void> _onToggleFavorite(ToggleFavorite event, Emitter<RecipesState> emit) async {
     try {
+      RecipesLoaded? loadedState;
+      if (state is RecipesLoaded) {
+        loadedState = state as RecipesLoaded;
+      }
+      
       if (event.currentlyFavorited) {
         await repository.removeFavorite(event.recipeId);
+        if (loadedState != null) {
+          final newFavs = Set<String>.from(loadedState.favoriteIds)..remove(event.recipeId);
+          emit(loadedState.copyWith(favoriteIds: newFavs));
+        }
         emit(FavoriteToggled(recipeId: event.recipeId, isFavorite: false));
       } else {
         await repository.addFavorite(event.recipeId);
+        if (loadedState != null) {
+          final newFavs = Set<String>.from(loadedState.favoriteIds)..add(event.recipeId);
+          emit(loadedState.copyWith(favoriteIds: newFavs));
+        }
         emit(FavoriteToggled(recipeId: event.recipeId, isFavorite: true));
       }
     } catch (e) {

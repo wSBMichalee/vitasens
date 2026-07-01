@@ -10,7 +10,7 @@ import 'package:vitasense/features/recipes/bloc/recipes_event.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_state.dart';
 import 'package:vitasense/features/recipes/data/recipes_repository.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import '../widgets/ai_meals/recipe_card.dart';
 
 class SavedRecipesScreen extends StatelessWidget {
   const SavedRecipesScreen({super.key});
@@ -30,7 +30,7 @@ class _SavedRecipesView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.backgroundWhite,
       body: SafeArea(
         child: Column(
           children: [
@@ -38,117 +38,92 @@ class _SavedRecipesView extends StatelessWidget {
               title: 'Saved Recipes',
               subtitle: 'Your collection',
               variant: AppHeaderVariant.nested,
-              backgroundColor: AppColors.primary,
-              textColor: AppColors.textWhite,
               onBack: () => context.pop(),
             ),
             Expanded(
-              child: BlocBuilder<RecipesBloc, RecipesState>(
+              child: BlocConsumer<RecipesBloc, RecipesState>(
+                listener: (context, state) {
+                  if (state is FavoriteToggled) {
+                    context.read<RecipesBloc>().add(const LoadFavorites());
+                  }
+                },
+                buildWhen: (previous, current) => current is RecipesLoading || current is FavoritesLoaded || current is RecipesError,
                 builder: (context, state) {
                   if (state is RecipesLoading) {
-                    return ListView.builder(
-                      padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
-                      itemCount: 4,
-                      itemBuilder: (_, __) => Padding(
-                        padding: EdgeInsets.only(bottom: 12.h),
-                        child: Shimmer.fromColors(
+                    return GridView.builder(
+                      padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 100.h),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16.w,
+                        mainAxisSpacing: 16.h,
+                        childAspectRatio: 0.75,
+                      ),
+                      itemCount: 6,
+                      itemBuilder: (context, index) {
+                        return Shimmer.fromColors(
                           baseColor: AppColors.borderLight,
                           highlightColor: AppColors.border,
                           child: Container(
-                            height: 90.h,
                             decoration: BoxDecoration(
                               color: AppColors.backgroundWhite,
                               borderRadius: BorderRadius.circular(16.r),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }
-                  if (state is FavoritesLoaded) {
-                    if (state.recipes.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.bookmark_border, color: AppColors.textMuted, size: 64.r),
-                            SizedBox(height: 16.h),
-                            Text('No saved recipes yet', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                            SizedBox(height: 8.h),
-                            Text('Tap the bookmark icon on any recipe\nto save it here.', style: TextStyle(fontSize: 14.sp, color: AppColors.textSecondary, height: 1.5), textAlign: TextAlign.center),
-                            SizedBox(height: 24.h),
-                            FilledButton(
-                              onPressed: () => context.go(AppRoutes.aiMeals),
-                              style: FilledButton.styleFrom(backgroundColor: AppColors.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r))),
-                              child: Text('Browse Recipes', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: AppColors.textWhite)),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                    return ListView.builder(
-                      padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
-                      itemCount: state.recipes.length,
-                      itemBuilder: (context, index) {
-                        final recipe = state.recipes[index];
-                        final imageUrl = recipe['imageUrl']?.toString() ?? recipe['image_url']?.toString();
-                        final title = recipe['title']?.toString() ?? '';
-                        final cookTime = recipe['cookTimeMinutes'] ?? 0;
-                        final calories = recipe['calories'] ?? 0;
-                        return GestureDetector(
-                          onTap: () => context.push(AppRoutes.recipeDetails, extra: recipe),
-                          child: Container(
-                            margin: EdgeInsets.only(bottom: 12.h),
-                            decoration: BoxDecoration(
-                              color: AppColors.backgroundWhite,
-                              borderRadius: BorderRadius.circular(16.r),
-                              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 16, offset: const Offset(0, 6))],
-                            ),
-                            child: Row(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.horizontal(left: Radius.circular(16.r)),
-                                  child: imageUrl != null
-                                      ? CachedNetworkImage(imageUrl: imageUrl, width: 90.r, height: 90.r, fit: BoxFit.cover,
-                                          placeholder: (_, __) => Container(width: 90.r, height: 90.r, color: AppColors.borderLight),
-                                          errorWidget: (_, __, ___) => Container(width: 90.r, height: 90.r, color: AppColors.borderLight, child: Icon(Icons.image_not_supported_outlined, color: AppColors.textMuted, size: 24.r)))
-                                      : Container(width: 90.r, height: 90.r, color: AppColors.borderLight),
-                                ),
-                                Expanded(
-                                  child: Padding(
-                                    padding: EdgeInsets.all(12.r),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(title, style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary), maxLines: 2, overflow: TextOverflow.ellipsis),
-                                        SizedBox(height: 4.h),
-                                        Row(children: [
-                                          Icon(Icons.timer_outlined, color: AppColors.textMuted, size: 12.r),
-                                          SizedBox(width: 3.w),
-                                          Text('$cookTime min', style: TextStyle(fontSize: 11.sp, color: AppColors.textMuted)),
-                                          SizedBox(width: 8.w),
-                                          Icon(Icons.local_fire_department_outlined, color: AppColors.primary, size: 12.r),
-                                          SizedBox(width: 3.w),
-                                          Text('$calories kcal', style: TextStyle(fontSize: 11.sp, color: AppColors.primary)),
-                                        ]),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.only(right: 12.w),
-                                  child: Icon(Icons.bookmark_rounded, color: AppColors.primary, size: 20.r),
-                                ),
-                              ],
                             ),
                           ),
                         );
                       },
                     );
                   }
+                  
+                  if (state is FavoritesLoaded) {
+                    if (state.recipes.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.favorite_border, color: AppColors.textMuted, size: 64.r),
+                            SizedBox(height: 16.h),
+                            Text(
+                              'Nie masz jeszcze zapisanych przepisów.',
+                              style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                              textAlign: TextAlign.center,
+                            ),
+                            SizedBox(height: 8.h),
+                            Text(
+                              'Dodaj ulubione przepisy klikając ❤️ w AI Meals.',
+                              style: TextStyle(fontSize: 14.sp, color: AppColors.textSecondary, height: 1.5),
+                              textAlign: TextAlign.center,
+                            ),
+                            SizedBox(height: 24.h),
+                            FilledButton(
+                              onPressed: () => context.go(AppRoutes.aiMeals),
+                              style: FilledButton.styleFrom(backgroundColor: AppColors.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r))),
+                              child: Text('Przeglądaj AI Meals', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: AppColors.textWhite)),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    
+                    return GridView.builder(
+                      padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 100.h),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16.w,
+                        mainAxisSpacing: 16.h,
+                        childAspectRatio: 0.75,
+                      ),
+                      itemCount: state.recipes.length,
+                      itemBuilder: (context, index) {
+                        final recipe = state.recipes[index];
+                        return RecipeCard(recipe: recipe, isFavorite: true);
+                      },
+                    );
+                  }
+                  
                   if (state is RecipesError) {
                     return Center(child: Text(state.message, style: TextStyle(color: AppColors.error, fontSize: 14.sp)));
                   }
+                  
                   return const SizedBox.shrink();
                 },
               ),

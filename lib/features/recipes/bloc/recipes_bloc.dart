@@ -265,23 +265,23 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
 
   Future<void> _onToggleFavorite(ToggleFavorite event, Emitter<RecipesState> emit) async {
     try {
-      RecipesLoaded? loadedState;
-      if (state is RecipesLoaded) {
-        loadedState = state as RecipesLoaded;
-      }
-      
+      // Zachowaj aktualny RecipesLoaded state zanim cokolwiek zmienimy
+      final currentLoaded = state is RecipesLoaded ? state as RecipesLoaded : null;
+
       if (event.currentlyFavorited) {
         await repository.removeFavorite(event.recipeId);
-        if (loadedState != null) {
-          final newFavs = Set<String>.from(loadedState.favoriteIds)..remove(event.recipeId);
-          emit(loadedState.copyWith(favoriteIds: newFavs));
+        // Zaktualizuj favoriteIds w RecipesLoaded żeby UI się odświeżył
+        if (currentLoaded != null) {
+          final newFavs = Set<String>.from(currentLoaded.favoriteIds)..remove(event.recipeId);
+          emit(currentLoaded.copyWith(favoriteIds: newFavs));
         }
         emit(FavoriteToggled(recipeId: event.recipeId, isFavorite: false));
       } else {
         await repository.addFavorite(event.recipeId);
-        if (loadedState != null) {
-          final newFavs = Set<String>.from(loadedState.favoriteIds)..add(event.recipeId);
-          emit(loadedState.copyWith(favoriteIds: newFavs));
+        // Zaktualizuj favoriteIds w RecipesLoaded żeby UI się odświeżył
+        if (currentLoaded != null) {
+          final newFavs = Set<String>.from(currentLoaded.favoriteIds)..add(event.recipeId);
+          emit(currentLoaded.copyWith(favoriteIds: newFavs));
         }
         emit(FavoriteToggled(recipeId: event.recipeId, isFavorite: true));
       }

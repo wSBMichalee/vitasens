@@ -8,6 +8,7 @@ import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_bloc.dart';
 import 'package:vitasense/features/recipes/bloc/recipes_event.dart';
+import 'package:vitasense/features/recipes/bloc/recipes_state.dart';
 
 class RecipeCard extends StatefulWidget {
   const RecipeCard({super.key, required this.recipe, required this.isFavorite});
@@ -90,7 +91,17 @@ class _RecipeCardState extends State<RecipeCard> with SingleTickerProviderStateM
           scale: _scaleAnimation.value,
           child: child,
         ),
-        child: Container(
+        child: BlocListener<RecipesBloc, RecipesState>(
+          listenWhen: (previous, current) => current is FavoriteToggled && current.recipeId == _recipeId,
+          listener: (context, state) {
+            // Służy tylko do opcjonalnych lokalnych efektów ubocznych
+            // np. HapticFeedback czy dodatkowe animacje serca, 
+            // bo widget.isFavorite zostanie zaktualizowane przez rodzica
+            if (state is FavoriteToggled) {
+              setState(() {}); // wymuszenie rebuilda jeśli rodzic jeszcze tego nie zrobił
+            }
+          },
+          child: Container(
             decoration: BoxDecoration(
               color: AppColors.backgroundWhite,
               borderRadius: BorderRadius.circular(16.r),
@@ -249,6 +260,7 @@ class _RecipeCardState extends State<RecipeCard> with SingleTickerProviderStateM
               ),
             ],
           ),
+        ),
         ),
       ),
     );

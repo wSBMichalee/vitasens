@@ -41,6 +41,8 @@ import 'package:vitasense/features/showcase/presentation/screens/feature_matcher
 import 'package:vitasense/features/showcase/presentation/screens/results_analysis_screen.dart';
 import 'package:vitasense/features/recipes/presentation/screens/saved_recipes_screen.dart';
 import 'package:vitasense/features/macros/presentation/screens/progress_screen.dart';
+import 'package:vitasense/features/detect/presentation/screens/barcode_scanner_screen.dart';
+import 'package:vitasense/features/detect/presentation/screens/barcode_result_screen.dart';
 export 'app_routes.dart';
 import 'app_routes.dart';
 import '../widgets/scaffold_with_bottom_nav.dart';
@@ -375,6 +377,23 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.progress,
       builder: (context, state) => const ProgressScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.barcodeScanner,
+      pageBuilder: (context, state) => _slideUpPage(
+        state: state,
+        child: const BarcodeScannerScreen(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.barcodeResult,
+      pageBuilder: (context, state) {
+        final product = state.extra as Map<String, dynamic>? ?? {};
+        return _slideUpPage(
+          state: state,
+          child: BarcodeResultScreen(product: product),
+        );
+      },
     ),
   ],
 );

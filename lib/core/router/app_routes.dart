@@ -39,4 +39,6 @@ class AppRoutes {
   static const String termsOfService = '/terms-of-service';
   static const String deleteAccount = '/delete-account';
   static const String savedRecipes = '/saved-recipes';
+  static const String barcodeScanner = '/barcode-scanner';
+  static const String barcodeResult = '/barcode-result';
 }

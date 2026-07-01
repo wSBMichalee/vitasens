@@ -114,8 +114,19 @@ serve(async (req: Request) => {
               .sort((a, b) => b.matchPercent - a.matchPercent);
           }
         } else {
-          // Brak składników — zwróć losowe przepisy
-          recipes = recipes.sort(() => Math.random() - 0.5).slice(0, 100);
+          // Brak składników — zwróć przepisy z daily seed
+          // Seed oparty na dacie — zmienia się każdego dnia ale jest spójny w ciągu dnia
+          const today = new Date().toISOString().split('T')[0]; // '2026-07-01'
+          const seed = today.split('-').reduce((acc, val) => acc + parseInt(val), 0);
+          
+          // Deterministyczny shuffle oparty na seedzie
+          const shuffled = [...recipes];
+          for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(((seed * (i + 1) * 2654435761) % 2147483647) / 2147483647 * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+          }
+          
+          recipes = shuffled.slice(0, 100);
         }
 
         // Pobierz składniki z pantry użytkownika

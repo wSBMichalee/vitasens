@@ -372,6 +372,15 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
                     onTap: () => context.push(AppRoutes.extract),
                   ),
                   SpeedDialChild(
+                    child: const Icon(Icons.qr_code, color: Colors.white),
+                    backgroundColor: AppColors.primary,
+                    label: 'Scan Barcode',
+                    labelStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                    labelBackgroundColor: Colors.white,
+                    shape: const CircleBorder(),
+                    onTap: () => context.push(AppRoutes.barcodeScanner),
+                  ),
+                  SpeedDialChild(
                     child: const Icon(Icons.qr_code_scanner, color: Colors.white),
                     backgroundColor: AppColors.primary,
                     label: 'Scan Food',

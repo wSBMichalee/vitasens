@@ -176,7 +176,6 @@ class RecipesRepository {
           .from('favorite_recipes')
           .select('recipe_id')
           .eq('user_id', userId);
-      if (data == null) return {};
       return (data as List)
           .map((row) => row['recipe_id']?.toString() ?? '')
           .where((id) => id.isNotEmpty)

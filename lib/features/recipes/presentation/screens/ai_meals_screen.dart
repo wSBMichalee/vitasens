@@ -171,6 +171,11 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
                   if (state is RecipesSubscriptionExpired) {
                     context.push('/subscription'); // Placeholder dla paywall
                   }
+                  if (state is RecipesLoaded) {
+                    setState(() {
+                      _lastLoadedState = state;
+                    });
+                  }
                 },
                 builder: (context, state) {
                   if (_isLoadingIngredients) {
@@ -186,11 +191,7 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
                   if (state is RecipesError && _lastLoadedState == null) {
                     return _buildErrorState(state.message);
                   }
-                  
-                  if (state is RecipesLoaded) {
-                    _lastLoadedState = state;
-                  }
-                  
+
                   if (_lastLoadedState != null) {
                     final currentState = _lastLoadedState!;
                     if (currentState.recipes.isEmpty) {

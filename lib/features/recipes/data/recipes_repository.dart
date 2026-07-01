@@ -150,17 +150,22 @@ class RecipesRepository {
     );
   }
   Future<void> addFavorite(String recipeId) async {
-    await _supabase.functions.invoke(
-      'search-recipes',
-      body: {'action': 'add_favorite', 'recipeId': recipeId},
-    );
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) return;
+    await _supabase.from('favorite_recipes').upsert({
+      'user_id': userId,
+      'recipe_id': recipeId,
+    }, onConflict: 'user_id,recipe_id');
   }
 
   Future<void> removeFavorite(String recipeId) async {
-    await _supabase.functions.invoke(
-      'search-recipes',
-      body: {'action': 'remove_favorite', 'recipeId': recipeId},
-    );
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) return;
+    await _supabase
+        .from('favorite_recipes')
+        .delete()
+        .eq('user_id', userId)
+        .eq('recipe_id', recipeId);
   }
 
   Future<Set<String>> getFavoriteIds() async {

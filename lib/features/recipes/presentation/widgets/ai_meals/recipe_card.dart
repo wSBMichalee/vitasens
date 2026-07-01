@@ -24,10 +24,12 @@ class _RecipeCardState extends State<RecipeCard> with SingleTickerProviderStateM
   late final AnimationController _controller;
   late final Animation<double> _scaleAnimation;
   late String _recipeId;
+  bool _localIsFavorite = false;
 
   @override
   void initState() {
     super.initState();
+    _localIsFavorite = widget.isFavorite;
     _recipeId = widget.recipe['id']?.toString() ?? UniqueKey().toString();
     _controller = AnimationController(
       vsync: this,
@@ -42,6 +44,15 @@ class _RecipeCardState extends State<RecipeCard> with SingleTickerProviderStateM
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(RecipeCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Synchronizuj lokalny stan gdy rodzic przekaże nową wartość
+    if (oldWidget.isFavorite != widget.isFavorite) {
+      _localIsFavorite = widget.isFavorite;
+    }
   }
 
   @override
@@ -190,7 +201,11 @@ class _RecipeCardState extends State<RecipeCard> with SingleTickerProviderStateM
                           behavior: HitTestBehavior.opaque,
                           onTap: () {
                             HapticFeedback.lightImpact();
-                            context.read<RecipesBloc>().add(ToggleFavorite(_recipeId, currentlyFavorited: widget.isFavorite));
+                            final wasLiked = _localIsFavorite; // zapamiętaj PRZED zmianą
+                            setState(() => _localIsFavorite = !_localIsFavorite); // optimistic update
+                            context.read<RecipesBloc>().add(
+                              ToggleFavorite(_recipeId, currentlyFavorited: wasLiked), // użyj starej wartości
+                            );
                           },
                           child: Container(
                             padding: EdgeInsets.all(6.r),
@@ -200,9 +215,9 @@ class _RecipeCardState extends State<RecipeCard> with SingleTickerProviderStateM
                               boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4.r)],
                             ),
                             child: Icon(
-                              widget.isFavorite ? Icons.favorite : Icons.favorite_border,
+                              _localIsFavorite ? Icons.favorite : Icons.favorite_border,
                               size: 18.r,
-                              color: widget.isFavorite ? AppColors.error : AppColors.textPrimary,
+                              color: _localIsFavorite ? AppColors.error : AppColors.textPrimary,
                             ),
                           ),
                         ),

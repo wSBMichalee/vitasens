@@ -7,6 +7,7 @@ import 'package:vitasense/core/widgets/app_header.dart';
 import 'package:vitasense/core/supabase/supabase_client.dart';
 import 'package:vitasense/core/utils/snackbar_utils.dart';
 import 'package:vitasense/core/router/app_routes.dart';
+import 'package:vitasense/features/pantry/data/pantry_repository.dart';
 
 class BarcodeResultScreen extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -19,7 +20,9 @@ class BarcodeResultScreen extends StatefulWidget {
 
 class _BarcodeResultScreenState extends State<BarcodeResultScreen> {
   late double _servingG;
-  bool _isProcessing = false;
+  bool _isProcessingMeal = false;
+  bool _isProcessingPantry = false;
+  String _storageLocation = 'fridge';
 
   @override
   void initState() {
@@ -36,71 +39,71 @@ class _BarcodeResultScreenState extends State<BarcodeResultScreen> {
     return value100g * (_servingG / 100.0);
   }
 
-  Future<void> _handleAction() async {
-    final mode = widget.product['_mode'] ?? 'meal';
+  Future<void> _handleAddToMeal() async {
     final barcode = widget.product['barcode'];
     if (barcode == null) return;
     
-    setState(() => _isProcessing = true);
+    setState(() => _isProcessingMeal = true);
     
     try {
-      if (mode == 'meal') {
-        final now = DateTime.now();
-        final mealTimeStr = _getMealTimeStr(now.hour);
-        final dateStr = now.toIso8601String().split('T')[0];
-        
-        final response = await SupabaseClientService.instance.client.functions.invoke(
-          'scan-barcode',
-          body: {
-            'action': 'log_meal',
-            'barcode': barcode,
-            'servingG': _servingG,
-            'mealTime': mealTimeStr,
-            'mealDate': dateStr,
-          },
-        );
-        
-        final data = response.data;
-        if (data['success'] == true) {
-          if (!mounted) return;
-          SnackbarUtils.showSuccess(context, "Dodano \${widget.product['name']} do $mealTimeStr!");
-          context.go(AppRoutes.home); // go to home to see the change
-        } else {
-          throw Exception('Failed');
-        }
-      } else if (mode == 'pantry') {
-        // Here we just use a default pantryId. In real life we might get this from the user's active pantry.
-        // Wait, for this demo we just get the first one or hardcode an ID if none provided.
-        // A better approach is to ask backend to pick default or we fetch it.
-        // Assuming backend handles user's pantry if we send null or we just fetch it.
-        // Let's assume we need to fetch pantryId first
-        final pantryRes = await SupabaseClientService.instance.client.from('pantries').select('id').limit(1).single();
-        final pantryId = pantryRes['id'];
-        
-        final response = await SupabaseClientService.instance.client.functions.invoke(
-          'scan-barcode',
-          body: {
-            'action': 'add_to_pantry',
-            'barcode': barcode,
-            'pantryId': pantryId,
-            'quantity': _servingG,
-            'unit': 'g',
-          },
-        );
-        
-        final data = response.data;
-        if (data['success'] == true) {
-          if (!mounted) return;
-          SnackbarUtils.showSuccess(context, 'Dodano do spiżarni!');
-          context.go(AppRoutes.pantry); 
-        } else {
-          throw Exception('Failed');
-        }
+      final now = DateTime.now();
+      final mealTimeStr = _getMealTimeStr(now.hour);
+      final dateStr = now.toIso8601String().split('T')[0];
+      
+      final response = await SupabaseClientService.instance.client.functions.invoke(
+        'scan-barcode',
+        body: {
+          'action': 'log_meal',
+          'barcode': barcode,
+          'servingG': _servingG,
+          'mealTime': mealTimeStr,
+          'mealDate': dateStr,
+        },
+      );
+      
+      final data = response.data;
+      if (data['success'] == true) {
+        if (!mounted) return;
+        SnackbarUtils.showSuccess(context, 'Dodano do dziennika');
+        context.go(AppRoutes.home);
+      } else {
+        throw Exception('Failed');
       }
     } catch (e) {
       if (!mounted) return;
-      SnackbarUtils.showError(context, 'Wystąpił błąd podczas dodawania.');
-      setState(() => _isProcessing = false);
+      SnackbarUtils.showError(context, 'Wystąpił błąd podczas dodawania do posiłku.');
+      setState(() => _isProcessingMeal = false);
+    }
+  }
+
+  Future<void> _handleAddToPantry() async {
+    final name = widget.product['name'] as String? ?? 'Nieznany produkt';
+    
+    setState(() => _isProcessingPantry = true);
+    
+    try {
+      await PantryRepository().addIngredient(
+        pantryId: 'default',
+        name: name,
+        quantity: _servingG,
+        unit: 'g',
+        category: 'other',
+        storageLocation: _storageLocation,
+      );
+      
+      if (!mounted) return;
+      
+      String locationLabel = 'lodówki';
+      if (_storageLocation == 'freezer') locationLabel = 'zamrażarki';
+      if (_storageLocation == 'pantry') locationLabel = 'spiżarni';
+      
+      SnackbarUtils.showSuccess(context, '$name dodano do $locationLabel');
+      
+      setState(() => _isProcessingPantry = false);
+    } catch (e) {
+      if (!mounted) return;
+      SnackbarUtils.showError(context, 'Wystąpił błąd podczas dodawania do spiżarni.');
+      setState(() => _isProcessingPantry = false);
     }
   }
   
@@ -123,7 +126,6 @@ class _BarcodeResultScreenState extends State<BarcodeResultScreen> {
     final scaledFat = _scaleMacro('fat100g');
     
     final mode = widget.product['_mode'] ?? 'meal';
-    final buttonLabel = mode == 'meal' ? 'Dodaj do posiłku' : 'Dodaj do spiżarni';
 
     return Scaffold(
       backgroundColor: AppColors.backgroundWhite,
@@ -132,7 +134,7 @@ class _BarcodeResultScreenState extends State<BarcodeResultScreen> {
           children: [
             AppHeader(
               title: 'Skanowanie',
-              subtitle: "Wynik dla kodu: \${widget.product['barcode']}",
+              subtitle: "Wynik dla kodu: ${widget.product['barcode']}",
               variant: AppHeaderVariant.nested,
               onBack: () => context.pop(),
             ),
@@ -212,7 +214,7 @@ class _BarcodeResultScreenState extends State<BarcodeResultScreen> {
                             borderRadius: BorderRadius.circular(8.r),
                           ),
                           child: Text(
-                            '\${_servingG.toInt()}g',
+                            '${_servingG.toInt()}g',
                             style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold),
                             textAlign: TextAlign.center,
                           ),
@@ -232,6 +234,34 @@ class _BarcodeResultScreenState extends State<BarcodeResultScreen> {
                         _MacroBubble(label: 'Tłuszcz', value: '${scaledFat.round()}g', color: Colors.red),
                       ],
                     ),
+
+                    SizedBox(height: 32.h),
+                    
+                    // Storage location selector
+                    Row(
+                      children: [
+                        _StorageChip(
+                          label: '🧊 Lodówka',
+                          value: 'fridge',
+                          selected: _storageLocation == 'fridge',
+                          onTap: () => setState(() => _storageLocation = 'fridge'),
+                        ),
+                        SizedBox(width: 8.w),
+                        _StorageChip(
+                          label: '❄️ Zamrażarka',
+                          value: 'freezer',
+                          selected: _storageLocation == 'freezer',
+                          onTap: () => setState(() => _storageLocation = 'freezer'),
+                        ),
+                        SizedBox(width: 8.w),
+                        _StorageChip(
+                          label: '🗄️ Spiżarnia',
+                          value: 'pantry',
+                          selected: _storageLocation == 'pantry',
+                          onTap: () => setState(() => _storageLocation = 'pantry'),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -246,19 +276,44 @@ class _BarcodeResultScreenState extends State<BarcodeResultScreen> {
                   BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5)),
                 ],
               ),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56.h,
-                child: FilledButton(
-                  onPressed: _isProcessing ? null : _handleAction,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (mode == 'meal') ...[
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56.h,
+                      child: FilledButton.icon(
+                        onPressed: _isProcessingMeal || _isProcessingPantry ? null : _handleAddToMeal,
+                        icon: _isProcessingMeal 
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                            : const Icon(Icons.restaurant, color: Colors.white),
+                        label: Text('Dodaj do posiłku', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700)),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 12.h),
+                  ],
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56.h,
+                    child: OutlinedButton.icon(
+                      onPressed: _isProcessingMeal || _isProcessingPantry ? null : _handleAddToPantry,
+                      icon: _isProcessingPantry
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Icon(Icons.kitchen),
+                      label: Text('Dodaj do spiżarni', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700)),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        side: const BorderSide(color: AppColors.primary, width: 2),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                      ),
+                    ),
                   ),
-                  child: _isProcessing 
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : Text(buttonLabel, style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700)),
-                ),
+                ],
               ),
             ),
           ],
@@ -300,6 +355,47 @@ class _MacroBubble extends StatelessWidget {
           style: TextStyle(fontSize: 12.sp, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
         ),
       ],
+    );
+  }
+}
+
+class _StorageChip extends StatelessWidget {
+  final String label, value;
+  final bool selected;
+  final VoidCallback onTap;
+  
+  const _StorageChip({
+    required this.label, 
+    required this.value, 
+    required this.selected, 
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: EdgeInsets.symmetric(vertical: 10.h),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.primaryLight : AppColors.backgroundWhite,
+            border: Border.all(color: selected ? AppColors.primary : AppColors.border),
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          child: Center(
+            child: Text(
+              label, 
+              style: TextStyle(
+                fontSize: 11.sp, 
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500, 
+                color: selected ? AppColors.primary : AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

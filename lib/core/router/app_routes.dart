@@ -25,7 +25,7 @@ class AppRoutes {
   static const String aiMeals = '/ai-meals';
   static const String foodDetected = '/food-detected';
   static const String recipeDetails = '/recipe-details/:id';
-  static const String progress = '/progress';
+
   static const String progressHistory = '/progress-history';
   static const String profile = '/profile';
   static const String settings = '/settings';

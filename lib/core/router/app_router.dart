@@ -40,7 +40,7 @@ import 'package:vitasense/features/showcase/presentation/screens/problem_fatigue
 import 'package:vitasense/features/showcase/presentation/screens/feature_matcher_screen.dart';
 import 'package:vitasense/features/showcase/presentation/screens/results_analysis_screen.dart';
 import 'package:vitasense/features/recipes/presentation/screens/saved_recipes_screen.dart';
-import 'package:vitasense/features/macros/presentation/screens/progress_screen.dart';
+
 import 'package:vitasense/features/detect/presentation/screens/barcode_scanner_screen.dart';
 import 'package:vitasense/features/detect/presentation/screens/barcode_result_screen.dart';
 export 'app_routes.dart';
@@ -374,10 +374,7 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.savedRecipes,
       builder: (context, state) => const SavedRecipesScreen(),
     ),
-    GoRoute(
-      path: AppRoutes.progress,
-      builder: (context, state) => const ProgressScreen(),
-    ),
+
     GoRoute(
       path: AppRoutes.barcodeScanner,
       pageBuilder: (context, state) => _slideUpPage(

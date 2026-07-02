@@ -111,30 +111,27 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
                 backgroundColor: Colors.white,
                 textColor: AppColors.textPrimary,
                 actions: [
-                  GestureDetector(
-                    onTap: () => context.push(AppRoutes.progress),
-                    child: BlocBuilder<MacrosBloc, MacrosState>(
-                      builder: (context, state) {
-                        final streak = state is MacrosLoaded ? state.streakDays : 0;
-                        return Container(
-                          height: 36.r,
-                          padding: EdgeInsets.symmetric(horizontal: 10.w),
-                          decoration: BoxDecoration(
-                            color: AppColors.backgroundWhite,
-                            borderRadius: BorderRadius.circular(20.r),
-                            border: Border.all(color: AppColors.border),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.local_fire_department_rounded, color: const Color(0xFFFACC15), size: 16.r),
-                              SizedBox(width: 4.w),
-                              Text('$streak', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
+                  BlocBuilder<MacrosBloc, MacrosState>(
+                    builder: (context, state) {
+                      final streak = state is MacrosLoaded ? state.streakDays : 0;
+                      return Container(
+                        height: 36.r,
+                        padding: EdgeInsets.symmetric(horizontal: 10.w),
+                        decoration: BoxDecoration(
+                          color: AppColors.backgroundWhite,
+                          borderRadius: BorderRadius.circular(20.r),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.local_fire_department_rounded, color: const Color(0xFFFACC15), size: 16.r),
+                            SizedBox(width: 4.w),
+                            Text('$streak', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                   SizedBox(width: 8.w),
                   GestureDetector(

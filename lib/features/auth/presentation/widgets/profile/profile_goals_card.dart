@@ -102,10 +102,14 @@ class MyGoalsCard extends StatelessWidget {
     switch (activity) {
       case 'sedentary':
         return 'Sedentary';
+      case 'light':
+        return 'Lightly Active';
       case 'moderate':
         return 'Moderately Active';
       case 'active':
         return 'Very Active';
+      case 'very_active':
+        return 'Extremely Active';
       default:
         return 'Not set';
     }

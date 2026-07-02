@@ -89,8 +89,10 @@ class RecipesRepository {
       'manage-user-recipes',
       body: {'action': 'my_recipes'},
     );
-    final data = response.data as List<dynamic>;
-    return data.map((e) => RecipeModel.fromJson(e as Map<String, dynamic>)).toList();
+    final body = response.data as Map<String, dynamic>;
+    if (body['success'] != true) throw Exception(body['error'] ?? 'Wystąpił błąd');
+    final dataList = body['data'] as List<dynamic>? ?? [];
+    return dataList.map((e) => RecipeModel.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   Future<RecipeModel> createRecipe({
@@ -117,7 +119,9 @@ class RecipesRepository {
         'dietTags': dietTags,
       },
     );
-    return RecipeModel.fromJson(response.data as Map<String, dynamic>);
+    final body = response.data as Map<String, dynamic>;
+    if (body['success'] != true) throw Exception(body['error'] ?? 'Wystąpił błąd');
+    return RecipeModel.fromJson(body['data'] as Map<String, dynamic>);
   }
 
   Future<void> publishRecipe(String recipeId) async {

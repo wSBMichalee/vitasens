@@ -23,7 +23,8 @@ class MenuCard extends StatelessWidget {
       iconBg: AppColors.secondaryLight,
       iconColor: AppColors.secondary,
       label: 'Family Plan',
-      route: '/family',
+      route: null,
+      badgeText: 'Coming Soon',
     ),
     MenuItem(
       icon: Icons.menu_book_outlined,
@@ -69,6 +70,7 @@ class MenuItem {
     required this.iconColor,
     required this.label,
     required this.route,
+    this.badgeText,
   });
 
   final IconData icon;
@@ -76,6 +78,7 @@ class MenuItem {
   final Color iconColor;
   final String label;
   final String? route;
+  final String? badgeText;
 }
 
 class MenuRow extends StatelessWidget {
@@ -104,15 +107,37 @@ class MenuRow extends StatelessWidget {
             ),
             SizedBox(width: 12.w),
             Expanded(
-              child: Text(
-                item.label,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w500,
-                  color: isEnabled
-                      ? AppColors.textPrimary
-                      : AppColors.textSecondary,
-                ),
+              child: Row(
+                children: [
+                  Text(
+                    item.label,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w500,
+                      color: isEnabled
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary,
+                    ),
+                  ),
+                  if (item.badgeText != null) ...[
+                    SizedBox(width: 8.w),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryLight,
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                      child: Text(
+                        item.badgeText!,
+                        style: TextStyle(
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primaryDark,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
             Icon(

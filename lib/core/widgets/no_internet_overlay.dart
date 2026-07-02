@@ -14,6 +14,7 @@ class NoInternetOverlay extends StatefulWidget {
 
 class _NoInternetOverlayState extends State<NoInternetOverlay> {
   bool _isConnected = true;
+  bool _isChecking = false;
   late StreamSubscription<List<ConnectivityResult>> _subscription;
   Timer? _debounce;
 
@@ -71,8 +72,8 @@ class _NoInternetOverlayState extends State<NoInternetOverlay> {
                         Container(
                           width: 80.r,
                           height: 80.r,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF5F5F5),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF5F5F5),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -106,8 +107,11 @@ class _NoInternetOverlayState extends State<NoInternetOverlay> {
                           height: 52.h,
                           child: FilledButton(
                             onPressed: () async {
+                              setState(() => _isChecking = true);
+                              await Future.delayed(const Duration(milliseconds: 1500));
                               final results = await Connectivity().checkConnectivity();
                               _updateConnectionStatus(results);
+                              if (mounted) setState(() => _isChecking = false);
                             },
                             style: FilledButton.styleFrom(
                               backgroundColor: const Color(0xFF2ECC71),
@@ -115,14 +119,21 @@ class _NoInternetOverlayState extends State<NoInternetOverlay> {
                                 borderRadius: BorderRadius.circular(14.r),
                               ),
                             ),
-                            child: Text(
-                              'Odśwież',
-                              style: TextStyle(
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
+                            child: _isChecking
+                                ? const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                        color: Colors.white, strokeWidth: 2.5),
+                                  )
+                                : Text(
+                                    'Odśwież',
+                                    style: TextStyle(
+                                      fontSize: 16.sp,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                           ),
                         ),
                         SizedBox(height: 16.h),

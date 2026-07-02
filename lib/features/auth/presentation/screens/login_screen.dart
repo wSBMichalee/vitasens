@@ -197,7 +197,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     );
                   },
                 ),
-                SizedBox(height: 20.h),
+                SizedBox(height: 24.h),
                 
                 // Divider
                 Row(

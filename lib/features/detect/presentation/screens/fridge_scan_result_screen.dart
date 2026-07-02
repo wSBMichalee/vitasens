@@ -5,6 +5,9 @@ import 'package:vitasense/core/router/app_routes.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/features/pantry/data/pantry_repository.dart';
 
+part '../widgets/fridge_scan/fridge_product_card.dart';
+part '../widgets/fridge_scan/fridge_storage_selector.dart';
+
 class FridgeScanResultScreen extends StatefulWidget {
   final List<dynamic> products;
   final String mode; // 'fridge' | 'receipt'
@@ -164,19 +167,9 @@ class _FridgeScanResultScreenState extends State<FridgeScanResultScreen> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('GDZIE DODAĆ PRODUKTY?', style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Colors.grey.shade600)),
-                      SizedBox(height: 12.h),
-                      Row(children: [
-                        _StorageChip(label: '🧊 Lodówka', value: 'fridge', selected: _globalStorageLocation == 'fridge', onTap: () => setState(() => _globalStorageLocation = 'fridge')),
-                        SizedBox(width: 8.w),
-                        _StorageChip(label: '❄️ Zamrażarka', value: 'freezer', selected: _globalStorageLocation == 'freezer', onTap: () => setState(() => _globalStorageLocation = 'freezer')),
-                        SizedBox(width: 8.w),
-                        _StorageChip(label: '🗄️ Spiżarnia', value: 'pantry', selected: _globalStorageLocation == 'pantry', onTap: () => setState(() => _globalStorageLocation = 'pantry')),
-                      ]),
-                    ],
+                  child: FridgeStorageSelector(
+                    selected: _globalStorageLocation,
+                    onChanged: (val) => setState(() => _globalStorageLocation = val),
                   ),
                 ),
               ),
@@ -280,7 +273,7 @@ class _FridgeScanResultScreenState extends State<FridgeScanResultScreen> {
                                   mapEntry.value as Map<String, dynamic>;
                               final isLast = itemIdx == items.length - 1;
 
-                              return _ProductRow(
+                              return FridgeProductCard(
                                 product: product,
                                 isSelected: _selected.contains(globalIdx),
                                 isLast: isLast,
@@ -361,168 +354,6 @@ class _FridgeScanResultScreenState extends State<FridgeScanResultScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ─── PRODUCT ROW ──────────────────────────────────────────────────────────────
-
-class _ProductRow extends StatelessWidget {
-  final Map<String, dynamic> product;
-  final bool isSelected;
-  final bool isLast;
-  final VoidCallback onToggle;
-
-  const _ProductRow({
-    required this.product,
-    required this.isSelected,
-    required this.isLast,
-    required this.onToggle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final name = product['name']?.toString() ?? 'Unknown';
-    final qty = (product['estimatedQuantity'] ?? 1) as num;
-    final unit = product['unit']?.toString() ?? 'pcs';
-    final expiryDays = (product['estimatedExpiryDays'] ?? 7) as num;
-    final cal = (product['calories100g'] ?? 0) as num;
-
-    return Column(
-      children: [
-        InkWell(
-          onTap: onToggle,
-          borderRadius: isLast
-              ? BorderRadius.vertical(bottom: Radius.circular(16.r))
-              : BorderRadius.zero,
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-            child: Row(
-              children: [
-                // Checkbox
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  width: 22.r,
-                  height: 22.r,
-                  decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primary : Colors.transparent,
-                    border: Border.all(
-                      color: isSelected
-                          ? AppColors.primary
-                          : AppColors.border,
-                      width: 2,
-                    ),
-                    borderRadius: BorderRadius.circular(6.r),
-                  ),
-                  child: isSelected
-                      ? Icon(Icons.check_rounded,
-                          size: 14.r, color: Colors.white)
-                      : null,
-                ),
-                SizedBox(width: 12.w),
-
-                // Name + details
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      SizedBox(height: 2.h),
-                      Row(
-                        children: [
-                          Text(
-                            '${qty.toStringAsFixed(qty == qty.toInt() ? 0 : 1)} $unit',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          if (expiryDays > 0) ...[
-                            Text(
-                              ' • ',
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                            Text(
-                              '${expiryDays.toInt()}d to expiry',
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                color: expiryDays <= 3
-                                    ? const Color(0xFFEF4444)
-                                    : AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Calorie chip
-                if (cal > 0)
-                  Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryLight,
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    child: Text(
-                      '${cal.toInt()} kcal',
-                      style: TextStyle(
-                        fontSize: 11.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-        if (!isLast)
-          Divider(
-            height: 1,
-            indent: 48.w,
-            color: AppColors.borderLight,
-          ),
-      ],
-    );
-  }
-}
-
-class _StorageChip extends StatelessWidget {
-  final String label, value;
-  final bool selected;
-  final VoidCallback onTap;
-  const _StorageChip({required this.label, required this.value, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: EdgeInsets.symmetric(vertical: 10.h),
-          decoration: BoxDecoration(
-            color: selected ? AppColors.primaryLight : AppColors.backgroundWhite,
-            border: Border.all(color: selected ? AppColors.primary : AppColors.border),
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          child: Center(child: Text(label, style: TextStyle(fontSize: 11.sp, fontWeight: selected ? FontWeight.w700 : FontWeight.w500, color: selected ? AppColors.primary : AppColors.textSecondary))),
-        ),
       ),
     );
   }

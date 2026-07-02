@@ -62,10 +62,12 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final scanWindowSize = screenSize.width * 0.7; // 70% szerokości ekranu
     final scanWindow = Rect.fromCenter(
-      center: MediaQuery.of(context).size.center(Offset.zero),
-      width: 250.w,
-      height: 250.h,
+      center: Offset(screenSize.width / 2, screenSize.height / 2),
+      width: scanWindowSize,
+      height: scanWindowSize,
     );
 
     return Scaffold(
@@ -138,27 +140,51 @@ class _ScannerOverlayPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final backgroundPaint = Paint()
-      ..color = Colors.black.withOpacity(0.5)
-      ..style = PaintingStyle.fill;
-
-    final transparentPaint = Paint()
-      ..color = Colors.transparent
-      ..blendMode = BlendMode.clear;
-
-    final borderPaint = Paint()
+    canvas.saveLayer(Offset.zero & size, Paint());
+    
+    // Ciemne tło
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()..color = Colors.black.withValues(alpha: 0.6),
+    );
+    
+    // Przezroczysty otwór
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(scanWindow, const Radius.circular(16)),
+      Paint()..blendMode = BlendMode.clear,
+    );
+    
+    canvas.restore();
+    
+    // Zielona ramka wokół okna
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(scanWindow, const Radius.circular(16)),
+      Paint()
+        ..color = AppColors.primary
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.0,
+    );
+    
+    // Rogi (opcjonalne - jak w Cal AI)
+    final cornerLength = 24.0;
+    final cornerPaint = Paint()
       ..color = AppColors.primary
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.0;
-
-    canvas.drawRect(Offset.zero & size, backgroundPaint);
+      ..strokeWidth = 4.0
+      ..strokeCap = StrokeCap.round;
     
-    // Clear the center rect
-    final RRect rrect = RRect.fromRectAndRadius(scanWindow, const Radius.circular(20));
-    canvas.drawRRect(rrect, transparentPaint);
-    
-    // Draw the border
-    canvas.drawRRect(rrect, borderPaint);
+    // Top-left
+    canvas.drawLine(Offset(scanWindow.left, scanWindow.top + cornerLength), Offset(scanWindow.left, scanWindow.top), cornerPaint);
+    canvas.drawLine(Offset(scanWindow.left, scanWindow.top), Offset(scanWindow.left + cornerLength, scanWindow.top), cornerPaint);
+    // Top-right
+    canvas.drawLine(Offset(scanWindow.right - cornerLength, scanWindow.top), Offset(scanWindow.right, scanWindow.top), cornerPaint);
+    canvas.drawLine(Offset(scanWindow.right, scanWindow.top), Offset(scanWindow.right, scanWindow.top + cornerLength), cornerPaint);
+    // Bottom-left
+    canvas.drawLine(Offset(scanWindow.left, scanWindow.bottom - cornerLength), Offset(scanWindow.left, scanWindow.bottom), cornerPaint);
+    canvas.drawLine(Offset(scanWindow.left, scanWindow.bottom), Offset(scanWindow.left + cornerLength, scanWindow.bottom), cornerPaint);
+    // Bottom-right
+    canvas.drawLine(Offset(scanWindow.right - cornerLength, scanWindow.bottom), Offset(scanWindow.right, scanWindow.bottom), cornerPaint);
+    canvas.drawLine(Offset(scanWindow.right, scanWindow.bottom), Offset(scanWindow.right, scanWindow.bottom - cornerLength), cornerPaint);
   }
 
   @override

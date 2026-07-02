@@ -14,6 +14,10 @@ import 'package:vitasense/features/recipes/bloc/recipes_state.dart';
 import 'package:vitasense/features/recipes/data/recipes_repository.dart';
 import '../widgets/my_recipe_card.dart';
 
+part '../widgets/create_recipe/recipe_basic_info_section.dart';
+part '../widgets/create_recipe/recipe_ingredients_section.dart';
+part '../widgets/create_recipe/recipe_steps_section.dart';
+
 class CreateRecipeScreen extends StatelessWidget {
   const CreateRecipeScreen({super.key});
 
@@ -288,197 +292,33 @@ class _CreateRecipeViewState extends State<_CreateRecipeView> with SingleTickerP
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ─── BASICS ────────────────────────────────────────────────────────
-          Text('RECIPE BASICS', style: AppTextStyles.caption),
-          SizedBox(height: 12.h),
-          _buildTextField(
-            controller: _titleController,
-            hint: 'Recipe title',
-            isRequired: true,
-          ),
-          SizedBox(height: 12.h),
-          _buildTextField(
-            controller: _descController,
-            hint: 'Description',
-            maxLines: 3,
-          ),
-          SizedBox(height: 12.h),
-          Row(
-            children: [
-              Expanded(
-                child: _buildTextField(
-                  controller: _timeController,
-                  hint: 'Cook time (min)',
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: _buildTextField(
-                  controller: _servingsController,
-                  hint: 'Servings',
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                ),
-              ),
-            ],
+          RecipeBasicInfoSection(
+            titleController: _titleController,
+            descController: _descController,
+            timeController: _timeController,
+            servingsController: _servingsController,
+            selectedCuisine: _selectedCuisine,
+            selectedTags: _selectedTags,
+            onCuisineChanged: (val) => setState(() => _selectedCuisine = val),
+            onTagToggled: (tag) => setState(() {
+              if (_selectedTags.contains(tag)) {
+                _selectedTags.remove(tag);
+              } else {
+                _selectedTags.add(tag);
+              }
+            }),
+            cuisines: _cuisines,
+            allTags: _allTags,
           ),
           SizedBox(height: 24.h),
 
-          // ─── CUISINE & DIET ────────────────────────────────────────────────
-          Text('CUISINE & DIET', style: AppTextStyles.caption),
-          SizedBox(height: 12.h),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: AppColors.border),
-              color: AppColors.backgroundWhite,
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: _selectedCuisine,
-                isExpanded: true,
-                hint: Text('Select Cuisine', style: TextStyle(color: AppColors.textMuted, fontSize: 14.sp)),
-                items: _cuisines.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-                onChanged: (val) => setState(() => _selectedCuisine = val),
-              ),
-            ),
+          RecipeIngredientsSection(
+            ingredients: _ingredients,
           ),
           SizedBox(height: 24.h),
 
-          // ─── DIET TAGS ─────────────────────────────────────────────────────
-          Text('DIET TAGS', style: AppTextStyles.caption),
-          SizedBox(height: 12.h),
-          Wrap(
-            spacing: 8.w,
-            runSpacing: 8.h,
-            children: _allTags.map((tag) {
-              final isSelected = _selectedTags.contains(tag);
-              return ChoiceChip(
-                label: Text(tag, style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w500)),
-                selected: isSelected,
-                selectedColor: AppColors.primaryLight,
-                backgroundColor: AppColors.borderLight,
-                labelStyle: TextStyle(color: isSelected ? AppColors.primary : AppColors.textSecondary),
-                onSelected: (selected) {
-                  setState(() {
-                    if (selected) {
-                      _selectedTags.add(tag);
-                    } else {
-                      _selectedTags.remove(tag);
-                    }
-                  });
-                },
-              );
-            }).toList(),
-          ),
-          SizedBox(height: 24.h),
-
-          // ─── INGREDIENTS ───────────────────────────────────────────────────
-          Text('INGREDIENTS', style: AppTextStyles.caption),
-          SizedBox(height: 12.h),
-          ..._ingredients.asMap().entries.map((entry) {
-            final index = entry.key;
-            final item = entry.value;
-            return Padding(
-              padding: EdgeInsets.only(bottom: 8.h),
-              child: Row(
-                children: [
-                  Expanded(flex: 3, child: _buildTextField(controller: item['name'] as TextEditingController, hint: 'Name')),
-                  SizedBox(width: 8.w),
-                  Expanded(flex: 1, child: _buildTextField(controller: item['amount'] as TextEditingController, hint: 'Amt')),
-                  SizedBox(width: 8.w),
-                  Expanded(flex: 1, child: _buildTextField(controller: item['unit'] as TextEditingController, hint: 'Unit')),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, color: AppColors.error),
-                    onPressed: () {
-                      setState(() {
-                        (item['name'] as TextEditingController).dispose();
-                        (item['amount'] as TextEditingController).dispose();
-                        (item['unit'] as TextEditingController).dispose();
-                        _ingredients.removeAt(index);
-                      });
-                    },
-                  ),
-                ],
-              ),
-            );
-          }),
-          SizedBox(height: 8.h),
-          OutlinedButton.icon(
-            onPressed: () {
-              setState(() {
-                _ingredients.add({
-                  'name': TextEditingController(),
-                  'amount': TextEditingController(),
-                  'unit': TextEditingController(),
-                });
-              });
-            },
-            icon: const Icon(Icons.add, color: AppColors.primary),
-            label: const Text('Add Ingredient', style: TextStyle(color: AppColors.primary)),
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: AppColors.primary),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-            ),
-          ),
-          SizedBox(height: 24.h),
-
-          // ─── STEPS ─────────────────────────────────────────────────────────
-          Text('STEPS', style: AppTextStyles.caption),
-          SizedBox(height: 12.h),
-          ..._stepControllers.asMap().entries.map((entry) {
-            final index = entry.key;
-            final ctrl = entry.value;
-            return Padding(
-              padding: EdgeInsets.only(bottom: 8.h),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 24.r,
-                    height: 24.r,
-                    margin: EdgeInsets.only(top: 12.h),
-                    decoration: const BoxDecoration(color: AppColors.primaryLight, shape: BoxShape.circle),
-                    alignment: Alignment.center,
-                    child: Text('${index + 1}', style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w700, color: AppColors.primary)),
-                  ),
-                  SizedBox(width: 8.w),
-                  Expanded(
-                    child: _buildTextField(
-                      controller: ctrl,
-                      hint: 'Step description',
-                      maxLines: 2,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, color: AppColors.error),
-                    onPressed: () {
-                      setState(() {
-                        ctrl.dispose();
-                        _stepControllers.removeAt(index);
-                      });
-                    },
-                  ),
-                ],
-              ),
-            );
-          }),
-          SizedBox(height: 8.h),
-          OutlinedButton.icon(
-            onPressed: () {
-              setState(() {
-                _stepControllers.add(TextEditingController());
-              });
-            },
-            icon: const Icon(Icons.add, color: AppColors.primary),
-            label: const Text('Add Step', style: TextStyle(color: AppColors.primary)),
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: AppColors.primary),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-            ),
+          RecipeStepsSection(
+            stepControllers: _stepControllers,
           ),
 
           // ─── BOTTOM SAVE BUTTON ────────────────────────────────────────────
@@ -522,37 +362,35 @@ class _CreateRecipeViewState extends State<_CreateRecipeView> with SingleTickerP
       ),
     );
   }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hint,
-    int maxLines = 1,
-    TextInputType keyboardType = TextInputType.text,
-    List<TextInputFormatter>? inputFormatters,
-    bool isRequired = false,
-  }) {
-    return TextField(
-      controller: controller,
-      maxLines: maxLines,
-      keyboardType: keyboardType,
-      inputFormatters: inputFormatters,
-      decoration: InputDecoration(
-        hintText: hint + (isRequired ? ' *' : ''),
-        hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 14.sp),
-        filled: true,
-        fillColor: AppColors.backgroundWhite,
-        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.r),
-          borderSide: const BorderSide(color: AppColors.border),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.r),
-          borderSide: const BorderSide(color: AppColors.border),
-        ),
-      ),
-    );
-  }
 }
 
-
+Widget _buildTextField({
+  required TextEditingController controller,
+  required String hint,
+  int maxLines = 1,
+  TextInputType keyboardType = TextInputType.text,
+  List<TextInputFormatter>? inputFormatters,
+  bool isRequired = false,
+}) {
+  return TextField(
+    controller: controller,
+    maxLines: maxLines,
+    keyboardType: keyboardType,
+    inputFormatters: inputFormatters,
+    decoration: InputDecoration(
+      hintText: hint + (isRequired ? ' *' : ''),
+      hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 14.sp),
+      filled: true,
+      fillColor: AppColors.backgroundWhite,
+      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: const BorderSide(color: AppColors.border),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r),
+        borderSide: const BorderSide(color: AppColors.border),
+      ),
+    ),
+  );
+}

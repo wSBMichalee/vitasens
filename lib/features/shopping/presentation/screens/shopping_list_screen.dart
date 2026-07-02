@@ -15,6 +15,9 @@ import 'package:vitasense/features/pantry/bloc/pantry_bloc.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_event.dart';
 import 'package:vitasense/core/widgets/app_header.dart';
 
+part '../widgets/tabs/shopping_active_tab.dart';
+part '../widgets/tabs/shopping_history_tab.dart';
+
 class ShoppingListScreen extends StatelessWidget {
   const ShoppingListScreen({super.key});
 
@@ -188,29 +191,6 @@ class _ShoppingListViewState extends State<_ShoppingListView> with SingleTickerP
     );
   }
 
-  String _monthName(int month) {
-    const months = ['sty', 'lut', 'mar', 'kwi', 'maj', 'cze', 'lip', 'sie', 'wrz', 'paź', 'lis', 'gru'];
-    return months[month - 1];
-  }
-
-  Map<String, List<ShoppingItemModel>> _groupByDate(List<ShoppingItemModel> items) {
-    final groups = <String, List<ShoppingItemModel>>{};
-    for (final item in items) {
-      final date = item.purchasedAt ?? item.createdAt ?? DateTime.now();
-      String label;
-      final now = DateTime.now();
-      if (date.year == now.year && date.month == now.month && date.day == now.day) {
-        label = 'Dzisiaj';
-      } else if (date.year == now.year && date.month == now.month && date.day == now.day - 1) {
-        label = 'Wczoraj';
-      } else {
-        label = '${date.day} ${_monthName(date.month)} ${date.year}';
-      }
-      groups.putIfAbsent(label, () => []).add(item);
-    }
-    return groups;
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocListener<ShoppingBloc, ShoppingState>(
@@ -256,8 +236,49 @@ class _ShoppingListViewState extends State<_ShoppingListView> with SingleTickerP
                       controller: _tabController,
                       physics: const NeverScrollableScrollPhysics(), // Disable swipe to avoid Bloc mismatches during transition
                       children: [
-                        _buildActiveListTab(),
-                        _buildHistoryTab(),
+                        BlocBuilder<ShoppingBloc, ShoppingState>(
+                          buildWhen: (previous, current) => current is ShoppingLoaded || current is ShoppingLoading || current is ShoppingError,
+                          builder: (context, state) {
+                            if (state is ShoppingInitial || state is ShoppingLoading) {
+                              return _buildShimmerList();
+                            }
+                            if (state is ShoppingError) {
+                              return _buildErrorState();
+                            }
+                            if (state is ShoppingLoaded) {
+                              return ShoppingActiveTab(
+                                items: state.items,
+                                quickAddController: _quickAddController,
+                                onQuickAdd: (value) {
+                                  if (value.trim().isNotEmpty) {
+                                    context.read<ShoppingBloc>().add(
+                                          AddShoppingItem(value.trim(), 1, 'piece'),
+                                        );
+                                    _quickAddController.clear();
+                                  }
+                                },
+                              );
+                            }
+                            return const SizedBox();
+                          },
+                        ),
+                        BlocBuilder<ShoppingBloc, ShoppingState>(
+                          buildWhen: (previous, current) => current is ShoppingHistoryLoaded || current is ShoppingLoading || current is ShoppingError,
+                          builder: (context, state) {
+                            if (state is ShoppingInitial || state is ShoppingLoading) {
+                              return _buildShimmerList();
+                            }
+                            if (state is ShoppingError) {
+                              return _buildErrorState();
+                            }
+                            if (state is ShoppingHistoryLoaded) {
+                              return ShoppingHistoryTab(
+                                history: state.history,
+                              );
+                            }
+                            return const SizedBox();
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -277,237 +298,6 @@ class _ShoppingListViewState extends State<_ShoppingListView> with SingleTickerP
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildActiveListTab() {
-    return BlocBuilder<ShoppingBloc, ShoppingState>(
-      buildWhen: (previous, current) => current is ShoppingLoaded || current is ShoppingLoading || current is ShoppingError,
-      builder: (context, state) {
-        if (state is ShoppingInitial || state is ShoppingLoading) {
-          return _buildShimmerList();
-        }
-        if (state is ShoppingError) {
-          return _buildErrorState();
-        }
-        if (state is ShoppingLoaded) {
-          return Column(
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _quickAddController,
-                        decoration: InputDecoration(
-                          hintText: 'Quick add item...',
-                          hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 14.sp),
-                          prefixIcon: Icon(Icons.add_shopping_cart, color: AppColors.textMuted, size: 20.r),
-                          filled: true,
-                          fillColor: AppColors.background,
-                          contentPadding: EdgeInsets.symmetric(vertical: 12.h),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                            borderSide: const BorderSide(color: AppColors.border),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                            borderSide: const BorderSide(color: AppColors.border),
-                          ),
-                        ),
-                        onSubmitted: (value) {
-                          if (value.trim().isNotEmpty) {
-                            context.read<ShoppingBloc>().add(
-                                  AddShoppingItem(value.trim(), 1, 'piece'),
-                                );
-                            _quickAddController.clear();
-                          }
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 16.h),
-              if (state.items.isEmpty)
-                Expanded(
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(32.r),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 72.r,
-                            height: 72.r,
-                            decoration: const BoxDecoration(
-                              color: AppColors.borderLight,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(Icons.shopping_cart_outlined,
-                                size: 36.r, color: AppColors.textMuted),
-                          ),
-                          SizedBox(height: 24.h),
-                          Text(
-                            'Your list is empty',
-                            style: TextStyle(
-                              fontSize: 18.sp,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                )
-              else
-                Expanded(
-                  child: ListView.builder(
-                    padding: EdgeInsets.only(bottom: 80.h),
-                    itemCount: state.items.length,
-                    itemBuilder: (context, index) {
-                      return ShoppingItemCard(item: state.items[index]);
-                    },
-                  ),
-                ),
-            ],
-          );
-        }
-        return const SizedBox();
-      },
-    );
-  }
-
-  Widget _buildHistoryTab() {
-    return BlocBuilder<ShoppingBloc, ShoppingState>(
-      buildWhen: (previous, current) => current is ShoppingHistoryLoaded || current is ShoppingLoading || current is ShoppingError,
-      builder: (context, state) {
-        if (state is ShoppingInitial || state is ShoppingLoading) {
-          return _buildShimmerList();
-        }
-        if (state is ShoppingError) {
-          return _buildErrorState();
-        }
-        if (state is ShoppingHistoryLoaded) {
-          if (state.history.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.history, size: 64.r, color: AppColors.border),
-                  SizedBox(height: 16.h),
-                  Text(
-                    'Brak historii zakupów',
-                    style: TextStyle(fontSize: 16.sp, color: AppColors.textSecondary),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          final groups = _groupByDate(state.history);
-          return ListView.builder(
-            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h).copyWith(bottom: 80.h),
-            itemCount: groups.length,
-            itemBuilder: (context, index) {
-              final dateLabel = groups.keys.elementAt(index);
-              final items = groups[dateLabel]!;
-              
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(top: 16.h, bottom: 8.h),
-                    child: Text(
-                      '$dateLabel • ${items.length} produktów',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  ...items.map((item) => Container(
-                    margin: EdgeInsets.only(bottom: 8.h),
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                    decoration: BoxDecoration(
-                      color: AppColors.backgroundWhite,
-                      borderRadius: BorderRadius.circular(12.r),
-                      border: Border.all(color: AppColors.borderLight),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.textPrimary.withValues(alpha: 0.02),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40.r,
-                          height: 40.r,
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryLight.withValues(alpha: 0.3),
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          child: Center(
-                            child: Text(
-                              getCategoryEmoji(item.name, item.category),
-                              style: TextStyle(fontSize: 20.sp),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.name,
-                                style: TextStyle(
-                                  fontSize: 15.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                              Text(
-                                '${item.quantity.toStringAsFixed(item.quantity.truncateToDouble() == item.quantity ? 0 : 1)} ${item.unit}',
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Icon(Icons.check_circle, color: AppColors.primary, size: 20.r),
-                            SizedBox(height: 4.h),
-                            Text(
-                              'kupiono',
-                              style: TextStyle(
-                                fontSize: 10.sp,
-                                color: AppColors.textMuted,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  )),
-                ],
-              );
-            },
-          );
-        }
-        return const SizedBox();
-      },
     );
   }
 

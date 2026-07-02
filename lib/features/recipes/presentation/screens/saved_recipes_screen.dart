@@ -12,6 +12,7 @@ import 'package:vitasense/features/recipes/bloc/recipes_state.dart';
 import 'package:vitasense/features/recipes/data/recipes_repository.dart';
 import 'package:shimmer/shimmer.dart';
 import '../widgets/ai_meals/recipe_card.dart';
+import 'package:vitasense/l10n/app_localizations.dart';
 
 class SavedRecipesScreen extends StatelessWidget {
   const SavedRecipesScreen({super.key});
@@ -66,13 +67,13 @@ class _SavedRecipesViewState extends State<_SavedRecipesView> {
           Icon(Icons.favorite_border, color: AppColors.textMuted, size: 64.r),
           SizedBox(height: 16.h),
           Text(
-            'Nie masz jeszcze zapisanych przepisów.',
+            AppLocalizations.of(context)!.noSavedRecipes,
             style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 8.h),
           Text(
-            'Add your favorite recipes by tapping ❤️ in AI Meals.',
+            AppLocalizations.of(context)!.addFavoriteRecipes,
             style: TextStyle(fontSize: 14.sp, color: AppColors.textSecondary, height: 1.5),
             textAlign: TextAlign.center,
           ),
@@ -80,7 +81,7 @@ class _SavedRecipesViewState extends State<_SavedRecipesView> {
           FilledButton(
             onPressed: () => context.pop(),
             style: FilledButton.styleFrom(backgroundColor: AppColors.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r))),
-            child: Text('Przeglądaj AI Meals', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: AppColors.textWhite)),
+            child: Text(AppLocalizations.of(context)!.browseAiMeals, style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600, color: AppColors.textWhite)),
           ),
         ],
       ),
@@ -120,8 +121,8 @@ class _SavedRecipesViewState extends State<_SavedRecipesView> {
         child: Column(
           children: [
             AppHeader(
-              title: 'Saved Recipes',
-              subtitle: 'Your collection',
+              title: AppLocalizations.of(context)!.savedRecipes,
+              subtitle: AppLocalizations.of(context)!.yourCollection,
               variant: AppHeaderVariant.nested,
               onBack: () => context.pop(),
             ),

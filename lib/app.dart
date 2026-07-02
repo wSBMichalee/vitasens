@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:vitasense/l10n/app_localizations.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_theme.dart';
 import 'package:vitasense/core/widgets/no_internet_overlay.dart';
@@ -124,12 +125,12 @@ class _MaterialApp extends StatelessWidget {
       themeMode: ThemeMode.light,
 
       // Lokalizacja
-      locale: const Locale('pl', 'PL'),
       supportedLocales: const [
-        Locale('pl', 'PL'),
-        Locale('en', 'US'),
+        Locale('en'),
+        Locale('pl'),
       ],
       localizationsDelegates: const [
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

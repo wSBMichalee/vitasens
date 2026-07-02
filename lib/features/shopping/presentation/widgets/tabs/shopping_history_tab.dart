@@ -13,16 +13,16 @@ class ShoppingHistoryTab extends StatelessWidget {
     return months[month - 1];
   }
 
-  Map<String, List<ShoppingItemModel>> _groupByDate(List<ShoppingItemModel> items) {
+  Map<String, List<ShoppingItemModel>> _groupByDate(BuildContext context, List<ShoppingItemModel> items) {
     final groups = <String, List<ShoppingItemModel>>{};
     for (final item in items) {
       final date = item.purchasedAt ?? item.createdAt ?? DateTime.now();
       String label;
       final now = DateTime.now();
       if (date.year == now.year && date.month == now.month && date.day == now.day) {
-        label = 'Today';
+        label = AppLocalizations.of(context)!.today;
       } else if (date.year == now.year && date.month == now.month && date.day == now.day - 1) {
-        label = 'Yesterday';
+        label = AppLocalizations.of(context)!.yesterday;
       } else {
         label = '${date.day} ${_monthName(date.month)} ${date.year}';
       }
@@ -41,7 +41,7 @@ class ShoppingHistoryTab extends StatelessWidget {
             Icon(Icons.history, size: 64.r, color: AppColors.border),
             SizedBox(height: 16.h),
             Text(
-              'No purchase history yet',
+              AppLocalizations.of(context)!.noPurchaseHistory,
               style: TextStyle(fontSize: 16.sp, color: AppColors.textSecondary),
             ),
           ],
@@ -49,7 +49,7 @@ class ShoppingHistoryTab extends StatelessWidget {
       );
     }
 
-    final groups = _groupByDate(history);
+    final groups = _groupByDate(context, history);
     return ListView.builder(
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h).copyWith(bottom: 80.h),
       itemCount: groups.length,

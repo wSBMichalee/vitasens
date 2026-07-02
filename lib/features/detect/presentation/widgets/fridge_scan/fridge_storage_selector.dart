@@ -16,16 +16,16 @@ class FridgeStorageSelector extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'GDZIE DODAĆ PRODUKTY?',
+          AppLocalizations.of(context)!.whereDoYouStore,
           style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Colors.grey.shade600),
         ),
         SizedBox(height: 12.h),
         Row(children: [
-          _StorageChip(label: '🧊 Fridge', value: 'fridge', selected: selected == 'fridge', onTap: () => onChanged('fridge')),
+          _StorageChip(label: '🧊 ${AppLocalizations.of(context)!.fridge}', value: 'fridge', selected: selected == 'fridge', onTap: () => onChanged('fridge')),
           SizedBox(width: 8.w),
-          _StorageChip(label: '❄️ Freezer', value: 'freezer', selected: selected == 'freezer', onTap: () => onChanged('freezer')),
+          _StorageChip(label: '❄️ ${AppLocalizations.of(context)!.freezer}', value: 'freezer', selected: selected == 'freezer', onTap: () => onChanged('freezer')),
           SizedBox(width: 8.w),
-          _StorageChip(label: '🗄️ Pantry', value: 'pantry', selected: selected == 'pantry', onTap: () => onChanged('pantry')),
+          _StorageChip(label: '🗄️ ${AppLocalizations.of(context)!.pantryStorage}', value: 'pantry', selected: selected == 'pantry', onTap: () => onChanged('pantry')),
         ]),
       ],
     );

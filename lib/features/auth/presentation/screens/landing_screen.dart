@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
+import 'package:vitasense/l10n/app_localizations.dart';
 
 class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});
@@ -29,7 +30,7 @@ class LandingScreen extends StatelessWidget {
                     ),
                     SizedBox(height: 16.h),
                     Text(
-                      'VitaSense',
+                      AppLocalizations.of(context)!.appName,
                       style: TextStyle(
                         fontSize: 48.sp,
                         fontWeight: FontWeight.w800,
@@ -39,7 +40,7 @@ class LandingScreen extends StatelessWidget {
                     ),
                     SizedBox(height: 16.h),
                     Text(
-                      'Know what to eat. Every day.',
+                      AppLocalizations.of(context)!.knowWhatToEat,
                       style: TextStyle(
                         fontSize: 18.sp,
                         color: Colors.white.withValues(alpha: 0.8),
@@ -66,7 +67,7 @@ class LandingScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Eat smarter.\nLive better.',
+                    '${AppLocalizations.of(context)!.eatSmarter}\n${AppLocalizations.of(context)!.liveBetter}',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 32.sp,
@@ -77,7 +78,7 @@ class LandingScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 16.h),
                   Text(
-                    "Your personalized meal plan based on what's in your fridge.",
+                    AppLocalizations.of(context)!.personalizedMealPlan,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 15.sp,
@@ -97,7 +98,7 @@ class LandingScreen extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        'Get Started',
+                        AppLocalizations.of(context)!.getStarted,
                         style: TextStyle(
                           fontSize: 17.sp,
                           fontWeight: FontWeight.bold,
@@ -118,14 +119,14 @@ class LandingScreen extends StatelessWidget {
                       text: TextSpan(
                         children: [
                           TextSpan(
-                            text: 'Already have an account? ',
+                            text: '${AppLocalizations.of(context)!.alreadyHaveAccount} ',
                             style: TextStyle(
                               fontSize: 14.sp,
                               color: Colors.grey[600],
                             ),
                           ),
                           TextSpan(
-                            text: 'Sign in',
+                            text: AppLocalizations.of(context)!.signIn,
                             style: TextStyle(
                               fontSize: 14.sp,
                               fontWeight: FontWeight.bold,

@@ -11,6 +11,7 @@ import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/features/pantry/data/models/ingredient_model.dart';
 import 'package:vitasense/core/utils/snackbar_utils.dart';
 import 'pantry_emoji_helper.dart';
+import 'package:vitasense/l10n/app_localizations.dart';
 
 class IngredientCard extends StatefulWidget {
   const IngredientCard({super.key, required this.ingredient});
@@ -278,51 +279,51 @@ class _IngredientCardState extends State<IngredientCard> with TickerProviderStat
             // Nazwa produktu
             Text(widget.ingredient.name, style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
             SizedBox(height: 4.h),
-            Text('Przenieś do:', style: TextStyle(fontSize: 13.sp, color: AppColors.textSecondary)),
+            Text(AppLocalizations.of(context)!.moveTo, style: TextStyle(fontSize: 13.sp, color: AppColors.textSecondary)),
             SizedBox(height: 16.h),
             // 3 opcje przeniesienia
             if (current != 'fridge')
               _MoveOption(
                 icon: '🧊',
-                label: 'Lodówka',
+                label: AppLocalizations.of(context)!.fridge,
                 subtitle: 'Krótki termin przydatności',
                 onTap: () {
                   Navigator.pop(ctx);
                   HapticFeedback.mediumImpact();
                   context.read<PantryBloc>().add(MoveIngredient(widget.ingredient.id, 'fridge'));
-                  SnackbarUtils.showSuccess(context, '${widget.ingredient.name} → Lodówka ✓');
+                  SnackbarUtils.showSuccess(context, '${widget.ingredient.name} → Fridge ✓');
                 },
               ),
             if (current != 'freezer')
               _MoveOption(
                 icon: '❄️',
-                label: 'Zamrażarka',
+                label: AppLocalizations.of(context)!.freezer,
                 subtitle: 'Długie przechowywanie',
                 onTap: () {
                   Navigator.pop(ctx);
                   HapticFeedback.mediumImpact();
                   context.read<PantryBloc>().add(MoveIngredient(widget.ingredient.id, 'freezer'));
-                  SnackbarUtils.showSuccess(context, '${widget.ingredient.name} → Zamrażarka ✓');
+                  SnackbarUtils.showSuccess(context, '${widget.ingredient.name} → Freezer ✓');
                 },
               ),
             if (current != 'pantry')
               _MoveOption(
                 icon: '🗄️',
-                label: 'Spiżarnia',
+                label: AppLocalizations.of(context)!.pantryStorage,
                 subtitle: 'Suche produkty, długi termin',
                 onTap: () {
                   Navigator.pop(ctx);
                   HapticFeedback.mediumImpact();
                   context.read<PantryBloc>().add(MoveIngredient(widget.ingredient.id, 'pantry'));
-                  SnackbarUtils.showSuccess(context, '${widget.ingredient.name} → Spiżarnia ✓');
+                  SnackbarUtils.showSuccess(context, '${widget.ingredient.name} → Pantry ✓');
                 },
               ),
             Divider(color: AppColors.border, height: 24.h),
             // Usuń
             _MoveOption(
               icon: '🗑️',
-              label: 'Usuń produkt',
-              subtitle: 'Usuń ze spiżarni',
+              label: AppLocalizations.of(context)!.removeItem,
+              subtitle: AppLocalizations.of(context)!.removeFromStorage,
               isDestructive: true,
               onTap: () {
                 Navigator.pop(ctx);

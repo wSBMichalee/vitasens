@@ -5,6 +5,7 @@ import 'package:vitasense/features/meals/data/meal_model.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/features/meals/presentation/widgets/meal_suggestion_card.dart';
+import 'package:vitasense/l10n/app_localizations.dart';
 
 class MealSection extends StatefulWidget {
   const MealSection({
@@ -69,7 +70,7 @@ class MealSectionState extends State<MealSection> {
                       Text(widget.title, style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                       Text(
                         widget.meals.isEmpty 
-                            ? 'No meals added yet' 
+                            ? AppLocalizations.of(context)!.noMealsAdded 
                             : '$totalKcal kcal  •  P: ${totalP.round()}g  C: ${totalC.round()}g  F: ${totalF.round()}g',
                         style: TextStyle(fontSize: 11.sp, color: AppColors.textMuted),
                       ),
@@ -112,7 +113,7 @@ class MealSectionState extends State<MealSection> {
                   borderRadius: BorderRadius.circular(10.r),
                 ),
                 child: Center(
-                  child: Text('No meals added', style: TextStyle(fontSize: 13.sp, color: AppColors.textMuted)),
+                  child: Text(AppLocalizations.of(context)!.noMeals, style: TextStyle(fontSize: 13.sp, color: AppColors.textMuted)),
                 ),
               ),
             ),

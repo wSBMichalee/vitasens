@@ -49,7 +49,7 @@ class SearchStep extends StatelessWidget {
               onPressed: onEnableManualEntry,
               icon: Icon(Icons.edit_outlined, size: 16.r, color: AppColors.primary),
               label: Text(
-                'Nie znalazłeś produktu? Dodaj ręcznie',
+                "Can't find it? Add manually",
                 style: TextStyle(fontSize: 13.sp, color: AppColors.primary, fontWeight: FontWeight.w600),
               ),
             ),
@@ -97,7 +97,7 @@ class SearchStep extends StatelessWidget {
                 Icon(Icons.arrow_back_ios, size: 14.r, color: AppColors.primary),
                 SizedBox(width: 4.w),
                 Text(
-                  'Kategorie',
+                  'Categories',
                   style: TextStyle(
                     fontSize: 14.sp,
                     color: AppColors.primary,
@@ -125,7 +125,7 @@ class SearchStep extends StatelessWidget {
           Padding(
             padding: EdgeInsets.all(24.r),
             child: Center(
-              child: Text("Brak wyników dla '${searchController.text}'", style: TextStyle(color: Colors.grey.shade500, fontSize: 15.sp)),
+              child: Text("No results for '${searchController.text}'", style: TextStyle(color: Colors.grey.shade500, fontSize: 15.sp)),
             ),
           )
         else

@@ -14,6 +14,7 @@ import 'package:vitasense/features/recipes/bloc/recipes_state.dart';
 import 'package:vitasense/core/widgets/app_header.dart';
 import '../widgets/ai_meals/recipe_card.dart';
 import '../widgets/ai_meals/filter_bottom_sheet.dart';
+import 'package:vitasense/l10n/app_localizations.dart';
 
 class AiMealsScreen extends StatefulWidget {
   const AiMealsScreen({super.key, this.ingredients});
@@ -275,10 +276,10 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
           children: [
             Icon(Icons.kitchen, color: AppColors.textMuted, size: 48.r),
             SizedBox(height: 16.h),
-            Text('No ingredients', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+            Text(AppLocalizations.of(context)!.noIngredients, style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
             SizedBox(height: 8.h),
             Text(
-              'Add ingredients to your pantry to see matching recipes',
+              AppLocalizations.of(context)!.addIngredientsToPantry,
               style: TextStyle(fontSize: 14.sp, height: 1.5, color: AppColors.textMuted),
               textAlign: TextAlign.center,
             ),
@@ -366,7 +367,7 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
               child: Icon(Icons.restaurant_menu, size: 36.r, color: AppColors.textMuted),
             ),
             SizedBox(height: 24.h),
-            Text('No results', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+            Text(AppLocalizations.of(context)!.noResults, style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
             SizedBox(height: 8.h),
             Text(
               'Spróbuj zmienić filtry lub dodać więcej składników.',
@@ -383,7 +384,7 @@ class _AiMealsScreenState extends State<AiMealsScreen> {
                   backgroundColor: AppColors.primary,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
                 ),
-                child: Text('Clear filters', style: AppTextStyles.labelLarge.copyWith(color: AppColors.textWhite)),
+                child: Text(AppLocalizations.of(context)!.clearFilters, style: AppTextStyles.labelLarge.copyWith(color: AppColors.textWhite)),
               ),
             ),
           ],

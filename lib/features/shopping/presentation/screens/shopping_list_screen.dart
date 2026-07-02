@@ -14,6 +14,7 @@ import 'package:vitasense/core/utils/bottom_sheet_utils.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_bloc.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_event.dart';
 import 'package:vitasense/core/widgets/app_header.dart';
+import 'package:vitasense/l10n/app_localizations.dart';
 
 part '../widgets/tabs/shopping_active_tab.dart';
 part '../widgets/tabs/shopping_history_tab.dart';
@@ -87,12 +88,12 @@ class _ShoppingListViewState extends State<_ShoppingListView> with SingleTickerP
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Add Item', style: AppTextStyles.headingMedium),
+                  Text(AppLocalizations.of(context)!.addItem, style: AppTextStyles.headingMedium),
                   SizedBox(height: 16.h),
                   TextField(
                     controller: nameController,
                     decoration: InputDecoration(
-                      labelText: 'Item name',
+                      labelText: AppLocalizations.of(context)!.itemName,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12.r),
                         borderSide: const BorderSide(color: AppColors.border),
@@ -112,7 +113,7 @@ class _ShoppingListViewState extends State<_ShoppingListView> with SingleTickerP
                           controller: quantityController,
                           keyboardType: const TextInputType.numberWithOptions(decimal: true),
                           decoration: InputDecoration(
-                            labelText: 'Quantity',
+                            labelText: AppLocalizations.of(context)!.quantity,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12.r),
                               borderSide: const BorderSide(color: AppColors.border),
@@ -174,7 +175,7 @@ class _ShoppingListViewState extends State<_ShoppingListView> with SingleTickerP
                         }
                       },
                       child: Text(
-                        'Add to List',
+                        AppLocalizations.of(context)!.addToList,
                         style: TextStyle(
                           fontSize: 16.sp,
                           fontWeight: FontWeight.w700,
@@ -210,7 +211,7 @@ class _ShoppingListViewState extends State<_ShoppingListView> with SingleTickerP
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   AppHeader(
-                    title: 'Shopping List',
+                    title: AppLocalizations.of(context)!.shoppingList,
                     subtitle: 'Manage your groceries',
                     actions: [
                       IconButton(
@@ -225,9 +226,9 @@ class _ShoppingListViewState extends State<_ShoppingListView> with SingleTickerP
                     labelColor: AppColors.primary,
                     unselectedLabelColor: AppColors.textSecondary,
                     indicatorWeight: 3,
-                    tabs: const [
-                      Tab(text: 'Shopping List'),
-                      Tab(text: 'History'),
+                    tabs: [
+                      Tab(text: AppLocalizations.of(context)!.shoppingList),
+                      Tab(text: AppLocalizations.of(context)!.history),
                     ],
                   ),
                   SizedBox(height: 16.h),
@@ -308,7 +309,7 @@ class _ShoppingListViewState extends State<_ShoppingListView> with SingleTickerP
         children: [
           Icon(Icons.error_outline, color: AppColors.error, size: 40.r),
           SizedBox(height: 12.h),
-          Text('Failed to load.', style: AppTextStyles.bodyMedium),
+          Text(AppLocalizations.of(context)!.failedToLoad, style: AppTextStyles.bodyMedium),
           SizedBox(height: 16.h),
           SizedBox(
             height: 50.h,
@@ -327,7 +328,7 @@ class _ShoppingListViewState extends State<_ShoppingListView> with SingleTickerP
                 ),
               ),
               child: Text(
-                'Retry',
+                AppLocalizations.of(context)!.tryAgain,
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,

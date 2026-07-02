@@ -3,6 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vitasense/core/router/app_routes.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
+
+import 'package:vitasense/l10n/app_localizations.dart';
 import 'package:vitasense/features/pantry/data/pantry_repository.dart';
 
 part '../widgets/fridge_scan/fridge_product_card.dart';

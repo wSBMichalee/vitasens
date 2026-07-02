@@ -7,6 +7,7 @@ import 'package:vitasense/core/theme/app_colors.dart';
 import 'package:vitasense/features/auth/bloc/auth_bloc.dart';
 import 'package:vitasense/features/auth/bloc/auth_event.dart';
 import 'package:vitasense/features/auth/bloc/auth_state.dart';
+import 'package:vitasense/l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -77,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Icon(Icons.eco, size: 50.r, color: AppColors.primary),
                 SizedBox(height: 12.h),
                 Text(
-                  'VitaSense',
+                  AppLocalizations.of(context)!.appName,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 24.sp,
@@ -88,7 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 SizedBox(height: 24.h),
                 Text(
-                  'Welcome back',
+                  AppLocalizations.of(context)!.welcomeBack,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 28.sp,
@@ -99,7 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 SizedBox(height: 8.h),
                 Text(
-                  'Sign in to continue your journey',
+                  AppLocalizations.of(context)!.signInToContinue,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15.sp,
@@ -113,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
-                    hintText: 'Email address',
+                    hintText: AppLocalizations.of(context)!.emailAddress,
                     prefixIcon: Icon(Icons.mail_outline, color: Colors.grey[500]),
                     filled: true,
                     fillColor: const Color(0xFFF5F5F5),
@@ -128,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
-                    hintText: 'Password',
+                    hintText: AppLocalizations.of(context)!.password,
                     prefixIcon: Icon(Icons.lock_outline, color: Colors.grey[500]),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -156,7 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                     child: Text(
-                      'Forgot password?',
+                      AppLocalizations.of(context)!.forgotPassword,
                       style: TextStyle(
                         fontSize: 14.sp,
                         color: AppColors.primary,
@@ -187,7 +188,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
                               )
                             : Text(
-                                'Sign In',
+                                AppLocalizations.of(context)!.signInButton,
                                 style: TextStyle(
                                   fontSize: 16.sp,
                                   fontWeight: FontWeight.bold,
@@ -206,7 +207,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16.w),
                       child: Text(
-                        'or continue with',
+                        AppLocalizations.of(context)!.orContinueWith,
                         style: TextStyle(
                           fontSize: 13.sp,
                           color: Colors.grey[500],
@@ -220,7 +221,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 
                 // Social Login
                 _buildSocialButton(
-                  label: 'Continue with Apple',
+                  label: AppLocalizations.of(context)!.continueWithApple,
                   iconWidget: Icon(Icons.apple, color: Colors.white, size: 24.r),
                   backgroundColor: Colors.black,
                   textColor: Colors.white,
@@ -228,7 +229,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 SizedBox(height: 10.h),
                 _buildSocialButton(
-                  label: 'Continue with Google',
+                  label: AppLocalizations.of(context)!.continueWithGoogle,
                   iconWidget: _buildGoogleIcon(),
                   backgroundColor: Colors.white,
                   textColor: Colors.black,
@@ -243,7 +244,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Don't have an account? ",
+                      '${AppLocalizations.of(context)!.dontHaveAccount} ',
                       style: TextStyle(
                         fontSize: 14.sp,
                         color: Colors.grey[600],
@@ -252,7 +253,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     GestureDetector(
                       onTap: () => context.push(AppRoutes.signup),
                       child: Text(
-                        'Sign up',
+                        AppLocalizations.of(context)!.signUp,
                         style: TextStyle(
                           fontSize: 14.sp,
                           color: AppColors.primary,

@@ -173,14 +173,14 @@ class DetailsStep extends StatelessWidget {
           SizedBox(height: 40.h),
 
           // ── STORAGE LOCATION ──────────────────────
-          Text('GDZIE PRZECHOWUJESZ?', style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Colors.grey.shade600)),
+          Text('WHERE DO YOU STORE IT?', style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Colors.grey.shade600)),
           SizedBox(height: 12.h),
           Row(children: [
-            _StorageChip(label: '🧊 Lodówka', value: 'fridge', selected: storageLocation == 'fridge', onTap: () => onStorageChanged('fridge')),
+            _StorageChip(label: '🧊 Fridge', value: 'fridge', selected: storageLocation == 'fridge', onTap: () => onStorageChanged('fridge')),
             SizedBox(width: 8.w),
-            _StorageChip(label: '❄️ Zamrażarka', value: 'freezer', selected: storageLocation == 'freezer', onTap: () => onStorageChanged('freezer')),
+            _StorageChip(label: '❄️ Freezer', value: 'freezer', selected: storageLocation == 'freezer', onTap: () => onStorageChanged('freezer')),
             SizedBox(width: 8.w),
-            _StorageChip(label: '🗄️ Spiżarnia', value: 'pantry', selected: storageLocation == 'pantry', onTap: () => onStorageChanged('pantry')),
+            _StorageChip(label: '🗄️ Pantry', value: 'pantry', selected: storageLocation == 'pantry', onTap: () => onStorageChanged('pantry')),
           ]),
           SizedBox(height: 24.h),
 

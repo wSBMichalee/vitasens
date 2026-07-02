@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
+import 'package:vitasense/l10n/app_localizations.dart';
 
 class PantryStorageTabs extends StatelessWidget {
   const PantryStorageTabs({super.key, required this.selected, required this.onSelected});
@@ -18,11 +19,11 @@ class PantryStorageTabs extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(child: _tab(context, 'fridge', Icons.kitchen_outlined, 'Lodówka')),
+          Expanded(child: _tab(context, 'fridge', Icons.kitchen_outlined, AppLocalizations.of(context)!.fridge)),
           SizedBox(width: 4.w),
-          Expanded(child: _tab(context, 'freezer', Icons.ac_unit_outlined, 'Zamrażarka')),
+          Expanded(child: _tab(context, 'freezer', Icons.ac_unit_outlined, AppLocalizations.of(context)!.freezer)),
           SizedBox(width: 4.w),
-          Expanded(child: _tab(context, 'pantry', Icons.inventory_2_outlined, 'Spiżarnia')),
+          Expanded(child: _tab(context, 'pantry', Icons.inventory_2_outlined, AppLocalizations.of(context)!.pantryStorage)),
         ],
       ),
     );

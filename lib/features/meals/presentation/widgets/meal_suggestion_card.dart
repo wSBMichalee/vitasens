@@ -11,6 +11,7 @@ import 'package:vitasense/features/meals/data/meal_suggestions_repository.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vitasense/core/router/app_routes.dart';
 import 'package:vitasense/features/macros/presentation/widgets/streak_celebration_modal.dart';
+import 'package:vitasense/l10n/app_localizations.dart';
 
 class MealSuggestionCard extends StatelessWidget {
   final String mealType;
@@ -220,7 +221,7 @@ class _SuggestionCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(4.r),
                   ),
                   child: Text(
-                    "SUGESTIA",
+                    AppLocalizations.of(context)!.suggestion.toUpperCase(),
                     style: TextStyle(fontSize: 8.sp, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 0.5),
                   ),
                 ),
@@ -257,7 +258,7 @@ class _SuggestionCard extends StatelessWidget {
                             border: Border.all(color: AppColors.border),
                             borderRadius: BorderRadius.circular(6.r),
                           ),
-                          child: Text('Zmień', style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+                          child: Text(AppLocalizations.of(context)!.change, style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
                         ),
                       ),
                       SizedBox(width: 6.w),
@@ -273,7 +274,7 @@ class _SuggestionCard extends StatelessWidget {
                             color: AppColors.primary,
                             borderRadius: BorderRadius.circular(6.r),
                           ),
-                          child: Text('Zjedzone', style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.w600, color: Colors.white)),
+                          child: Text(AppLocalizations.of(context)!.eaten, style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.w600, color: Colors.white)),
                         ),
                       ),
                     ],
@@ -323,7 +324,7 @@ class _SuggestionCard extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Anuluj'),
+              child: Text(AppLocalizations.of(context)!.cancel),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
@@ -346,7 +347,7 @@ class _SuggestionCard extends StatelessWidget {
                   await maybeShowStreakCelebration(context);
                 }
               },
-              child: Text('Zapisz', style: TextStyle(color: Colors.white, fontSize: 13.sp)),
+              child: Text(AppLocalizations.of(context)!.save, style: TextStyle(color: Colors.white, fontSize: 13.sp)),
             ),
           ],
         ),

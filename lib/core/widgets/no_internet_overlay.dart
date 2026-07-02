@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vitasense/l10n/app_localizations.dart';
 
 class NoInternetOverlay extends StatefulWidget {
   final Widget child;
@@ -84,7 +85,7 @@ class _NoInternetOverlayState extends State<NoInternetOverlay> {
                         ),
                         SizedBox(height: 24.h),
                         Text(
-                          'Brak połączenia',
+                          AppLocalizations.of(context)!.noConnection,
                           style: TextStyle(
                             fontSize: 24.sp,
                             fontWeight: FontWeight.w800,
@@ -93,7 +94,7 @@ class _NoInternetOverlayState extends State<NoInternetOverlay> {
                         ),
                         SizedBox(height: 8.h),
                         Text(
-                          'Sprawdź połączenie z internetem.\nApka odświeży się automatycznie.',
+                          AppLocalizations.of(context)!.checkConnection,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 15.sp,
@@ -127,7 +128,7 @@ class _NoInternetOverlayState extends State<NoInternetOverlay> {
                                         color: Colors.white, strokeWidth: 2.5),
                                   )
                                 : Text(
-                                    'Odśwież',
+                                    AppLocalizations.of(context)!.refresh,
                                     style: TextStyle(
                                       fontSize: 16.sp,
                                       fontWeight: FontWeight.w700,
@@ -138,7 +139,7 @@ class _NoInternetOverlayState extends State<NoInternetOverlay> {
                         ),
                         SizedBox(height: 16.h),
                         Text(
-                          'Połączenie wróci automatycznie',
+                          AppLocalizations.of(context)!.connectionWillRestore,
                           style: TextStyle(
                             fontSize: 13.sp,
                             color: Colors.grey.shade400,

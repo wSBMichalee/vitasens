@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:vitasense/core/services/cache_service.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_event.dart';
 import 'package:vitasense/features/pantry/bloc/pantry_state.dart';
 import 'package:vitasense/features/pantry/data/pantry_repository.dart';
@@ -68,11 +69,18 @@ class PantryBloc extends Bloc<PantryEvent, PantryState> {
     DeleteIngredient event,
     Emitter<PantryState> emit,
   ) async {
+    if (state is PantryLoaded) {
+      final current = state as PantryLoaded;
+      final updated = current.ingredients
+          .where((i) => i.id != event.id)
+          .toList();
+      emit(current.copyWith(ingredients: updated));
+    }
+
     try {
       await repository.deleteIngredient(event.id);
-      add(const RefreshPantry());
+      CacheService().invalidate('pantry_ingredients');
     } catch (e) {
-      // In case of error we can just refresh to ensure state is synced
       add(const RefreshPantry());
     }
   }
@@ -104,11 +112,22 @@ class PantryBloc extends Bloc<PantryEvent, PantryState> {
     MoveIngredient event,
     Emitter<PantryState> emit,
   ) async {
+    if (state is PantryLoaded) {
+      final current = state as PantryLoaded;
+      final updated = current.ingredients.map((i) {
+        if (i.id == event.id) {
+          return i.copyWith(storageLocation: event.storageLocation);
+        }
+        return i;
+      }).toList();
+      emit(current.copyWith(ingredients: updated));
+    }
+
     try {
       await repository.moveIngredient(event.id, event.storageLocation);
-      add(const RefreshPantry());
+      CacheService().invalidate('pantry_ingredients');
     } catch (e) {
-      emit(PantryError(_parseError(e)));
+      add(const RefreshPantry());
     }
   }
 

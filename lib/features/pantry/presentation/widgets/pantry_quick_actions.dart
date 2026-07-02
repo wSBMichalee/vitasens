@@ -15,7 +15,7 @@ class PantryQuickActions extends StatelessWidget {
           child: QuickActionCard(
             icon: Icons.camera_alt_outlined,
             label: 'SCAN FRIDGE',
-            onTap: () => context.push(AppRoutes.scanning),
+            onTap: () => context.push(AppRoutes.scanning, extra: 'fridge'),
           ),
         ),
         SizedBox(width: 10.w),
@@ -23,7 +23,7 @@ class PantryQuickActions extends StatelessWidget {
           child: QuickActionCard(
             icon: Icons.receipt_long_outlined,
             label: 'SCAN RECEIPT',
-            onTap: () => context.push(AppRoutes.scanning),
+            onTap: () => context.push(AppRoutes.scanning, extra: 'receipt'),
           ),
         ),
       ],

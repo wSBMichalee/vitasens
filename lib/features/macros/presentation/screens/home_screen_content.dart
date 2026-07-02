@@ -384,7 +384,7 @@ class _MockupHomeScreenState extends State<MockupHomeScreen> {
                     labelStyle: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
                     labelBackgroundColor: Colors.white,
                     shape: const CircleBorder(),
-                    onTap: () => context.push(AppRoutes.scanning),
+                    onTap: () => context.push(AppRoutes.scanning, extra: 'meal'),
                   ),
                   SpeedDialChild(
                     child: const Icon(Icons.restaurant_menu, color: Colors.white),

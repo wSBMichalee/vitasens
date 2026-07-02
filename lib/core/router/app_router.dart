@@ -96,8 +96,9 @@ final GoRouter appRouter = GoRouter(
           location == AppRoutes.landing ||
           location == AppRoutes.login ||
           location == AppRoutes.signup) {
-        // Wymuszenie Home Page'a do testów widoku!
-        return AppRoutes.home;
+        // Wymuszenie Home Page'a zablokowane na prośbę o pokazanie ekranu logowania
+        // return AppRoutes.home;
+        return null;
       }
     }
 
@@ -317,8 +318,13 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.scanning,
-      pageBuilder: (context, state) =>
-          _slideUpPage(state: state, child: const ScanningScreen()),
+      pageBuilder: (context, state) {
+        final mode = (state.extra is String) ? state.extra as String : 'meal';
+        return _slideUpPage(
+          state: state,
+          child: ScanningScreen(initialMode: mode),
+        );
+      },
     ),
     GoRoute(
       path: '/fridge-scan-result',

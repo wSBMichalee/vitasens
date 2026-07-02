@@ -13,7 +13,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
 
 class ScanningScreen extends StatelessWidget {
-  const ScanningScreen({super.key});
+  final String initialMode;
+  const ScanningScreen({super.key, this.initialMode = 'meal'});
 
   @override
   Widget build(BuildContext context) {
@@ -21,13 +22,14 @@ class ScanningScreen extends StatelessWidget {
       create: (context) => DetectBloc(
         repository: DetectRepository(),
       ),
-      child: const _ScanningView(),
+      child: _ScanningView(initialMode: initialMode),
     );
   }
 }
 
 class _ScanningView extends StatefulWidget {
-  const _ScanningView();
+  final String initialMode;
+  const _ScanningView({this.initialMode = 'meal'});
 
   @override
   State<_ScanningView> createState() => _ScanningViewState();
@@ -42,6 +44,7 @@ class _ScanningViewState extends State<_ScanningView> {
   @override
   void initState() {
     super.initState();
+    _mode = widget.initialMode;
     _initCamera();
   }
 
@@ -229,7 +232,7 @@ class _ScanningViewState extends State<_ScanningView> {
                 child: Stack(
                   children: [
                     CustomPaint(
-                      size: const Size(260, 260),
+                      size: Size(260.w, 260.h),
                       painter: ScannerFramePainter(),
                     ),
                     Center(

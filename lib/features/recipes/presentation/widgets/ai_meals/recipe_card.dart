@@ -59,7 +59,7 @@ class _RecipeCardState extends State<RecipeCard> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     final recipe = widget.recipe;
     final imageUrl = recipe['imageUrl'] as String?;
-    final title = recipe['title'] as String? ?? 'Brak tytułu';
+    final title = recipe['title'] as String? ?? 'Untitled';
     final cookTime = recipe['cookTimeMinutes'] as int? ?? 0;
     final calories = (recipe['calories'] as num?)?.toInt() ?? 0;
     
@@ -256,7 +256,7 @@ class _RecipeCardState extends State<RecipeCard> with SingleTickerProviderStateM
                             '$cookTime min',
                             style: TextStyle(fontSize: 11.sp, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                           ),
-                          Spacer(),
+                          const Spacer(),
                           Icon(Icons.local_fire_department_outlined, size: 12.r, color: AppColors.textSecondary),
                           SizedBox(width: 4.w),
                           Text(

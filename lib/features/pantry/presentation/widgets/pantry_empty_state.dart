@@ -28,7 +28,7 @@ class PantryEmptyState extends StatelessWidget {
             ),
             SizedBox(height: 20.h),
             Text(
-              isFiltered ? 'No ingredients found' : 'Twoja $storageLabel jest pusta',
+              isFiltered ? 'No ingredients found' : 'Your $storageLabel is empty',
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.w700,
@@ -39,7 +39,7 @@ class PantryEmptyState extends StatelessWidget {
             Text(
               isFiltered
                   ? 'Try a different search or filter'
-                  : storageLabel == 'lodówka' ? 'Dodaj swój pierwszy produkt z lodówki by zacząć' : 'Dodaj swój pierwszy produkt ze spiżarki by zacząć',
+                  : 'Add your first item to $storageLabel to get started',
               style:
                   TextStyle(fontSize: 14.sp, color: AppColors.textSecondary),
               textAlign: TextAlign.center,

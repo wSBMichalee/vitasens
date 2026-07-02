@@ -64,7 +64,7 @@ class _BarcodeResultScreenState extends State<BarcodeResultScreen> {
       final data = response.data;
       if (data['success'] == true) {
         if (!mounted) return;
-        SnackbarUtils.showSuccess(context, 'Dodano do dziennika');
+        SnackbarUtils.showSuccess(context, 'Added to diary');
         context.go(AppRoutes.home);
       } else {
         throw Exception('Failed');
@@ -192,7 +192,7 @@ class _BarcodeResultScreenState extends State<BarcodeResultScreen> {
                     SizedBox(height: 32.h),
                     
                     // Serving size selector
-                    Text('Porcja (g)', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                    Text('Serving (g)', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                     SizedBox(height: 8.h),
                     Row(
                       children: [
@@ -241,21 +241,21 @@ class _BarcodeResultScreenState extends State<BarcodeResultScreen> {
                     Row(
                       children: [
                         _StorageChip(
-                          label: '🧊 Lodówka',
+                          label: '🧊 Fridge',
                           value: 'fridge',
                           selected: _storageLocation == 'fridge',
                           onTap: () => setState(() => _storageLocation = 'fridge'),
                         ),
                         SizedBox(width: 8.w),
                         _StorageChip(
-                          label: '❄️ Zamrażarka',
+                          label: '❄️ Freezer',
                           value: 'freezer',
                           selected: _storageLocation == 'freezer',
                           onTap: () => setState(() => _storageLocation = 'freezer'),
                         ),
                         SizedBox(width: 8.w),
                         _StorageChip(
-                          label: '🗄️ Spiżarnia',
+                          label: '🗄️ Pantry',
                           value: 'pantry',
                           selected: _storageLocation == 'pantry',
                           onTap: () => setState(() => _storageLocation = 'pantry'),
@@ -288,7 +288,7 @@ class _BarcodeResultScreenState extends State<BarcodeResultScreen> {
                         icon: _isProcessingMeal 
                             ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                             : const Icon(Icons.restaurant, color: Colors.white),
-                        label: Text('Dodaj do posiłku', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700)),
+                        label: Text('Add to meal', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700)),
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
@@ -305,7 +305,7 @@ class _BarcodeResultScreenState extends State<BarcodeResultScreen> {
                       icon: _isProcessingPantry
                           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                           : const Icon(Icons.kitchen),
-                      label: Text('Dodaj do spiżarni', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700)),
+                      label: Text('Add to pantry', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w700)),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.primary,
                         side: const BorderSide(color: AppColors.primary, width: 2),

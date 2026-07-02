@@ -226,8 +226,8 @@ class _ShoppingListViewState extends State<_ShoppingListView> with SingleTickerP
                     unselectedLabelColor: AppColors.textSecondary,
                     indicatorWeight: 3,
                     tabs: const [
-                      Tab(text: 'Lista zakupów'),
-                      Tab(text: 'Historia'),
+                      Tab(text: 'Shopping List'),
+                      Tab(text: 'History'),
                     ],
                   ),
                   SizedBox(height: 16.h),

@@ -313,7 +313,7 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
   String _parseError(dynamic e) {
     final raw = e.toString().toLowerCase();
 
-    if (raw.contains('recipe_not_found') || raw.contains('przepis nie istnieje')) return 'Przepis nie znaleziony — odśwież listę.';
+    if (raw.contains('recipe_not_found') || raw.contains('przepis nie istnieje')) return 'Recipe not found — refresh the list.';
     if (raw.contains('subscription_expired') || raw.contains('403')) return 'SUBSCRIPTION_EXPIRED';
     if (raw.contains('not found')) return 'Recipe not found.';
     if (raw.contains('network') ||

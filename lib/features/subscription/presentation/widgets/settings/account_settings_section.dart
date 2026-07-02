@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vitasense/core/router/app_router.dart';
 import 'package:vitasense/core/theme/app_colors.dart';
-import 'package:vitasense/features/auth/data/auth_repository.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:vitasense/features/auth/bloc/auth_bloc.dart';
+import 'package:vitasense/features/auth/bloc/auth_event.dart';
 import 'base_card.dart';
 import 'action_row.dart';
 
@@ -36,9 +38,8 @@ class AccountSettingsSection extends StatelessWidget {
           ActionRow(
             icon: Icons.logout_rounded,
             label: 'Sign Out',
-            onTap: () async {
-              await AuthRepository().signOut();
-              if (context.mounted) context.go(AppRoutes.login);
+            onTap: () {
+              context.read<AuthBloc>().add(const SignOutRequested());
             },
           ),
           const Divider(color: AppColors.border),

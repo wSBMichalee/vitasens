@@ -20,9 +20,9 @@ class ShoppingHistoryTab extends StatelessWidget {
       String label;
       final now = DateTime.now();
       if (date.year == now.year && date.month == now.month && date.day == now.day) {
-        label = 'Dzisiaj';
+        label = 'Today';
       } else if (date.year == now.year && date.month == now.month && date.day == now.day - 1) {
-        label = 'Wczoraj';
+        label = 'Yesterday';
       } else {
         label = '${date.day} ${_monthName(date.month)} ${date.year}';
       }
@@ -41,7 +41,7 @@ class ShoppingHistoryTab extends StatelessWidget {
             Icon(Icons.history, size: 64.r, color: AppColors.border),
             SizedBox(height: 16.h),
             Text(
-              'Brak historii zakupów',
+              'No purchase history yet',
               style: TextStyle(fontSize: 16.sp, color: AppColors.textSecondary),
             ),
           ],

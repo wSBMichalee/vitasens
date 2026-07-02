@@ -146,7 +146,7 @@ class _RecipeDetailViewState extends State<_RecipeDetailView> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Smacznego! 🍽️ Spiżarnia zaktualizowana.',
+                'Enjoy your meal! 🍽️ Pantry updated.',
                 style: TextStyle(color: AppColors.textWhite, fontSize: 14.sp),
               ),
               backgroundColor: AppColors.primary,
@@ -398,8 +398,8 @@ class _RecipeDetailViewState extends State<_RecipeDetailView> {
                                 icon: Icon(Icons.add_shopping_cart, color: Colors.white, size: 18.r),
                                 label: Text(
                                   _ingredientsAddedToList
-                                    ? 'Dodano do listy zakupów ✓'
-                                    : 'Dodaj ${missedIngredients.length} brakujących składników',
+                                    ? 'Added to shopping list ✓'
+                                    : 'Add ${missedIngredients.length} missing ingredients',
                                   style: TextStyle(color: Colors.white, fontSize: 14.sp, fontWeight: FontWeight.w600),
                                 ),
                                 onPressed: _ingredientsAddedToList ? null : () async {
@@ -414,7 +414,7 @@ class _RecipeDetailViewState extends State<_RecipeDetailView> {
                                     if (context.mounted) {
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
-                                          content: Text('Dodano ${items.length} składników do listy zakupów ✓'),
+                                          content: Text('Added ${items.length} ingredients to shopping list ✓'),
                                           backgroundColor: AppColors.primary,
                                           duration: const Duration(seconds: 2),
                                         ),

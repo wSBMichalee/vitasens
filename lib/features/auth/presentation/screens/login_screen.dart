@@ -16,9 +16,23 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _obscurePassword = true;
+
   @override
   void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
+  }
+
+  void _signInWithEmail() {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    if (email.isNotEmpty && password.isNotEmpty) {
+      context.read<AuthBloc>().add(SignInRequested(email: email, password: password));
+    }
   }
 
   @override
@@ -52,88 +66,205 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Scaffold(
         backgroundColor: Colors.white,
         body: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 24.w),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: IntrinsicHeight(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SizedBox(height: 48.h),
-                        Icon(Icons.eco, size: 36.r, color: AppColors.primary),
-                        SizedBox(height: 8.h),
-                        Text(
-                          'VitaSense',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 24.sp,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.black,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        SizedBox(height: 32.h),
-                        Text(
-                          'Welcome back',
-                          style: TextStyle(
-                            fontSize: 24.sp,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.black,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        SizedBox(height: 24.h),
-                        SizedBox(height: 12.h),
-                        _buildSocialButton(
-                          label: 'Continue with Apple',
-                          iconWidget: Icon(Icons.apple, color: Colors.white, size: 24.r),
-                          backgroundColor: Colors.black,
-                          textColor: Colors.white,
-                          onTap: () => context.read<AuthBloc>().add(const SignInWithAppleRequested()),
-                        ),
-                        SizedBox(height: 8.h),
-                        _buildSocialButton(
-                          label: 'Continue with Google',
-                          iconWidget: _buildGoogleIcon(),
-                          backgroundColor: Colors.white,
-                          textColor: Colors.black,
-                          borderColor: const Color(0xFFE5E5EA),
-                          onTap: () => context.read<AuthBloc>().add(const SignInWithGoogleRequested()),
-                        ),
-                        const Spacer(),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "Don't have an account? ",
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                color: const Color(0xFF8A8A8E),
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () => context.push(AppRoutes.signup),
-                              child: Text(
-                                'Sign up',
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 32.h),
-                      ],
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: 24.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(height: 48.h),
+                
+                // Top Section
+                Icon(Icons.eco, size: 50.r, color: AppColors.primary),
+                SizedBox(height: 12.h),
+                Text(
+                  'VitaSense',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 24.sp,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                SizedBox(height: 24.h),
+                Text(
+                  'Welcome back',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 28.sp,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  'Sign in to continue your journey',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 15.sp,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                SizedBox(height: 20.h),
+                
+                // Middle Section: Email & Password
+                TextField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                    hintText: 'Email address',
+                    prefixIcon: Icon(Icons.mail_outline, color: Colors.grey[500]),
+                    filled: true,
+                    fillColor: const Color(0xFFF5F5F5),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16.r),
+                      borderSide: BorderSide.none,
                     ),
                   ),
                 ),
-              );
-            },
+                SizedBox(height: 12.h),
+                TextField(
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    hintText: 'Password',
+                    prefixIcon: Icon(Icons.lock_outline, color: Colors.grey[500]),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                        color: Colors.grey[500],
+                      ),
+                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                    ),
+                    filled: true,
+                    fillColor: const Color(0xFFF5F5F5),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16.r),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => context.push(AppRoutes.forgotPassword),
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      'Forgot password?',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                
+                // Sign In Button
+                BlocBuilder<AuthBloc, AuthState>(
+                  builder: (context, state) {
+                    return SizedBox(
+                      height: 56.h,
+                      child: FilledButton(
+                        onPressed: state is AuthLoading ? null : _signInWithEmail,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(28.r),
+                          ),
+                        ),
+                        child: state is AuthLoading
+                            ? SizedBox(
+                                width: 24.r,
+                                height: 24.r,
+                                child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                              )
+                            : Text(
+                                'Sign In',
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(height: 20.h),
+                
+                // Divider
+                Row(
+                  children: [
+                    const Expanded(child: Divider(color: Color(0xFFE5E5EA))),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
+                      child: Text(
+                        'or continue with',
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ),
+                    const Expanded(child: Divider(color: Color(0xFFE5E5EA))),
+                  ],
+                ),
+                SizedBox(height: 16.h),
+                
+                // Social Login
+                _buildSocialButton(
+                  label: 'Continue with Apple',
+                  iconWidget: Icon(Icons.apple, color: Colors.white, size: 24.r),
+                  backgroundColor: Colors.black,
+                  textColor: Colors.white,
+                  onTap: () => context.read<AuthBloc>().add(const SignInWithAppleRequested()),
+                ),
+                SizedBox(height: 10.h),
+                _buildSocialButton(
+                  label: 'Continue with Google',
+                  iconWidget: _buildGoogleIcon(),
+                  backgroundColor: Colors.white,
+                  textColor: Colors.black,
+                  borderColor: const Color(0xFFE5E5EA),
+                  onTap: () => context.read<AuthBloc>().add(const SignInWithGoogleRequested()),
+                ),
+                
+                SizedBox(height: 16.h),
+                
+                // Bottom Link
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Don't have an account? ",
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => context.push(AppRoutes.signup),
+                      child: Text(
+                        'Sign up',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 32.h),
+              ],
+            ),
           ),
         ),
       ),

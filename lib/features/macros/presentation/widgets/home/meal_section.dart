@@ -69,7 +69,7 @@ class MealSectionState extends State<MealSection> {
                       Text(widget.title, style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                       Text(
                         widget.meals.isEmpty 
-                            ? 'Brak dodanych posiłków' 
+                            ? 'No meals added yet' 
                             : '$totalKcal kcal  •  P: ${totalP.round()}g  C: ${totalC.round()}g  F: ${totalF.round()}g',
                         style: TextStyle(fontSize: 11.sp, color: AppColors.textMuted),
                       ),

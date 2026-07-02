@@ -21,11 +21,11 @@ class FridgeStorageSelector extends StatelessWidget {
         ),
         SizedBox(height: 12.h),
         Row(children: [
-          _StorageChip(label: '🧊 Lodówka', value: 'fridge', selected: selected == 'fridge', onTap: () => onChanged('fridge')),
+          _StorageChip(label: '🧊 Fridge', value: 'fridge', selected: selected == 'fridge', onTap: () => onChanged('fridge')),
           SizedBox(width: 8.w),
-          _StorageChip(label: '❄️ Zamrażarka', value: 'freezer', selected: selected == 'freezer', onTap: () => onChanged('freezer')),
+          _StorageChip(label: '❄️ Freezer', value: 'freezer', selected: selected == 'freezer', onTap: () => onChanged('freezer')),
           SizedBox(width: 8.w),
-          _StorageChip(label: '🗄️ Spiżarnia', value: 'pantry', selected: selected == 'pantry', onTap: () => onChanged('pantry')),
+          _StorageChip(label: '🗄️ Pantry', value: 'pantry', selected: selected == 'pantry', onTap: () => onChanged('pantry')),
         ]),
       ],
     );

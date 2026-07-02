@@ -72,7 +72,7 @@ class _SavedRecipesViewState extends State<_SavedRecipesView> {
           ),
           SizedBox(height: 8.h),
           Text(
-            'Dodaj ulubione przepisy klikając ❤️ w AI Meals.',
+            'Add your favorite recipes by tapping ❤️ in AI Meals.',
             style: TextStyle(fontSize: 14.sp, color: AppColors.textSecondary, height: 1.5),
             textAlign: TextAlign.center,
           ),

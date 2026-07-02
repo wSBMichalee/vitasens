@@ -8,31 +8,38 @@ class RecipesRepository {
       : _supabase = supabase ?? Supabase.instance.client;
 
   Future<Map<String, dynamic>> searchRecipesFast(List<String> pantryIngredients) async {
-    final response = await _supabase.functions.invoke(
-      'search-recipes',
-      body: {'action': 'search_fast', 'pantryIngredients': pantryIngredients},
+    final cacheKey = 'recipes_${pantryIngredients.join("_")}';
+    return CacheService().fetchWithStaleWhileRevalidate<Map<String, dynamic>>(
+      key: cacheKey,
+      fetchFuture: () async {
+        final response = await _supabase.functions.invoke(
+          'search-recipes',
+          body: {'action': 'search_fast', 'pantryIngredients': pantryIngredients},
+        ).timeout(const Duration(seconds: 15));
+        
+        final body = response.data as Map<String, dynamic>;
+        if (body['success'] != true) throw Exception(body['error'] ?? 'Unknown error');
+        final payload = body['data'] as Map<String, dynamic>;
+        final list = payload['recipes'] as List<dynamic>;
+        final ids = (payload['spoonacularIds'] as List?) ?? [];
+        
+        final recipes = list.map((e) {
+          final r = Map<String, dynamic>.from(e as Map);
+          return {
+            ...r,
+            'imageUrl': r['imageUrl'] ?? r['image_url'] ?? '',
+            'cookTimeMinutes': r['cookTimeMinutes'] ?? r['cook_time_minutes'] ?? 0,
+            'proteinG': (r['proteinG'] ?? r['protein_g'] ?? 0.0).toDouble(),
+            'carbsG': (r['carbsG'] ?? r['carbs_g'] ?? 0.0).toDouble(),
+            'fatG': (r['fatG'] ?? r['fat_g'] ?? 0.0).toDouble(),
+            'calories': (r['calories'] ?? 0).toInt(),
+            'geminiReason': r['geminiReason'] as String?,
+          };
+        }).toList();
+        
+        return {'recipes': recipes, 'spoonacularIds': ids};
+      },
     );
-    final body = response.data as Map<String, dynamic>;
-    if (body['success'] != true) throw Exception(body['error'] ?? 'Unknown error');
-    final payload = body['data'] as Map<String, dynamic>;
-    final list = payload['recipes'] as List<dynamic>;
-    final ids = (payload['spoonacularIds'] as List?) ?? [];
-    
-    final recipes = list.map((e) {
-      final r = Map<String, dynamic>.from(e as Map);
-      return {
-        ...r,
-        'imageUrl': r['imageUrl'] ?? r['image_url'] ?? '',
-        'cookTimeMinutes': r['cookTimeMinutes'] ?? r['cook_time_minutes'] ?? 0,
-        'proteinG': (r['proteinG'] ?? r['protein_g'] ?? 0.0).toDouble(),
-        'carbsG': (r['carbsG'] ?? r['carbs_g'] ?? 0.0).toDouble(),
-        'fatG': (r['fatG'] ?? r['fat_g'] ?? 0.0).toDouble(),
-        'calories': (r['calories'] ?? 0).toInt(),
-        'geminiReason': r['geminiReason'] as String?,
-      };
-    }).toList();
-    
-    return {'recipes': recipes, 'spoonacularIds': ids};
   }
 
   Future<List<Map<String, dynamic>>> enrichRecipes(List<int> spoonacularIds) async {

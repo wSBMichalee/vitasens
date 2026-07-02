@@ -80,6 +80,7 @@ class PantryBloc extends Bloc<PantryEvent, PantryState> {
     try {
       await repository.deleteIngredient(event.id);
       CacheService().invalidate('pantry_ingredients');
+      CacheService().invalidatePattern('recipes_');
     } catch (e) {
       add(const RefreshPantry());
     }

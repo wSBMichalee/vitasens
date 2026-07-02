@@ -82,11 +82,13 @@ class PantryRepository {
       'storage_location': storageLocation,
     });
     CacheService().invalidate('pantry_ingredients');
+    CacheService().invalidatePattern('recipes_');
   }
 
   Future<void> deleteIngredient(String id) async {
     await _supabase.from('ingredients').delete().eq('id', id);
     CacheService().invalidate('pantry_ingredients');
+    CacheService().invalidatePattern('recipes_');
   }
 
   Future<void> moveIngredient(String id, String storageLocation) async {
@@ -95,5 +97,6 @@ class PantryRepository {
         .update({'storage_location': storageLocation})
         .eq('id', id);
     CacheService().invalidate('pantry_ingredients');
+    CacheService().invalidatePattern('recipes_');
   }
 }

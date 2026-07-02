@@ -51,6 +51,11 @@ class CacheService {
     _cache.remove(key);
   }
 
+  /// Usuwa wpisy pasujące do prefiksu
+  void invalidatePattern(String prefix) {
+    _cache.removeWhere((key, _) => key.startsWith(prefix));
+  }
+
   /// Czyści cały bufor (np. przy wylogowaniu).
   void clear() {
     _cache.clear();

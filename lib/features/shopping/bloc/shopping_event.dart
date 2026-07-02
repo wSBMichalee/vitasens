@@ -47,3 +47,7 @@ class ClearPurchasedItems extends ShoppingEvent {
 class MoveAllToPantry extends ShoppingEvent {
   const MoveAllToPantry();
 }
+
+class LoadShoppingHistory extends ShoppingEvent {
+  const LoadShoppingHistory();
+}

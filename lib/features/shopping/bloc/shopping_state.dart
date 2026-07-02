@@ -39,3 +39,12 @@ class ShoppingMovedToPantry extends ShoppingState {
   const ShoppingMovedToPantry();
 }
 
+class ShoppingHistoryLoaded extends ShoppingState {
+  final List<ShoppingItemModel> history;
+
+  const ShoppingHistoryLoaded(this.history);
+
+  @override
+  List<Object?> get props => [history];
+}
+

@@ -8,6 +8,7 @@ class ShoppingItemModel {
   final String? addedBy;
   final DateTime? createdAt;
   final String? pantryItemId;
+  final DateTime? purchasedAt;
 
   const ShoppingItemModel({
     required this.id,
@@ -19,6 +20,7 @@ class ShoppingItemModel {
     this.addedBy,
     this.createdAt,
     this.pantryItemId,
+    this.purchasedAt,
   });
 
   factory ShoppingItemModel.fromJson(Map<String, dynamic> json) {
@@ -34,6 +36,9 @@ class ShoppingItemModel {
           ? DateTime.tryParse(json['created_at'].toString())
           : null,
       pantryItemId: json['pantry_item_id']?.toString(),
+      purchasedAt: json['purchased_at'] != null
+          ? DateTime.tryParse(json['purchased_at'].toString())
+          : null,
     );
   }
 
@@ -48,6 +53,7 @@ class ShoppingItemModel {
       'added_by': addedBy,
       'created_at': createdAt?.toIso8601String(),
       'pantry_item_id': pantryItemId,
+      'purchased_at': purchasedAt?.toIso8601String(),
     };
   }
 
@@ -61,6 +67,7 @@ class ShoppingItemModel {
     String? addedBy,
     DateTime? createdAt,
     String? pantryItemId,
+    DateTime? purchasedAt,
   }) {
     return ShoppingItemModel(
       id: id ?? this.id,
@@ -72,6 +79,7 @@ class ShoppingItemModel {
       addedBy: addedBy ?? this.addedBy,
       createdAt: createdAt ?? this.createdAt,
       pantryItemId: pantryItemId ?? this.pantryItemId,
+      purchasedAt: purchasedAt ?? this.purchasedAt,
     );
   }
 }

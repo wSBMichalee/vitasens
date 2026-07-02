@@ -25,6 +25,22 @@ class ShoppingRepository {
         .toList();
   }
 
+  Future<List<ShoppingItemModel>> getHistory() async {
+    final userId = _supabaseService.userId;
+    if (userId == null) return [];
+    
+    final data = await _supabaseService.client
+        .from('shopping_list')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_purchased', true)
+        .order('purchased_at', ascending: false);
+        
+    return (data as List)
+        .map((e) => ShoppingItemModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   Future<void> addItem(String name, double quantity, String unit) async {
     await _supabaseService.invokeFunction(
       'manage-shopping-list',

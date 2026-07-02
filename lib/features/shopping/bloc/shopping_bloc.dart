@@ -16,6 +16,7 @@ class ShoppingBloc extends Bloc<ShoppingEvent, ShoppingState> {
     on<DeleteShoppingItem>(_onDeleteShoppingItem);
     on<ClearPurchasedItems>(_onClearPurchasedItems);
     on<MoveAllToPantry>(_onMoveAllToPantry);
+    on<LoadShoppingHistory>(_onLoadShoppingHistory);
   }
 
   Future<void> _onLoadShoppingList(
@@ -103,6 +104,19 @@ class ShoppingBloc extends Bloc<ShoppingEvent, ShoppingState> {
     } catch (e) {
       emit(ShoppingError(_parseError(e)));
       add(const LoadShoppingList());
+    }
+  }
+
+  Future<void> _onLoadShoppingHistory(
+    LoadShoppingHistory event,
+    Emitter<ShoppingState> emit,
+  ) async {
+    emit(const ShoppingLoading());
+    try {
+      final history = await _repository.getHistory();
+      emit(ShoppingHistoryLoaded(history));
+    } catch (e) {
+      emit(ShoppingError(_parseError(e)));
     }
   }
 
